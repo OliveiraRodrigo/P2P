@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <netdb.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -26,9 +27,28 @@ void * servidor(){
         int numbytes;
 	struct sockaddr_in endereco_meu;
 	struct sockaddr_in endereco_cliente;
+        struct hostent *me;
         char * ip_meu = (char*) malloc(20*sizeof(char));
         char * ip_cliente = (char*) malloc(20*sizeof(char));
         char buffer[255];
+        char host_meu[128];
+        long addr_cliente;
+    
+        gethostname(host_meu, sizeof host_meu);
+        printf("\nS: meu host: %s\n", host_meu);
+        if ((me=gethostbyname(host_meu)) == NULL) {
+            perror("\nS: erro: could not gethostbyname\n");
+            exit(1);
+        }
+        
+        endereco_meu.sin_family = PF_INET;
+        endereco_meu.sin_port = htons(PORTA_SERVIDOR);
+        endereco_meu.sin_addr.s_addr = INADDR_ANY;
+        endereco_meu.sin_addr = *((struct in_addr *)me->h_addr);
+    
+        memset(&(endereco_meu.sin_zero), '\0', 8);
+        ip_meu = inet_ntoa(endereco_meu.sin_addr);
+        printf("\nS: meu ip: %s ", ip_meu);
 	
 	/* cria socket. PF_INET define IPv4, SOCK_STREAM define TCP */
 	porta = socket(PF_INET, SOCK_STREAM, 0);
@@ -44,10 +64,10 @@ void * servidor(){
 	endereco_meu.sin_family = AF_INET;
 	endereco_meu.sin_port = htons(PORTA_SERVIDOR);
 	endereco_meu.sin_addr.s_addr = INADDR_ANY;
-        ip_meu = inet_ntoa(endereco_meu.sin_addr);
+        //ip_meu = inet_ntoa(endereco_meu.sin_addr);
 	 
 	memset(&(endereco_meu.sin_zero), '\0', 8);
-	
+	//printf("\nS: meu ip depois: %s ", ip_meu);
 	
 	if (bind(porta,(struct sockaddr *) &endereco_meu, sizeof(struct sockaddr_in)) == -1){
 		perror("\n ::::: erro: servidor nao conseguiu fazer bind\n");	
@@ -68,10 +88,8 @@ void * servidor(){
                 /*Fica esperando aqui*/
                 nova_porta = accept(porta, (struct sockaddr*)&endereco_cliente, &tamanho);
                 
-                ip_meu = inet_ntoa(endereco_meu.sin_addr);
                 ip_cliente = inet_ntoa(endereco_cliente.sin_addr);
                 printf("\nip_cliente: %s", ip_cliente);
-                strcpy(ip_meu, "10.15.120.25");
                 printf("\nip_meu: %s", ip_meu);
 		
 		if (nova_porta==-1){
@@ -86,8 +104,8 @@ void * servidor(){
                 }
         	buffer[numbytes] = '\0';
                 printf("\n ::::: Servidor recebeu: %s", buffer);
-                printf("\n ::::: Ping pra comparar: %s", ping("10.15.120.115", ip_meu));
-                if(!strcmp(buffer, ping("10.15.120.115", ip_meu))){
+                printf("\n ::::: Ping pra comparar: %s", ping(ip_cliente, ip_meu));
+                if(!strcmp(buffer, ping(ip_cliente, ip_meu))){
 		    /* trata a conexao: simplesmente envia uma mensagem de volta */
                     printf("\n ::::: Servidor enviando pong...");
 		

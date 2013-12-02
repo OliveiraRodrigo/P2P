@@ -4,7 +4,6 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "comandos.h"
@@ -13,7 +12,6 @@
 
 void * cliente(/*char** parametros*/){
     
-    char * host_meu = (char*) malloc(20*sizeof(char));
     char * server_name = (char*) malloc(20*sizeof(char));
     char ** comando;
     int porta_minha, porta_destino, numbytes;
@@ -25,19 +23,24 @@ void * cliente(/*char** parametros*/){
     char * ip_destino = (char*) malloc(20*sizeof(char));
     char buffer[255];
     int i, j, quit;
-    
     long addr_destino;
+    char host_meu[128];
     
+    gethostname(host_meu, sizeof host_meu);
+    printf("\n meu host: %s\n", host_meu);
+    if ((me=gethostbyname(host_meu)) == NULL) {
+        perror("\nerro: could not gethostbyname\n");
+        exit(1);
+    }
 /////////////////////////////////////////////////////////
-    /*endereco_meu.sin_family = PF_INET;
+    endereco_meu.sin_family = PF_INET;
     endereco_meu.sin_port = htons(PORTA_SERVIDOR);
     endereco_meu.sin_addr.s_addr = INADDR_ANY;
     endereco_meu.sin_addr = *((struct in_addr *)me->h_addr);
     
     memset(&(endereco_meu.sin_zero), '\0', 8);
-    ip_meu = inet_ntoa(endereco_meu.sin_addr);*/
-    //strcpy(ip_meu,"10.15.120.115");
-    //printf(" meu ip: %s ", ip_meu);
+    ip_meu = inet_ntoa(endereco_meu.sin_addr);
+    printf("\n meu ip: %s ", ip_meu);
 /////////////////////////////////////////////////////////
     
     quit = 0;
@@ -115,7 +118,6 @@ void * cliente(/*char** parametros*/){
                 exit(1);
             }
             
-            strcpy(ip_meu, "10.15.120.115");
             printf("\n P2P:> Cliente enviando ping...");
             printf("\n P2P:> %s", ping(ip_meu, ip_destino));
             if (send(porta_destino, ping(ip_meu, ip_destino), 200, 0) == -1)
@@ -171,7 +173,8 @@ int qual_comando(char * comando){
 char * ping(char * ip_meu, char * ip_destino){
     
     char * saida  = (char*) malloc(200 * sizeof(char));
-    
+    printf("dentro do ping: meu: %s", ip_meu);
+    printf("dentro do ping: dest: %s", ip_destino);
     //saida = " ";
     sprintf(saida, "{protocol:\"pcmj\", "
                    "command:\"ping\", "
