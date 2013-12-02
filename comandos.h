@@ -18,7 +18,7 @@ extern "C" {
 
 #endif	/* COMANDOS_H */
 
-void * cliente(char** parametros);
+void * cliente(/*char** parametros*/);
 
 void * servidor();
 
