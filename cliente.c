@@ -13,25 +13,31 @@
 
 void * cliente(/*char** parametros*/){
     
+    char * host_meu = (char*) malloc(20*sizeof(char));
     char * server_name = (char*) malloc(20*sizeof(char));
     char ** comando;
     int porta_minha, porta_destino, numbytes;
     struct sockaddr_in endereco_meu;
     struct sockaddr_in endereco_destino;
+    struct hostent *me;
     struct hostent *he;
     char * ip_meu = (char*) malloc(20*sizeof(char));
     char * ip_destino = (char*) malloc(20*sizeof(char));
     char buffer[255];
     int i, j, quit;
     
+    long addr_destino;
+    
 /////////////////////////////////////////////////////////
-    endereco_meu.sin_family = AF_INET;
+    /*endereco_meu.sin_family = PF_INET;
     endereco_meu.sin_port = htons(PORTA_SERVIDOR);
     endereco_meu.sin_addr.s_addr = INADDR_ANY;
-    ip_meu = inet_ntoa(endereco_meu.sin_addr);
-    printf(" meu ip: %s ", ip_meu);
+    endereco_meu.sin_addr = *((struct in_addr *)me->h_addr);
     
     memset(&(endereco_meu.sin_zero), '\0', 8);
+    ip_meu = inet_ntoa(endereco_meu.sin_addr);*/
+    //strcpy(ip_meu,"10.15.120.115");
+    //printf(" meu ip: %s ", ip_meu);
 /////////////////////////////////////////////////////////
     
     quit = 0;
@@ -84,14 +90,12 @@ void * cliente(/*char** parametros*/){
     switch(qual_comando(comando[1])){
         /* try */
         case 0:
-            strcpy(ip_destino,comando[2]);
-            /* passe o nome do host onde esta o servidor e essa funcao retorna um endereco */
-            strcpy(server_name,"Rodrigo-PC");
-            //if ((he=gethostbyname(server_name)) == NULL) {
-            //if ((he=gethostbyaddr(ip_destino, 200, AF_INET)) == NULL) {
-            //   perror("\n P2P:> erro: cliente nao conseguiu descobrir aonde esta o servidor\n");
-            //    exit(1);
-            //}
+            addr_destino = inet_addr(comando[2]);
+            if ((he=gethostbyaddr((char *) &addr_destino, sizeof(addr_destino), AF_INET)) == NULL) {
+               perror("\n P2P:> erro: cliente nao conseguiu descobrir aonde esta o servidor\n");
+                exit(1);
+            }
+            
             if ((porta_destino = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
                 perror("\n P2P:> erro: cliente nao conseguiu criar porta\n");
                 exit(1);
@@ -100,12 +104,9 @@ void * cliente(/*char** parametros*/){
             /* prepara estrutura com endereco do servidor */
             endereco_destino.sin_family = AF_INET; 
             endereco_destino.sin_port = htons(PORTA_SERVIDOR);
-            //endereco_destino.sin_addr = *((struct in_addr *)he->h_addr);
-            endereco_destino.sin_addr = *((struct in_addr *)inet_addr(ip_destino));
+            endereco_destino.sin_addr = *((struct in_addr *)he->h_addr);
             memset(&(endereco_destino.sin_zero), '\0', 8);
-            //ip_destino = inet_ntoa(endereco_destino.sin_addr);
-            printf("--%s--", ip_destino);
-            //ip_destino = "127.0.0.1";
+            ip_destino = inet_ntoa(endereco_destino.sin_addr);
             
             if (connect(porta_destino,
                (struct sockaddr *)&endereco_destino,
@@ -114,7 +115,9 @@ void * cliente(/*char** parametros*/){
                 exit(1);
             }
             
+            strcpy(ip_meu, "10.15.120.115");
             printf("\n P2P:> Cliente enviando ping...");
+            printf("\n P2P:> %s", ping(ip_meu, ip_destino));
             if (send(porta_destino, ping(ip_meu, ip_destino), 200, 0) == -1)
                 perror("\n P2P:> erro: nao conseguiu mandar mensagem");
             

@@ -25,9 +25,9 @@ void * servidor(){
 	int tamanho;
         int numbytes;
 	struct sockaddr_in endereco_meu;
-	struct sockaddr_in endereco_destino;
+	struct sockaddr_in endereco_cliente;
         char * ip_meu = (char*) malloc(20*sizeof(char));
-        char * ip_destino = (char*) malloc(20*sizeof(char));
+        char * ip_cliente = (char*) malloc(20*sizeof(char));
         char buffer[255];
 	
 	/* cria socket. PF_INET define IPv4, SOCK_STREAM define TCP */
@@ -66,9 +66,13 @@ void * servidor(){
 		tamanho = sizeof(struct sockaddr_in);
 		
                 /*Fica esperando aqui*/
-                nova_porta = accept(porta, (struct sockaddr*)&endereco_destino, &tamanho);
+                nova_porta = accept(porta, (struct sockaddr*)&endereco_cliente, &tamanho);
                 
-                ip_destino = inet_ntoa(endereco_destino.sin_addr);
+                ip_meu = inet_ntoa(endereco_meu.sin_addr);
+                ip_cliente = inet_ntoa(endereco_cliente.sin_addr);
+                printf("\nip_cliente: %s", ip_cliente);
+                strcpy(ip_meu, "10.15.120.25");
+                printf("\nip_meu: %s", ip_meu);
 		
 		if (nova_porta==-1){
 			perror("\n ::::: erro: servidor: accept retornou erro\n");
@@ -82,7 +86,8 @@ void * servidor(){
                 }
         	buffer[numbytes] = '\0';
                 printf("\n ::::: Servidor recebeu: %s", buffer);
-                if(!strcmp(buffer, ping(ip_destino, ip_meu))){
+                printf("\n ::::: Ping pra comparar: %s", ping("10.15.120.115", ip_meu));
+                if(!strcmp(buffer, ping("10.15.120.115", ip_meu))){
 		    /* trata a conexao: simplesmente envia uma mensagem de volta */
                     printf("\n ::::: Servidor enviando pong...");
 		
@@ -90,7 +95,7 @@ void * servidor(){
 			close(porta); /* o filho nao aceita conexoes a mais */
 			
 			/*if (send(nova_porta, "Hello, world!\n", 14, 0) == -1)*/
-                        if (send(nova_porta, pong(ip_meu, ip_destino), 200, 0) == -1)
+                        if (send(nova_porta, pong(ip_meu, ip_cliente), 200, 0) == -1)
 			    perror("\n ::::: erro: servidor nao conseguiu mandar mensagem");
 			
 			close(nova_porta);
