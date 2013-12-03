@@ -13,7 +13,7 @@
 
 void * cliente(){
     
-    int i, j, quit, porta_destino, numbytes;
+    int i, j, seq, quit, porta_destino, numbytes;
     struct sockaddr_in endereco_destino;
     struct hostent *he;
     long addr_destino;
@@ -59,7 +59,7 @@ void * cliente(){
  * 
  * try 123.321.1.2              (Manda um ping pra este ip e recebe um pong.)
  * 
- * login minhasenha 123.321.1.2 (Tenta autenticar-se com este ip. Se receber
+ * login                        (Tenta autenticar-se com o mesmo ip. Se receber
  *                               authenticate-back codigo 200, envia agent-list,
  *                               recebe agent-list-back, insere na lista os
  *                               ips recebidos e retorna a lista pro usuario.)
@@ -77,6 +77,7 @@ void * cliente(){
         switch(qual_comando(comando[0])){
             /* try */
             case 0:
+                seq = 0;
                 addr_destino = inet_addr(comando[1]);
                 if ((he=gethostbyaddr((char *) &addr_destino, sizeof(addr_destino), AF_INET)) == NULL) {
                     perror("\n P2P:> Erro: cliente nao conseguiu descobrir onde esta o servidor.\n");
@@ -105,10 +106,41 @@ void * cliente(){
                     break;
                 }
                 
-                printf("\n P2P:> Cliente enviando ping...");
-                printf("\n P2P:> %s", ping(ip_meu, ip_destino));
+                printf("\n P2P:> Enviando ping...");
+                //printf("\n P2P:> %s", ping(ip_meu, ip_destino));
                 if (send(porta_destino, ping(ip_meu, ip_destino), 200, 0) == -1){
-                    perror("\n P2P:> Erro: nao conseguiu mandar mensagem");
+                    perror("\n P2P:> Erro: nao conseguiu enviar 'ping'");
+                }
+                
+                if ((numbytes = recv(porta_destino, buffer, 254, 0)) == -1) {
+                    perror("\n P2P:> Erro: nao conseguiu receber 'pong'\n");
+                    //exit(1);
+                    break;
+                }
+                
+                buffer[numbytes] = '\0';
+                
+                //printf("\n P2P:> Cliente recebeu: %s", buffer);
+                
+                // Testa se o recebido foi um pong.
+                if(!strcmp(buffer, pong(ip_destino, ip_meu))){
+                    printf("\n P2P:> Conexao com %s aceita.\n", ip_destino);
+                    seq = 1;
+                }
+                else{
+                    printf("\n P2P:> Erro: %s nao enviou um 'pong' compativel.\n", ip_destino);
+                }
+                break;
+            /* login */
+            case 1:
+                if(seq < 1){
+                    printf("\n P2P:> Primeiro execute 'try <IP>'.\n");
+                    break;
+                }
+                printf("\n P2P:> Autenticando-se com %s...", ip_destino);
+                printf("\n P2P:> %s", authenticate(CHAVE, ip_meu, ip_destino));
+                if (send(porta_destino, authenticate(CHAVE, ip_meu, ip_destino), 200, 0) == -1){
+                    perror("\n P2P:> Erro: nao conseguiu enviar autenticacao.");
                 }
                 
                 if ((numbytes = recv(porta_destino, buffer, 254, 0)) == -1) {
@@ -119,13 +151,16 @@ void * cliente(){
                 
                 buffer[numbytes] = '\0';
                 
-                printf("\n P2P:> Cliente recebeu: %s", buffer);
+                //printf("\n P2P:> Cliente recebeu: %s", buffer);
                 
-                // Testar se o recebido foi um pong e retornar um OK pro usuario, neste caso.
-                
-                break;
-            /* login */
-            case 1:
+                // Testa se o recebido foi um authenticate-back.
+                if(!strcmp(buffer, authenticate_back(200, ip_destino, ip_meu))){
+                    printf("\n P2P:> Autenticacao com %s aceita.\n", ip_destino);
+                    seq = 2;
+                }
+                else{
+                    printf("\n P2P:> Erro: %s nao autenticou.\n", ip_destino);
+                }
                 break;
             /* list */
             case 2:

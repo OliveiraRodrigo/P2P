@@ -13,7 +13,7 @@
 
 void * servidor(){
     
-    int porta, nova_porta, tamanho, numbytes;
+    int porta, nova_porta, tamanho, numbytes, again;
     struct sockaddr_in endereco_meu;
     struct sockaddr_in endereco_cliente;
     char buffer[255];
@@ -67,20 +67,50 @@ void * servidor(){
         }
         
         if ((numbytes = recv(nova_porta, buffer, 254, 0)) == -1) {
-            perror("\n ::::: Erro: servidor: recv no cliente.\n");
+            perror("\n ::::: Erro: Servidor nao conseguiu receber 'ping'.\n");
             //exit(1);
             break;
         }
         buffer[numbytes] = '\0';
         //printf("\n ::::: Servidor recebeu: %s\n", buffer);
         
-        /*Agora testa se foi um ping que foi recebido.*/
+        // Testa se foi um ping que foi recebido.
         //printf("\n ::::: ping pra comparar: %s", ping(ip_cliente, ip_meu));
         if(!strcmp(buffer, ping(ip_cliente, ip_meu))){
             
             //printf("\n ::::: Servidor enviando pong...\n");
             if (send(nova_porta, pong(ip_meu, ip_cliente), 200, 0) == -1){
-                    perror("\n ::::: Erro: servidor nao conseguiu mandar mensagem");
+                perror("\n ::::: Erro: servidor nao conseguiu enviar 'pong'.");
+            }
+            else{
+                //Espera um 'authenticate'
+                again = 1;
+                while(again){
+                    if ((numbytes = recv(nova_porta, buffer, 254, 0)) == -1) {
+                        perror("\n ::::: Erro: Servidor nao conseguiu receber 'authenticate'.\n");
+                        //exit(1);
+                        break;
+                    }
+                    buffer[numbytes] = '\0';
+                    //printf("\n ::::: Servidor recebeu: %s\n", buffer);
+                    
+                    // Testa se recebeu um authenticate correto.
+                    if(!strcmp(buffer, authenticate(CHAVE, ip_cliente, ip_meu))){
+                        // Autenticacao aceita
+                        //printf("\n ::::: Servidor enviando authenticate-back...\n");
+                        again = 0;
+                        if (send(nova_porta, authenticate_back(200, ip_meu, ip_cliente), 200, 0) == -1){
+                            perror("\n ::::: Erro: servidor nao conseguiu enviar 'authenticate-back'.");
+                        }
+                        else{
+                            //Espera outras solicitacoes do cliente.
+                        }
+                    }
+                    // Autenticacao nao aceita: envia codigo 203.
+                    if (send(nova_porta, authenticate_back(203, ip_meu, ip_cliente), 200, 0) == -1){
+                        perror("\n ::::: Erro: servidor nao conseguiu enviar 'authenticate-back'.");
+                    }
+                }
             }
             
             if (fork()==0){ // se for o filho
