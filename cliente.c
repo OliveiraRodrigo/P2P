@@ -31,7 +31,7 @@ void * cliente(/*char** parametros*/){
         printf("\n P2P:> ");
         
         /* Aloca espaco para 4 parametros com 50 caracteres cada */
-        comando = (char**) malloc(10*sizeof(char));
+        comando = (char**) malloc(4*sizeof(char));
         for(i = 0; i < 4; i++){
             comando[i] = (char*) malloc(50*sizeof(char));
         }

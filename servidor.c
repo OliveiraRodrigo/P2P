@@ -9,6 +9,11 @@
 #include "comandos.h"
 
 #define PORTA_SERVIDOR 9876
+#define SIZE 50
+
+struct ips{
+    char * ip;
+} ips_list[SIZE];
 
 void * servidor(){
     
@@ -95,6 +100,24 @@ void * servidor(){
         }
         //close(nova_porta); /* essa parte somente o pai executa */
     }
+}
+
+char * insert_ip(char * novo_ip){
+    
+    static int i = 0;
+    char * saida = (char*) malloc(100*sizeof(char));
+    
+    if(i < SIZE){
+        ips_list[i].ip = (char*) malloc(20*sizeof(char));
+        strcpy(ips_list[i].ip, novo_ip);
+        sprintf(saida, "\n ::::: IP %s inserido com sucesso.", novo_ip);
+        i++;
+    }
+    else{
+        sprintf(saida, "\n ::::: Erro: A lista de IPs esta cheia.", novo_ip);
+    }
+    
+    return saida;
 }
 
 char * pong(char * ip_meu, char * ip_destino){

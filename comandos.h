@@ -33,6 +33,8 @@ void * servidor();
 
 char * get_my_ip();
 
+char * insert_ip(char * novo_ip);
+
 char * ping(char * meu_ip, char * seu_ip);
 
 char * pong(char * meu_ip, char * seu_ip);
