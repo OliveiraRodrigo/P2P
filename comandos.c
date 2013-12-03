@@ -16,6 +16,16 @@ struct ips{
     int size;
 } ips_list;
 
+struct proto{
+    char * protocol;
+    char * command;
+    int    status;
+    char * passport;
+    char * back;
+    char * sender;
+    char * receptor;
+} protocolo;
+
 char * ping(char * ip_meu, char * ip_destino){
     
     char * saida  = (char*) malloc(200 * sizeof(char));
@@ -282,3 +292,126 @@ char ** get_ips_list(){
     return saida;
 }
 
+int set_proto(char * prot){
+    /*
+    int i, j;
+    char * field = (char*) malloc(20*sizeof(char));
+    char * data = (char*) malloc(200*sizeof(char));
+    
+    i = 0;
+    if(prot[i] == '{'){
+            i++;
+            while(prot[i] != '}'){
+                j = 0;
+                while(prot[i] == ' '){
+                    i++;
+                }
+                while(prot[i] != ':'){
+                    field[j] = prot[i];
+                    i++;
+                    j++;
+                }
+                i++;
+                field[j] = '\0';
+                j = 0;
+                if(prot[i] == '"'){
+                    i++;
+                    while(prot[i] != '"'){
+                        data[j] = prot[i];
+                        i++;
+                        j++;
+                    }
+                    i++;
+                    data[j] = '\0';
+                    j = 0;
+                    if(!strcmp(field, "protocol")){
+                        protocolo.protocol = (char*) malloc(10);
+                        strcpy(protocolo.protocol, data);
+                    }
+                    else{
+                        if(!strcmp(field, "command")){
+                            protocolo.protocol = (char*) malloc(20);
+                            strcpy(protocolo.command, data);
+                        }
+                        else{
+                            if(!strcmp(field, "status")){
+                                protocolo.status = atoi(data);
+                            }
+                            else{
+                                if(!strcmp(field, "passport")){
+                                    protocolo.protocol = (char*) malloc(32);
+                                    strcpy(protocolo.passport, data);
+                                }
+                                else{
+                                    if(!strcmp(field, "back")){
+                                        protocolo.protocol = (char*) malloc(200);
+                                        strcpy(protocolo.back, data);
+                                        //archive_request_back eh um problema
+                                    }
+                                    else{
+                                        if(!strcmp(field, "sender")){
+                                            protocolo.protocol = (char*) malloc(20);
+                                            strcpy(protocolo.sender, data);
+                                        }
+                                        else{
+                                            if(!strcmp(field, "receptor")){
+                                                protocolo.protocol = (char*) malloc(20);
+                                                strcpy(protocolo.receptor, data);
+                                            }
+                                            else{
+                                                return 400;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    while(prot[i] != ','){
+                        if(prot[i] == ' ')
+                            i++;
+                        else{
+                            return 400;
+                        }
+                    }
+                    i++;
+                }
+            }
+    }
+    else{
+        return 400;
+    }
+    set_ips_list(protocolo.back);
+    
+    return protocolo.status;*/
+    return 200;
+}
+
+int set_ips_list(char * proto_back){
+    
+    int i, j;
+    char * ip;
+    
+    ip = (char*) malloc(20*sizeof(char));
+    
+    i = 1;
+    j =0;
+    while(proto_back[i] != ']'){
+        while((proto_back[i] != ',') && (proto_back[i] != ']')){
+            ip[j] = proto_back[i];
+            i++;
+            j++;
+            if(j >= 20){
+                break;
+            }
+        }
+        ip[j] = '\0';
+        insert_ip(ip);
+        i++;
+        j = 0;
+        if(i >= strlen(proto_back)){
+            break;
+        }
+    }
+    return 1;
+}

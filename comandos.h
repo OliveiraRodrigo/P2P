@@ -61,3 +61,7 @@ char * insert_ip(char * novo_ip);
 
 char ** get_ips_list();
 
+int set_proto(char * prot);
+
+int set_ips_list(char * proto_back);
+

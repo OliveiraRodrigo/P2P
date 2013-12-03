@@ -13,7 +13,7 @@
 
 void * cliente(){
     
-    int i, j, seq, quit, porta_destino, numbytes;
+    int i, j, seq, quit, porta_destino, numbytes, codigo;
     struct sockaddr_in endereco_destino;
     struct hostent *he;
     long addr_destino;
@@ -144,7 +144,7 @@ void * cliente(){
                 }
                 
                 if ((numbytes = recv(porta_destino, buffer, 254, 0)) == -1) {
-                    perror("\n P2P:> Erro: recv no peer cliente\n");
+                    perror("\n P2P:> Erro: nao obteve resposta.\n");
                     //exit(1);
                     break;
                 }
@@ -157,6 +157,26 @@ void * cliente(){
                 if(!strcmp(buffer, authenticate_back(200, ip_destino, ip_meu))){
                     printf("\n P2P:> Autenticacao com %s aceita.\n", ip_destino);
                     seq = 2;
+                    // Solicita um agent-list
+                    if (send(porta_destino, agent_list(ip_meu, ip_destino), 200, 0) == -1){
+                        perror("\n P2P:> Erro: nao conseguiu enviar 'agent-list'.");
+                    }
+                    
+                    if ((numbytes = recv(porta_destino, buffer, 254, 0)) == -1) {
+                        perror("\n P2P:> Erro: nao obteve resposta.\n");
+                        //exit(1);
+                        break;
+                    }
+                    buffer[numbytes] = '\0';
+                    //printf("\n P2P:> Cliente recebeu: %s", buffer);
+                    // Testa se o recebido foi um agent-list-back.
+                    codigo = set_proto(buffer);
+                    if(codigo == 200){
+                        printf("\n P2P:> Lista de IPs recebida e inserida na lista local.\n");
+                    }
+                    else{
+                        printf("\n P2P:> Erro: %s retornou codigo %d.\n", ip_destino, codigo);
+                    }
                 }
                 else{
                     printf("\n P2P:> Erro: %s nao autenticou.\n", ip_destino);
