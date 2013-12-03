@@ -9,6 +9,7 @@
 #include "comandos.h"
 
 #define PORTA_SERVIDOR 9876
+#define CHAVE "DiJqWHqKtiDgZySAv7ZX"
 
 void * servidor(){
     

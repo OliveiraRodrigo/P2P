@@ -9,11 +9,12 @@
 #include "comandos.h"
 
 #define PORTA_SERVIDOR 9876
-#define SIZE 50
+#define MAX 50
 
 struct ips{
-    char * ip;
-} ips_list[SIZE];
+    char ip[MAX][20];
+    int size;
+} ips_list;
 
 char * ping(char * ip_meu, char * ip_destino){
     
@@ -221,8 +222,8 @@ int qual_comando(char * comando){
     if(!strcmp(comando, "ip"))
         return 4;
     if(!strcmp(comando, "q")) //"quit"
-        return 8;
-    return 9;
+        return 98;
+    return 99;
 }
 
 char * get_my_ip(){
@@ -253,14 +254,29 @@ char * insert_ip(char * novo_ip){
     static int i = 0;
     char * saida = (char*) malloc(100*sizeof(char));
     
-    if(i < SIZE){
-        ips_list[i].ip = (char*) malloc(20*sizeof(char));
-        strcpy(ips_list[i].ip, novo_ip);
-        sprintf(saida, "\n ::::: IP %s inserido com sucesso.\n", novo_ip);
+    if(i < MAX){
+        strcpy(ips_list.ip[i], novo_ip);
         i++;
+        ips_list.size = i;
+        sprintf(saida, "\n ::::: IP %s inserido com sucesso.\n", novo_ip);
     }
     else{
         sprintf(saida, "\n ::::: Erro: A lista de IPs esta cheia.\n", novo_ip);
+    }
+    
+    return saida;
+}
+
+char ** get_ips_list(){
+    
+    int i;
+    char ** saida;
+    
+    saida = (char**) malloc(ips_list.size*sizeof(char*));
+    for(i = 0; i < ips_list.size; i++){
+        printf("\n:: %d", i);
+        saida[i] = (char*) malloc(20*sizeof(char));
+        strcpy(saida[i], ips_list.ip[i]);
     }
     
     return saida;

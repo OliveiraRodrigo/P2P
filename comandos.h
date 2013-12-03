@@ -27,13 +27,9 @@ typedef struct{
     char * md5;
 } archive_def;
 
-void * cliente(/*char** parametros*/);
+void * cliente();
 
 void * servidor();
-
-char * get_my_ip();
-
-char * insert_ip(char * novo_ip);
 
 char * ping(char * meu_ip, char * seu_ip);
 
@@ -56,4 +52,12 @@ char * archive_request(char * arch_id, char * ip_meu, char * ip_destino);
 char * archive_request_back(int code, archive_def arch, char * ip_meu, char * ip_destino);
 
 char * end_connection(char * ip_meu, char * ip_destino);
+
+int qual_comando(char * comando);
+
+char * get_my_ip();
+
+char * insert_ip(char * novo_ip);
+
+char ** get_ips_list();
 

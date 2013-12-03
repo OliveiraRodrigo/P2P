@@ -9,6 +9,7 @@
 #include "comandos.h"
 
 #define PORTA_SERVIDOR 9876
+#define CHAVE "DiJqWHqKtiDgZySAv7ZX"
 
 void * cliente(/*char** parametros*/){
     
@@ -31,7 +32,7 @@ void * cliente(/*char** parametros*/){
         printf("\n P2P:> ");
         
         /* Aloca espaco para 4 parametros com 50 caracteres cada */
-        comando = (char**) malloc(4*sizeof(char));
+        comando = (char**) malloc(4*sizeof(char*));
         for(i = 0; i < 4; i++){
             comando[i] = (char*) malloc(50*sizeof(char));
         }
@@ -132,14 +133,16 @@ void * cliente(/*char** parametros*/){
             /* down */
             case 3:
                 break;
-            /* quit */
+            /* get my IP */
             case 4:
                 printf(" P2P:> %s", get_my_ip());
                 break;
-            case 8:
+            /* quit */
+            case 98:
                 quit = 1;
                 break;
-            case 9:
+            /* erro */
+            case 99:
                 printf("\n P2P:> Comando inexistente: '%s'", comando[0]);
                 break;
         }
