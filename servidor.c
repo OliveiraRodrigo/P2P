@@ -10,121 +10,91 @@
 
 #define PORTA_SERVIDOR 9876
 
-typedef struct{
-    char * type;        // "file" or "folder"
-    int    id;          // 1, 2, 3...
-    char * name;        // "nome do arquivo.txt"
-    char * size;        // "100", "15487"... (KB)
-    char * file;        // O arquivo em si (de algum jeito)(bin, hexa, base64...?)(char, int...?)
-    char * md5;
-} archive_def;
-
 void * servidor(){
-
-	int porta;
-	int nova_porta;
-	int tamanho;
-        int numbytes;
-	struct sockaddr_in endereco_meu;
-	struct sockaddr_in endereco_cliente;
-        struct hostent *me;
-        char * ip_meu = (char*) malloc(20*sizeof(char));
-        char * ip_cliente = (char*) malloc(20*sizeof(char));
-        char buffer[255];
-        char host_meu[128];
-        long addr_cliente;
     
-        gethostname(host_meu, sizeof host_meu);
-        printf("\nS: meu host: %s\n", host_meu);
-        if ((me=gethostbyname(host_meu)) == NULL) {
-            perror("\nS: erro: could not gethostbyname\n");
-            exit(1);
+    int porta, nova_porta, tamanho, numbytes;
+    struct sockaddr_in endereco_meu;
+    struct sockaddr_in endereco_cliente;
+    char buffer[255];
+    char * ip_meu     = (char*) malloc(20*sizeof(char));
+    char * ip_cliente = (char*) malloc(20*sizeof(char));
+    
+    ip_meu = get_my_ip();
+    //printf("\nS: meu ip: %s", ip_meu);
+    
+    /* cria socket. PF_INET define IPv4, SOCK_STREAM define TCP */
+    porta = socket(PF_INET, SOCK_STREAM, 0);
+    
+    /* verifica se foi criado */
+    if (porta == -1){
+        perror("\n ::::: Erro: porta nao foi criada corretamente");
+        exit(1);
+    }
+    
+    /* porta criada, agora faz o bind com o numero da porta desejado */
+    endereco_meu.sin_family = AF_INET;
+    endereco_meu.sin_port = htons(PORTA_SERVIDOR);
+    endereco_meu.sin_addr.s_addr = INADDR_ANY;
+    memset(&(endereco_meu.sin_zero), '\0', 8);
+    
+    if (bind(porta,(struct sockaddr *) &endereco_meu, sizeof(struct sockaddr_in)) == -1){
+        perror("\n ::::: Erro: servidor nao conseguiu fazer bind.\n");
+    }
+    
+    /* agora faz uma chamada ao listen*/
+    if (listen(porta,50)==-1){
+        perror("\n ::::: Erro: servidor tem problemas com o listen\n");
+        exit(1);
+    }
+    
+    //printf("\n Servidor Peer on-line, aguardando conexões.\n");
+    
+    /* agora verifica se ha conexoes */
+    while (1){
+        tamanho = sizeof(struct sockaddr_in);
+        
+        /*Fica esperando aqui*/
+        nova_porta = accept(porta, (struct sockaddr*)&endereco_cliente, &tamanho);
+        
+        ip_cliente = inet_ntoa(endereco_cliente.sin_addr);
+        //printf("\nip_cliente: %s", ip_cliente);
+        //printf("\nip_meu: %s", ip_meu);
+        
+        if (nova_porta==-1){
+            perror("\n ::::: Erro: servidor: accept retornou erro\n");
+            //exit(1);
+            break;
         }
         
-        endereco_meu.sin_family = PF_INET;
-        endereco_meu.sin_port = htons(PORTA_SERVIDOR);
-        endereco_meu.sin_addr.s_addr = INADDR_ANY;
-        endereco_meu.sin_addr = *((struct in_addr *)me->h_addr);
-    
-        memset(&(endereco_meu.sin_zero), '\0', 8);
-        ip_meu = inet_ntoa(endereco_meu.sin_addr);
-        printf("\nS: meu ip: %s ", ip_meu);
-	
-	/* cria socket. PF_INET define IPv4, SOCK_STREAM define TCP */
-	porta = socket(PF_INET, SOCK_STREAM, 0);
-	
-	/* verifica se foi criado */
-	if (porta == -1){
-		perror("\n ::::: erro: porta nao foi criada corretamente");
-		exit(1);	
-	}
-	
-	
-	/* porta criada, agora faz o bind com o numero da porta desejado */
-	endereco_meu.sin_family = AF_INET;
-	endereco_meu.sin_port = htons(PORTA_SERVIDOR);
-	endereco_meu.sin_addr.s_addr = INADDR_ANY;
-        //ip_meu = inet_ntoa(endereco_meu.sin_addr);
-	 
-	memset(&(endereco_meu.sin_zero), '\0', 8);
-	//printf("\nS: meu ip depois: %s ", ip_meu);
-	
-	if (bind(porta,(struct sockaddr *) &endereco_meu, sizeof(struct sockaddr_in)) == -1){
-		perror("\n ::::: erro: servidor nao conseguiu fazer bind\n");	
-	}
-	
-	/* agora faz uma chamada ao listen*/
-	if (listen(porta,50)==-1){
-		perror("\n ::::: erro: servidor tem problemas com o listen\n");
-		exit(1);
-	}
-	
-	/* agora verifica se ha conexoes */
-	printf("\n Servidor Peer on-line, aguardando conexões.\n");
+        if ((numbytes=recv(nova_porta, buffer, 254, 0)) == -1) {
+            perror("\n ::::: Erro: servidor: recv no cliente.\n");
+            //exit(1);
+            break;
+        }
+        buffer[numbytes] = '\0';
+        printf("\n ::::: Servidor recebeu: %s", buffer);
         
-	while (1){
-		tamanho = sizeof(struct sockaddr_in);
-		
-                /*Fica esperando aqui*/
-                nova_porta = accept(porta, (struct sockaddr*)&endereco_cliente, &tamanho);
+        /*Agora testa se foi um ping que foi recebido.*/
+        //printf("\n ::::: Ping pra comparar: %s", ping(ip_cliente, ip_meu));
+        if(!strcmp(buffer, ping(ip_cliente, ip_meu))){
+            printf("\n ::::: Servidor enviando pong...");
+            
+            if (fork()==0){ /* se for o filho */
+                close(porta); /* o filho nao aceita conexoes a mais */
                 
-                ip_cliente = inet_ntoa(endereco_cliente.sin_addr);
-                printf("\nip_cliente: %s", ip_cliente);
-                printf("\nip_meu: %s", ip_meu);
-		
-		if (nova_porta==-1){
-			perror("\n ::::: erro: servidor: accept retornou erro\n");
-			exit(1);
-		}
-                
-                /*Agora testa se foi um ping que foi recebido.*/
-                if ((numbytes=recv(nova_porta, buffer, 254, 0)) == -1) {
-                        perror("\n ::::: erro: servidor: recv no cliente.\n");
-                        exit(1);
+                if (send(nova_porta, pong(ip_meu, ip_cliente), 200, 0) == -1){
+                    perror("\n ::::: Erro: servidor nao conseguiu mandar mensagem");
                 }
-        	buffer[numbytes] = '\0';
-                printf("\n ::::: Servidor recebeu: %s", buffer);
-                printf("\n ::::: Ping pra comparar: %s", ping(ip_cliente, ip_meu));
-                if(!strcmp(buffer, ping(ip_cliente, ip_meu))){
-		    /* trata a conexao: simplesmente envia uma mensagem de volta */
-                    printf("\n ::::: Servidor enviando pong...");
-		
-		    if (fork()==0){ /* se for o filho */
-			close(porta); /* o filho nao aceita conexoes a mais */
-			
-			/*if (send(nova_porta, "Hello, world!\n", 14, 0) == -1)*/
-                        if (send(nova_porta, pong(ip_meu, ip_cliente), 200, 0) == -1)
-			    perror("\n ::::: erro: servidor nao conseguiu mandar mensagem");
-			
-			close(nova_porta);
-			exit(0); /* tao logo termine, o filho pode sair */
-                    }
-		}
-                send(nova_porta, "Erro no seu ping", 200, 0);
-		//close(nova_porta); /* essa parte somente o pai executa */
-	}
-	
-	//return 0; /* nunca chega aqui :-D */
+                
+                close(nova_porta);
+                exit(0); /* tao logo termine, o filho pode sair */
+            }
+        }
+        else{
+            send(nova_porta, "Erro no seu ping.", 200, 0);
+        }
+        //close(nova_porta); /* essa parte somente o pai executa */
+    }
 }
 
 char * pong(char * ip_meu, char * ip_destino){
