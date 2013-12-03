@@ -11,7 +11,7 @@
 #define PORTA_SERVIDOR 9876
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
 
-void * cliente(/*char** parametros*/){
+void * cliente(){
     
     int i, j, quit, porta_destino, numbytes;
     struct sockaddr_in endereco_destino;
@@ -111,7 +111,7 @@ void * cliente(/*char** parametros*/){
                     perror("\n P2P:> Erro: nao conseguiu mandar mensagem");
                 }
                 
-                if ((numbytes=recv(porta_destino, buffer, 254, 0)) == -1) {
+                if ((numbytes = recv(porta_destino, buffer, 254, 0)) == -1) {
                     perror("\n P2P:> Erro: recv no peer cliente\n");
                     //exit(1);
                     break;

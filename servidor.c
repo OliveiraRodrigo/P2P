@@ -66,28 +66,36 @@ void * servidor(){
             break;
         }
         
-        if ((numbytes=recv(nova_porta, buffer, 254, 0)) == -1) {
+        if ((numbytes = recv(nova_porta, buffer, 254, 0)) == -1) {
             perror("\n ::::: Erro: servidor: recv no cliente.\n");
             //exit(1);
             break;
         }
         buffer[numbytes] = '\0';
-        printf("\n ::::: Servidor recebeu: %s", buffer);
+        //printf("\n ::::: Servidor recebeu: %s\n", buffer);
         
         /*Agora testa se foi um ping que foi recebido.*/
-        printf("\n ::::: ping pra comparar: %s", ping(ip_cliente, ip_meu));
+        //printf("\n ::::: ping pra comparar: %s", ping(ip_cliente, ip_meu));
         if(!strcmp(buffer, ping(ip_cliente, ip_meu))){
-            printf("\n ::::: Servidor enviando pong...");
             
-            if (fork()==0){ /* se for o filho */
+            //printf("\n ::::: Servidor enviando pong...\n");
+            if (send(nova_porta, pong(ip_meu, ip_cliente), 200, 0) == -1){
+                    perror("\n ::::: Erro: servidor nao conseguiu mandar mensagem");
+            }
+            
+            if (fork()==0){ // se for o filho
+                //printf("\nxxxxx fork == 0 xxxxx\n");
                 close(porta); /* o filho nao aceita conexoes a mais */
                 
-                if (send(nova_porta, pong(ip_meu, ip_cliente), 200, 0) == -1){
+                /*if (send(nova_porta, pong(ip_meu, ip_cliente), 200, 0) == -1){
                     perror("\n ::::: Erro: servidor nao conseguiu mandar mensagem");
-                }
+                }*/
                 
                 close(nova_porta);
-                exit(0); /* tao logo termine, o filho pode sair */
+                exit(0); // tao logo termine, o filho pode sair
+            }
+            else{
+                //printf("\nxxxxx fork != 0 xxxxx\n");
             }
         }
         else{
