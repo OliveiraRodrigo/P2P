@@ -36,6 +36,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/cliente.o \
+	${OBJECTDIR}/comandos.o \
 	${OBJECTDIR}/p2p.o \
 	${OBJECTDIR}/servidor.o
 
@@ -68,6 +69,11 @@ ${OBJECTDIR}/cliente.o: cliente.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.c) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/cliente.o cliente.c
+
+${OBJECTDIR}/comandos.o: comandos.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/comandos.o comandos.c
 
 ${OBJECTDIR}/p2p.o: p2p.c 
 	${MKDIR} -p ${OBJECTDIR}

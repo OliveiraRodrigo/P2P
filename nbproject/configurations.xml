@@ -9,6 +9,7 @@
                    displayName="Arquivos de Código-Fonte"
                    projectFiles="true">
       <itemPath>cliente.c</itemPath>
+      <itemPath>comandos.c</itemPath>
       <itemPath>comandos.h</itemPath>
       <itemPath>p2p.c</itemPath>
       <itemPath>servidor.c</itemPath>
@@ -41,6 +42,8 @@
       </compileType>
       <item path="cliente.c" ex="false" tool="0" flavor2="0">
       </item>
+      <item path="comandos.c" ex="false" tool="0" flavor2="0">
+      </item>
       <item path="comandos.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="p2p.c" ex="false" tool="0" flavor2="0">
@@ -69,6 +72,8 @@
         </asmTool>
       </compileType>
       <item path="cliente.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="comandos.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="comandos.h" ex="false" tool="3" flavor2="0">
       </item>
