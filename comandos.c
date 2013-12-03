@@ -218,8 +218,10 @@ int qual_comando(char * comando){
         return 2;
     if(!strcmp(comando, "down"))
         return 3;
-    if(!strcmp(comando, "q")) //"quit"
+    if(!strcmp(comando, "ip"))
         return 4;
+    if(!strcmp(comando, "q")) //"quit"
+        return 8;
     return 9;
 }
 

@@ -19,8 +19,7 @@ void * servidor(){
     char * ip_meu     = (char*) malloc(20*sizeof(char));
     char * ip_cliente = (char*) malloc(20*sizeof(char));
     
-    ip_meu = get_my_ip();
-    //printf("\nS: meu ip: %s", ip_meu);
+    strcpy(ip_meu, get_my_ip());
     
     /* cria socket. PF_INET define IPv4, SOCK_STREAM define TCP */
     porta = socket(PF_INET, SOCK_STREAM, 0);
@@ -56,7 +55,7 @@ void * servidor(){
         /*Fica esperando aqui*/
         nova_porta = accept(porta, (struct sockaddr*)&endereco_cliente, &tamanho);
         
-        ip_cliente = inet_ntoa(endereco_cliente.sin_addr);
+        strcpy(ip_cliente, inet_ntoa(endereco_cliente.sin_addr));
         //printf("\nip_cliente: %s", ip_cliente);
         //printf("\nip_meu: %s", ip_meu);
         
@@ -75,7 +74,7 @@ void * servidor(){
         printf("\n ::::: Servidor recebeu: %s", buffer);
         
         /*Agora testa se foi um ping que foi recebido.*/
-        //printf("\n ::::: Ping pra comparar: %s", ping(ip_cliente, ip_meu));
+        printf("\n ::::: ping pra comparar: %s", ping(ip_cliente, ip_meu));
         if(!strcmp(buffer, ping(ip_cliente, ip_meu))){
             printf("\n ::::: Servidor enviando pong...");
             

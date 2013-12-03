@@ -21,7 +21,7 @@ void * cliente(/*char** parametros*/){
     char * ip_meu     = (char*) malloc(20*sizeof(char));
     char * ip_destino = (char*) malloc(20*sizeof(char));
     
-    ip_meu = get_my_ip();
+    strcpy(ip_meu, get_my_ip());
     
 /* Recebe comandos enquanto um deles nao for "quit" ***************************/
     quit = 0;
@@ -134,10 +134,13 @@ void * cliente(/*char** parametros*/){
                 break;
             /* quit */
             case 4:
+                printf(" P2P:> %s", get_my_ip());
+                break;
+            case 8:
                 quit = 1;
                 break;
             case 9:
-                printf("\n P2P:> Comando inexistente: %s", comando[0]);
+                printf("\n P2P:> Comando inexistente: '%s'", comando[0]);
                 break;
         }
     }
