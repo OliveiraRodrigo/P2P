@@ -18,6 +18,23 @@ extern "C" {
 
 #endif	/* COMANDOS_H */
 
+#define MAX 50
+
+typedef struct proto{
+    char protocol[5];
+    char command[20];
+    int    status;
+    char passport[30];
+    char back[200];
+    char sender[20];
+    char receptor[20];
+} protocolo;
+
+typedef struct ips{
+    char ip[MAX][20];
+    int size;
+} ips_list;
+
 typedef struct{
     char * type;        // "file" or "folder"
     int    id;          // 1, 2, 3...
@@ -61,7 +78,7 @@ char * insert_ip(char * novo_ip);
 
 char ** get_ips_list();
 
-int set_proto(char * prot);
+protocolo set_proto(char * entrada);
 
 int set_ips_list(char * proto_back);
 

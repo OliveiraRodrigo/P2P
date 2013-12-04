@@ -13,12 +13,13 @@
 
 void * servidor(){
     
-    int porta, nova_porta, tamanho, numbytes, again;
+    int porta, nova_porta, tamanho, numbytes, logado;
     struct sockaddr_in endereco_meu;
     struct sockaddr_in endereco_cliente;
     char buffer[255];
     char * ip_meu     = (char*) malloc(20*sizeof(char));
     char * ip_cliente = (char*) malloc(20*sizeof(char));
+    //ips_list ips_in;
     
     strcpy(ip_meu, get_my_ip());
     
@@ -84,8 +85,8 @@ void * servidor(){
             }
             else{
                 //Espera um 'authenticate'
-                again = 1;
-                while(again){
+                logado = 0;
+                while(!logado){
                     if ((numbytes = recv(nova_porta, buffer, 254, 0)) == -1) {
                         perror("\n ::::: Erro: Servidor nao conseguiu receber 'authenticate'.\n");
                         //exit(1);
@@ -98,12 +99,31 @@ void * servidor(){
                     if(!strcmp(buffer, authenticate(CHAVE, ip_cliente, ip_meu))){
                         // Autenticacao aceita
                         //printf("\n ::::: Servidor enviando authenticate-back...\n");
-                        again = 0;
+                        logado = 1;
                         if (send(nova_porta, authenticate_back(200, ip_meu, ip_cliente), 200, 0) == -1){
                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'authenticate-back'.");
                         }
                         else{
                             //Espera outras solicitacoes do cliente.
+                            
+                            //Espera agent-list
+                            if ((numbytes = recv(nova_porta, buffer, 254, 0)) == -1) {
+                                perror("\n ::::: Erro: Servidor nao conseguiu receber.\n");
+                                //exit(1);
+                                break;
+                            }
+
+                            buffer[numbytes] = '\0';
+                            
+                            //Testa se recebeu agent_list
+                            
+                            //Envia agent-list-back
+                            insert_ip("123.45.6.7");
+                            insert_ip("5.55.5.555");
+                            insert_ip("7.0.0.0");
+                            if (send(nova_porta, agent_list_back(200, get_ips_list(), ip_meu, ip_cliente), 200, 0) == -1){
+                                perror("\n ::::: Erro: servidor nao conseguiu enviar 'agent-list-back'.");
+                            }
                         }
                     }
                     // Autenticacao nao aceita: envia codigo 203.

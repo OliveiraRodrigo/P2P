@@ -11,20 +11,7 @@
 #define PORTA_SERVIDOR 9876
 #define MAX 50
 
-struct ips{
-    char ip[MAX][20];
-    int size;
-} ips_list;
-
-struct proto{
-    char * protocol;
-    char * command;
-    int    status;
-    char * passport;
-    char * back;
-    char * sender;
-    char * receptor;
-} protocolo;
+ips_list ips;
 
 char * ping(char * ip_meu, char * ip_destino){
     
@@ -262,12 +249,13 @@ char * get_my_ip(){
 char * insert_ip(char * novo_ip){
     
     static int i = 0;
+    static ips_list ips;
     char * saida = (char*) malloc(100*sizeof(char));
     
     if(i < MAX){
-        strcpy(ips_list.ip[i], novo_ip);
+        strcpy(ips.ip[i], novo_ip);
         i++;
-        ips_list.size = i;
+        ips.size = i;
         sprintf(saida, "\n ::::: IP %s inserido com sucesso.\n", novo_ip);
     }
     else{
@@ -282,84 +270,101 @@ char ** get_ips_list(){
     int i;
     char ** saida;
     
-    saida = (char**) malloc(ips_list.size*sizeof(char*));
-    for(i = 0; i < ips_list.size; i++){
+    saida = (char**) malloc(ips.size*sizeof(char*));
+    for(i = 0; i < ips.size; i++){
         printf("\n:: %d", i);
         saida[i] = (char*) malloc(20*sizeof(char));
-        strcpy(saida[i], ips_list.ip[i]);
+        strcpy(saida[i], ips.ip[i]);
     }
     
     return saida;
 }
 
-int set_proto(char * prot){
-    /*
+protocolo set_proto(char * entrada){
+printf(" 1 ");
     int i, j;
+    protocolo proto;
     char * field = (char*) malloc(20*sizeof(char));
     char * data = (char*) malloc(200*sizeof(char));
+printf(" 2 ");
     
     i = 0;
-    if(prot[i] == '{'){
+    if(entrada[i] == '{'){
+printf("%c",entrada[i]);
             i++;
-            while(prot[i] != '}'){
+printf("%c",entrada[i]);
+            while(entrada[i] != '}'){
                 j = 0;
-                while(prot[i] == ' '){
+                while(entrada[i] == ' '){
                     i++;
+printf("%c",entrada[i]);
                 }
-                while(prot[i] != ':'){
-                    field[j] = prot[i];
+                while(entrada[i] != ':'){
+                    field[j] = entrada[i];
                     i++;
                     j++;
+printf("%c",entrada[i]);
                 }
                 i++;
+printf("%c",entrada[i]);
                 field[j] = '\0';
                 j = 0;
-                if(prot[i] == '"'){
+                if(entrada[i] == '"'){
                     i++;
-                    while(prot[i] != '"'){
-                        data[j] = prot[i];
+printf("%c",entrada[i]);
+                    while(entrada[i] != '"'){
+                        data[j] = entrada[i];
                         i++;
                         j++;
+printf("%c",entrada[i]);
                     }
                     i++;
+printf("%c",entrada[i]);
                     data[j] = '\0';
                     j = 0;
                     if(!strcmp(field, "protocol")){
-                        protocolo.protocol = (char*) malloc(10);
-                        strcpy(protocolo.protocol, data);
+                        //proto.protocol = (char*) malloc(10);
+                        strcpy(proto.protocol, data);
+printf("%s",data);
                     }
                     else{
                         if(!strcmp(field, "command")){
-                            protocolo.protocol = (char*) malloc(20);
-                            strcpy(protocolo.command, data);
+                            //proto.protocol = (char*) malloc(20);
+                            strcpy(proto.command, data);
+printf("%s",data);
                         }
                         else{
                             if(!strcmp(field, "status")){
-                                protocolo.status = atoi(data);
+                                proto.status = atoi(data);
+printf("%d",atoi(data));
                             }
                             else{
                                 if(!strcmp(field, "passport")){
-                                    protocolo.protocol = (char*) malloc(32);
-                                    strcpy(protocolo.passport, data);
+                                    //proto.protocol = (char*) malloc(32);
+                                    strcpy(proto.passport, data);
+printf("%s",data);
                                 }
                                 else{
                                     if(!strcmp(field, "back")){
-                                        protocolo.protocol = (char*) malloc(200);
-                                        strcpy(protocolo.back, data);
+                                        //proto.protocol = (char*) malloc(200);
+                                        strcpy(proto.back, data);
                                         //archive_request_back eh um problema
+printf("%s",data);
                                     }
                                     else{
                                         if(!strcmp(field, "sender")){
-                                            protocolo.protocol = (char*) malloc(20);
-                                            strcpy(protocolo.sender, data);
+                                            //proto.protocol = (char*) malloc(20);
+                                            strcpy(proto.sender, data);
+printf("%s",data);
                                         }
                                         else{
                                             if(!strcmp(field, "receptor")){
-                                                protocolo.protocol = (char*) malloc(20);
-                                                strcpy(protocolo.receptor, data);
+                                              //proto.protocol = (char*) malloc(20);
+                                                strcpy(proto.receptor, data);
+printf("%s",data);
                                             }
                                             else{
-                                                return 400;
+                                                //erro
                                             }
                                         }
                                     }
@@ -367,24 +372,25 @@ int set_proto(char * prot){
                             }
                         }
                     }
-                    while(prot[i] != ','){
-                        if(prot[i] == ' ')
+                    while(entrada[i] != ','){
+                        if(entrada[i] == ' '){
                             i++;
+printf("%c",entrada[i]);
+                        }
                         else{
-                            return 400;
+                            //erro
                         }
                     }
                     i++;
+printf("%c",entrada[i]);
                 }
             }
     }
     else{
-        return 400;
+        //erro
     }
-    set_ips_list(protocolo.back);
     
-    return protocolo.status;*/
-    return 200;
+    return proto;
 }
 
 int set_ips_list(char * proto_back){

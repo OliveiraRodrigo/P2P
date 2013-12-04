@@ -17,10 +17,11 @@ void * cliente(){
     struct sockaddr_in endereco_destino;
     struct hostent *he;
     long addr_destino;
-    char buffer[255];
+    char buffer[1000];
     char ** comando;
     char * ip_meu     = (char*) malloc(20*sizeof(char));
     char * ip_destino = (char*) malloc(20*sizeof(char));
+    protocolo proto_in;
     
     strcpy(ip_meu, get_my_ip());
     
@@ -138,7 +139,7 @@ void * cliente(){
                     break;
                 }
                 printf("\n P2P:> Autenticando-se com %s...", ip_destino);
-                printf("\n P2P:> %s", authenticate(CHAVE, ip_meu, ip_destino));
+                //printf("\n P2P:> %s", authenticate(CHAVE, ip_meu, ip_destino));
                 if (send(porta_destino, authenticate(CHAVE, ip_meu, ip_destino), 200, 0) == -1){
                     perror("\n P2P:> Erro: nao conseguiu enviar autenticacao.");
                 }
@@ -158,19 +159,21 @@ void * cliente(){
                     printf("\n P2P:> Autenticacao com %s aceita.\n", ip_destino);
                     seq = 2;
                     // Solicita um agent-list
+                    printf("\n P2P:> Solicitando agent-list...\n");
                     if (send(porta_destino, agent_list(ip_meu, ip_destino), 200, 0) == -1){
                         perror("\n P2P:> Erro: nao conseguiu enviar 'agent-list'.");
                     }
-                    
-                    if ((numbytes = recv(porta_destino, buffer, 254, 0)) == -1) {
+                    if ((numbytes = recv(porta_destino, buffer, 999, 0)) == -1) {
                         perror("\n P2P:> Erro: nao obteve resposta.\n");
                         //exit(1);
                         break;
                     }
                     buffer[numbytes] = '\0';
-                    //printf("\n P2P:> Cliente recebeu: %s", buffer);
+                    //printf("\n P2P:> Cliente recebeu: %s.\n", buffer);
                     // Testa se o recebido foi um agent-list-back.
-                    codigo = set_proto(buffer);
+                    proto_in = set_proto(buffer);
+                    set_ips_list(proto_in.back);
+                    codigo = proto_in.status;
                     if(codigo == 200){
                         printf("\n P2P:> Lista de IPs recebida e inserida na lista local.\n");
                     }
