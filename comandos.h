@@ -23,11 +23,13 @@ extern "C" {
 typedef struct proto{
     char protocol[5];
     char command[20];
-    int    status;
+    int  status;
     char passport[30];
     char back[200];
+    int id;
     char sender[20];
     char receptor[20];
+    int  ok;
 } protocolo;
 
 typedef struct ips{
@@ -54,7 +56,7 @@ char * pong(char * meu_ip, char * seu_ip);
 
 char * agent_list(char * meu_ip, char * seu_ip);
 
-char * agent_list_back();
+char * agent_list_back(int code, char * ips_string, char * ip_meu, char * ip_destino);
 
 char * authenticate(char * pass, char * ip_meu, char * ip_destino);
 
@@ -74,11 +76,13 @@ int qual_comando(char * comando);
 
 char * get_my_ip();
 
-char * insert_ip(char * novo_ip);
+int insert_ip(char * ips_string, char * novo_ip);
 
-char ** get_ips_list();
+int remove_ip(char * ips_string, char * target);
+
+//char ** get_ips_list();
 
 protocolo set_proto(char * entrada);
 
-int set_ips_list(char * proto_back);
+//int set_ips_list(char * proto_back);
 

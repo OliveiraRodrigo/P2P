@@ -82,21 +82,9 @@ char * agent_list(char * ip_meu, char * ip_destino){
     return saida;
 }
 
-char * agent_list_back(int code, char ** ips, char * ip_meu, char * ip_destino){
+char * agent_list_back(int code, char * ips_string, char * ip_meu, char * ip_destino){
     
     char * saida     = (char*) malloc(200 * sizeof(char));
-    char * ips_list  = (char*) malloc(200 * sizeof(char));
-    int i;
-    
-    i = 0;
-    sprintf(ips_list, "%s", ips[i]);
-    i++;
-    ips++;
-    while(**ips){
-        sprintf(ips_list, "%s,%s", ips_list, ips[i]);
-        i++;
-        ips++;
-    }
     
     //saida = " ";
     sprintf(saida, "{protocol:\"pcmj\", "
@@ -104,7 +92,7 @@ char * agent_list_back(int code, char ** ips, char * ip_meu, char * ip_destino){
                    "status:\"%d\", "
                    "back:\"[%s\"], "
                    "sender:\"%s\", "
-                   "receptor:\"%s\"}", code, ips_list, ip_meu, ip_destino);
+                   "receptor:\"%s\"}", code, ips_string, ip_meu, ip_destino);
     
     return saida;
 }
@@ -218,6 +206,8 @@ int qual_comando(char * comando){
         return 3;
     if(!strcmp(comando, "ip"))
         return 4;
+    if(!strcmp(comando, "setip"))
+        return 5;
     if(!strcmp(comando, "q")) //"quit"
         return 98;
     return 99;
@@ -246,29 +236,88 @@ char * get_my_ip(){
     return ip;
 }
 
-char * insert_ip(char * novo_ip){
+int insert_ip(char * ips_string, char * novo_ip){
     
-    static int i = 0;
-    static ips_list ips;
-    char * saida = (char*) malloc(100*sizeof(char));
+//    static int i = 0;
+//    static ips_list ips;
+//    char * saida = (char*) malloc(1000*sizeof(char));
     
-    if(i < MAX){
-        strcpy(ips.ip[i], novo_ip);
-        i++;
-        ips.size = i;
-        sprintf(saida, "\n ::::: IP %s inserido com sucesso.\n", novo_ip);
+    if(strlen(ips_string) <= 2){
+        strcpy(ips_string, novo_ip);
     }
     else{
-        sprintf(saida, "\n ::::: Erro: A lista de IPs esta cheia.\n", novo_ip);
+        sprintf(ips_string, "%s,%s", ips_string, novo_ip);
     }
     
-    return saida;
+//    if(i < MAX){
+//        strcpy(ips.ip[i], novo_ip);
+//        i++;
+//        ips.size = i;
+//        sprintf(saida, "\n ::::: IP %s inserido com sucesso.\n", novo_ip);
+//    }
+//    else{
+//        sprintf(saida, "\n ::::: Erro: A lista de IPs esta cheia.\n", novo_ip);
+//    }
+    
+    return 0;
 }
 
+int remove_ip(char * ips_string, char * target){
+    
+///////////////////////////////////////////////////////
+// Igual set_ips_list, com as modificacoes necessarias.
+    int i, j;
+    char * ip;
+    char * temp;
+    
+    ip = (char*) malloc(20*sizeof(char));
+    temp = (char*) malloc(1000*sizeof(char));
+    
+    strcpy(temp, ips_string); //Salva uma copia pra comparar
+    strcpy(ips_string, "x"); //Zera pra reinserir tudo exceto o target
+    //Eu sei que eh um baita enjambre, mas to sem tempo.
+    
+    i = 1;
+    j =0;
+    while(temp[i] != ']'){
+        while((temp[i] != ',') && (temp[i] != ']')){
+            ip[j] = temp[i];
+            i++;
+            j++;
+            if(j >= 20){
+                break;
+            }
+        }
+        ip[j] = '\0';
+        if(strcmp(ip, target)){
+            insert_ip(temp, ip);
+        }
+        i++;
+        j = 0;
+        if(i >= strlen(temp)){
+            break;
+        }
+    }
+///////////////////////////////////////////////////////
+    return 0;
+}
+/*
 char ** get_ips_list(){
     
     int i;
     char ** saida;
+
+//    char * ips_list  = (char*) malloc(200 * sizeof(char));
+//    int i;
+//    i = 0;
+//    sprintf(ips_list, "%s", ips[i]);
+//    i++;
+//    ips++;
+//    while(**ips){
+//        sprintf(ips_list, "%s,%s", ips_list, ips[i]);
+//        i++;
+//        ips++;
+//    }
     
     saida = (char**) malloc(ips.size*sizeof(char*));
     for(i = 0; i < ips.size; i++){
@@ -279,14 +328,23 @@ char ** get_ips_list(){
     
     return saida;
 }
-
+*/
 protocolo set_proto(char * entrada){
-printf(" 1 ");
+    
     int i, j;
     protocolo proto;
     char * field = (char*) malloc(20*sizeof(char));
     char * data = (char*) malloc(200*sizeof(char));
-printf(" 2 ");
+    
+    //Zera tudo
+    strcpy(proto.protocol, "x");
+    strcpy(proto.command, "x");
+    proto.status = 0;
+    strcpy(proto.passport, "x");
+    strcpy(proto.back, "x");
+    strcpy(proto.sender, "x");
+    strcpy(proto.receptor, "x");
+    proto.ok = 0;
     
     i = 0;
     if(entrada[i] == '{'){
@@ -365,6 +423,7 @@ printf("%s",data);
                                             }
                                             else{
                                                 //erro
+                                                return proto;
                                             }
                                         }
                                     }
@@ -379,6 +438,7 @@ printf("%c",entrada[i]);
                         }
                         else{
                             //erro
+                            return proto;
                         }
                     }
                     i++;
@@ -388,11 +448,12 @@ printf("%c",entrada[i]);
     }
     else{
         //erro
+        return proto;
     }
-    
+    proto.ok = 1;
     return proto;
 }
-
+/*
 int set_ips_list(char * proto_back){
     
     int i, j;
@@ -421,3 +482,4 @@ int set_ips_list(char * proto_back){
     }
     return 1;
 }
+*/

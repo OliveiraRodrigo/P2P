@@ -172,7 +172,7 @@ void * cliente(){
                     //printf("\n P2P:> Cliente recebeu: %s.\n", buffer);
                     // Testa se o recebido foi um agent-list-back.
                     proto_in = set_proto(buffer);
-                    set_ips_list(proto_in.back);
+                    //set_ips_list(proto_in.back);
                     codigo = proto_in.status;
                     if(codigo == 200){
                         printf("\n P2P:> Lista de IPs recebida e inserida na lista local.\n");
@@ -193,7 +193,13 @@ void * cliente(){
                 break;
             /* get my IP */
             case 4:
-                printf(" P2P:> %s", get_my_ip());
+                strcpy(ip_meu, get_my_ip());
+                printf(" P2P:> %s", ip_meu);
+                break;
+            /* informo o meu IP, caso get_my_ip nao de certo */
+            case 5:
+                strcpy(ip_meu, comando[1]);
+                printf(" P2P:> Ok: usando %s como meu IP.", ip_meu);
                 break;
             /* quit */
             case 98:
