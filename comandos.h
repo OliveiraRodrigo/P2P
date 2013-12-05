@@ -74,6 +74,10 @@ char * end_connection(char * ip_meu, char * ip_destino);
 
 int qual_comando(char * comando);
 
+char ** get_command();
+
+int run_command(char ** comando, char * ip_return, int * quit);
+
 char * get_my_ip();
 
 int insert_ip(char * ips_string, char * novo_ip);
@@ -85,4 +89,6 @@ int remove_ip(char * ips_string, char * target);
 protocolo set_proto(char * entrada);
 
 //int set_ips_list(char * proto_back);
+
+void help();
 

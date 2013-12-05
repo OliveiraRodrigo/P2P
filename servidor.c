@@ -53,7 +53,7 @@ void * servidor(){
     
     //printf("\n Servidor Peer on-line, aguardando conexões.\n");
     
-    /* agora verifica se ha conexoes */
+/* Aguarda conexoes ***********************************************************/
     while (1){
         tamanho = sizeof(struct sockaddr_in);
         

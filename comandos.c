@@ -194,6 +194,37 @@ char * end_connection(char * ip_meu, char * ip_destino){
     return saida;
 }
 
+char ** get_command(){
+/* Recebe os parametros caracter a caracter ***********************************/
+        
+    int i, j;
+    char ** saida;
+    
+    /* Aloca espaco para 4 parametros com 50 caracteres cada */
+        saida = (char**) malloc(4*sizeof(char*));
+        for(i = 0; i < 4; i++){
+            saida[i] = (char*) malloc(50*sizeof(char));
+        }
+        
+        i = 0;
+        j = 0;
+        saida[i][j] = getchar();
+        j++;
+        while(saida[i][j-1] != '\n'){
+            saida[i][j] = getchar();
+            if(saida[i][j] == ' '){
+                saida[i][j] = '\0'; // Descarta o ' '.
+                j = 0;
+                i++;
+            }
+            else{
+                j++;
+            }
+        }
+        saida[i][j-1] = '\0'; // Descarta o '\n'.
+        return saida;
+}
+
 int qual_comando(char * comando){
     
     if(!strcmp(comando, "try"))
@@ -208,9 +239,32 @@ int qual_comando(char * comando){
         return 4;
     if(!strcmp(comando, "setip"))
         return 5;
+    if(!strcmp(comando, "help"))
+        return 97;
     if(!strcmp(comando, "q")) //"quit"
         return 98;
     return 99;
+}
+
+int run_command(char ** comando, char * ip_return, int * quit_return){
+    
+    if(!strcmp(comando[0], "ip")){
+        strcpy(ip_return, get_my_ip());
+        return 1;
+    }
+    if(!strcmp(comando[0], "setip")){
+        strcpy(ip_return, comando[1]);
+        return 1;
+    }
+    if(!strcmp(comando[0], "help")){
+        help();
+        return 1;
+    }
+    if(!strcmp(comando[0], "q")){ //"quit"
+        *quit_return = 1;
+        return 1;
+    }
+    return 0;
 }
 
 char * get_my_ip(){
@@ -231,8 +285,8 @@ char * get_my_ip(){
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_addr = *((struct in_addr *)he->h_addr);
     memset(&(addr.sin_zero), '\0', 8);
-    ip = inet_ntoa(addr.sin_addr);
-    //printf("\n meu ip: %s ", ip_meu);
+    strcpy(ip, inet_ntoa(addr.sin_addr));
+    printf("\n P2P:> %s\n", ip);
     return ip;
 }
 
@@ -550,3 +604,31 @@ int set_ips_list(char * proto_back){
     return 1;
 }
 */
+void help(){
+    
+    printf("\n\n");
+    printf("\n== HELP ====================================\n");
+    printf("\n"
+           " try <IP>             Manda um ping pra <IP> e espera dele um pong.\n"
+           "\n"
+           " login                Tenta autenticar-se com o mesmo IP.\n"
+           "\n"
+           " list-users           Solicita a lista de usuarios do peer atual.\n"
+           "                      Insere na lista local os IPs recebidos e retorna\n"
+           "                      a lista para o usuario. Precisa estar logado.\n"
+           "\n"
+           " list-files           Solicita a lista de arquivos do peer atual.\n"
+           "                      Retorna a lista para o usuario. Precisa estar logado.\n"
+           "\n"
+           " down <id>            Solicita ao peer atual o arquivo de id:\"<id>\".\n"
+           "                      Se confirmada a disponibilidade, recebe o arquivo.\n"
+           "                      Precisa estar logado.\n"
+           "\n"
+           " logout               Desconecta-se do peer atual e solicita a exclusao\n"
+           "                      da lista de IPs deste.\n"
+           "\n"
+           " quit                 Executa logout e sai do programa.\n"
+           "\n");
+    printf("\n __________________________________________\n");
+    
+}
