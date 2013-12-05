@@ -13,11 +13,11 @@
 
 void * cliente(){
     
-    int i, j, pong, logado, logout, seq, quit;
+    int i, j, pong, logado, logout, seq, esc_sessao, quit;
     int porta_destino, numbytes, codigo;
     struct sockaddr_in endereco_destino;
     struct hostent *he;
-    long addr_destino;
+    long addr_destino, temp_addr;
     char buffer[1000];
     char ** comando;
     char * ip_meu     = (char*) malloc(20*sizeof(char));
@@ -25,6 +25,13 @@ void * cliente(){
     protocolo protoin;
     archive_def * files;
     
+    /* Aloca espaco para 4 parametros com 50 caracteres cada */
+    comando = (char**) malloc(4*sizeof(char*));
+    for(i = 0; i < 4; i++){
+        comando[i] = (char*) calloc(50,sizeof(char));
+    }
+    
+    /* Detecta o IP local e o armazena em 'ip_meu' */
     strcpy(ip_meu, get_my_ip());
     
 /* Recebe comandos enquanto um deles nao for "quit" ***************************/
@@ -34,22 +41,19 @@ void * cliente(){
 /* Envia ping, espera pong ****************************************************/
         pong = 0;
         while(!pong && !quit){
+            printf("\nentrou no ping");
+            comando = get_command();
             
-        /* Aloca espaco para 4 parametros com 50 caracteres cada */
-        comando = (char**) malloc(4*sizeof(char*));
-        for(i = 0; i < 4; i++){
-            comando[i] = (char*) calloc(50,sizeof(char));
-        }
-        comando = get_command();
-            
-            if(!run_command(comando, ip_meu, &quit)){
+            if(!run_command(comando, ip_meu, &esc_sessao, &quit)){
                 
                 if(!strcmp(comando[0], "try")){
-                    
+// Se voltar pra ca, ele cria uma nova porta, entao nao conecta mais com o q estava antes                    
+                    temp_addr = addr_destino;
                     addr_destino = inet_addr(comando[1]);
                     
                     if((he=gethostbyaddr((char *) &addr_destino, sizeof(addr_destino), AF_INET)) == NULL) {
                         printf("\n P2P:> Erro: Nao foi possivel localizar '%s'.\n", comando[1]);
+                        addr_destino = temp_addr;
                         break;
                     }
                     
@@ -91,38 +95,83 @@ void * cliente(){
                     protoin = set_proto(buffer/*"{protocol:\"pcmj\", command:\"ping\", sender:\"1.1.1.1\", receptor:\"2.2.2.2\"}"*/);
                     if(protoin.ok && !strcmp(protoin.command, "pong")){
                         pong = 1;
-                        printf("\n P2P:> %s respondu corretamente.\n", ip_destino);
+                        printf("\n P2P:> %s respondeu corretamente.\n", ip_destino);
                     }
                     else{
                         printf("\n P2P:> Erro: %s retornou codigo %d.\n", ip_destino, protoin.status);
                     }
                 }
                 else{
-                    printf("\n P2P:> Comando inexisteste: '%s'\n", comando[0]);
+                    printf("\n P2P:> Comando inesperado: '%s'\n", comando[0]);
                 }
             }
-        }
+        //}
         
 /* Envia authenticate, espera authenticate-back *******************************/
-/*
-  logado = 0
-  while(!logado){
-	
-	aceita comandos do usuário
-	
-	if(comando interno ou fora-de-hora)
-		executa função interna ou explica o fora-de-hora
-	
-	else if(comando == login)
-		send(authenticate)
-		recv(buffer)
-		if(buffer tem authenticate-back 200)
-			logado = 1
-			mostra autenticado
-		else
-			mostra o erro recebido
-  }
-*/
+        logado = 0;
+        esc_sessao = 0;
+        while(pong && !logado && !esc_sessao){
+            printf("\nentrou no login");
+            comando = get_command();
+            
+            if(!run_command(comando, ip_meu, &esc_sessao, &quit)){
+                
+                if(!strcmp(comando[0], "login")){
+                    printf("\n P2P:> Enviando authenticate...");
+                    //printf("\n P2P:> %s", authenticate(ip_meu, ip_destino));
+                    if(send(porta_destino, authenticate(CHAVE, ip_meu, ip_destino), 200,0) == -1){
+                        perror("\n P2P:> Erro: nao conseguiu enviar 'authenticate'");
+                    }
+                    if((numbytes = recv(porta_destino, buffer, 999, 0)) == -1) {
+                        perror("\n P2P:> Erro: nao conseguiu receber 'pong'\n");
+                        break;
+                    }
+                    
+                    buffer[numbytes] = '\0';
+                    
+                    //printf("\n P2P:> Cliente recebeu: %s", buffer);
+                    
+                    //Testa se recebeu um authenticate-back ok.
+                    protoin = set_proto(buffer);
+                    if(protoin.ok){
+                        if(!strcmp(protoin.command, "authenticate-back")){
+                            if(protoin.status == 200){
+                                logado = 1;
+                                printf("\n P2P:> Autenticacao com %s aceita.\n", ip_destino);
+                            }
+                            else{
+                                printf("\n P2P:> Erro: autenticacao com %s falhou. Codigo %d.\n", ip_destino, protoin.status);
+                            }
+                        }
+                        else{
+                            printf("\n P2P:> Eu esperava 'authenticate-back'. %s enviou '%s'.\n", ip_destino, protoin.command);
+                        }
+                    }
+                    else{
+                        printf("\n P2P:> Erro: %s retornou um protocolo incompativel.\n", ip_destino);
+                    }
+                }
+                /*else{
+                if(!strcmp(comando[0], "try")){
+                    send(porta_destino, ping(ip_meu, ip_destino), 200, 0);
+                    numbytes = recv(porta_destino, buffer, 999, 0);
+                    buffer[numbytes] = '\0';
+                    printf("\n P2P:> Cliente recebeu: %s", buffer);
+                }*/
+                else{
+                    printf("\n P2P:> Comando inesperado: '%s'\n", comando[0]);
+                }
+            //}
+            }
+            
+///////////Colocar AQUI a parte "Executa qualquer comando".
+            
+        }//while do login
+        printf("\nsaiu do login");
+        pong = 0;
+        }//while do ping
+        printf("\nsaiu do ping");
+
 /* Executa qualquer comando ***************************************************/
 /*
   logout = 0

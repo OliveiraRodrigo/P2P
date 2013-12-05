@@ -213,6 +213,7 @@ char ** get_command(){
         j = 0;
         saida[i][j] = getchar();
         j++;
+        
         while(saida[i][j-1] != '\n'){
             saida[i][j] = getchar();
             if(saida[i][j] == ' '){
@@ -249,11 +250,11 @@ int qual_comando(char * comando){
     return 99;
 }
 */
-int run_command(char ** comando, char * ip_return, int * quit_return){
+int run_command(char ** comando, char * ip_return, int * esc_return, int * quit_return){
     
     if(!strcmp(comando[0], "ip")){
         strcpy(ip_return, get_my_ip());
-        printf("\n P2P:> %s\n", ip_return);
+        printf(" P2P:> %s\n", ip_return);
         return 1;
     }
     if(!strcmp(comando[0], "setip")){ //get_mey_ip nao ta funfando no Linux
@@ -265,7 +266,13 @@ int run_command(char ** comando, char * ip_return, int * quit_return){
         help();
         return 1;
     }
+    if(!strcmp(comando[0], "z")){
+        printf(" P2P:> Encerrou sessao atual de login.\n");
+        *esc_return = 1;
+        return 1;
+    }
     if(!strcmp(comando[0], "q")){ //"quit"
+        *esc_return = 1;
         *quit_return = 1;
         return 1;
     }

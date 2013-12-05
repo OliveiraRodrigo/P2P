@@ -73,6 +73,7 @@ void * servidor(){
 /* Espera ping, envia pong ****************************************************/
         ping = 0;
         while(!ping){
+            printf("\nservidor entrou no ping.");
             if ((numbytes = recv(nova_porta, buffer, 999, 0)) == -1) {
                 perror("\n ::::: Erro: Servidor nao conseguiu receber 'ping'.\n");
                 break;
@@ -93,12 +94,14 @@ void * servidor(){
                 send(nova_porta, "Erro: eu esperava um 'ping'.", 200, 0);
             }
         }
-        
+        printf("\nservidor saiu do ping.");
 /* Espera authenticate, envia authenticate-back *******************************/
+/* Tambem aceita ping, devolve pong *******************************************/
         logado = 0;
         while(!logado){
+            printf("\nservidor entrou no login.");
             if((numbytes = recv(nova_porta, buffer, 999, 0)) == -1) {
-                perror("\n ::::: Erro: Servidor nao conseguiu receber 'authenticate'.\n");
+                perror("\n ::::: Erro: Servidor nao conseguiu receber.\n");
                 break;
             }
             buffer[numbytes] = '\0';
@@ -120,18 +123,25 @@ void * servidor(){
                     }
                 }
                 else{
-                    send(nova_porta, "Erro 401: eu esperava um 'authenticate'.", 200, 0);
-                    //O correto seria enviar com codigo 401 o mesmo comando recebido.
+                    if(!strcmp(protoin.command, "ping")){
+                        printf("\nservidor vai enviar pong.");
+                        send(nova_porta, pong(ip_meu, ip_cliente), 200, 0);
+                    }
+                    else{
+                        send(nova_porta, "Erro 401: protocolo inesperado", 200, 0);
+                        //O correto seria enviar com codigo 401 o mesmo comando recebido.
+                    }
                 }
             }
             else{
                 send(nova_porta, authenticate_back(400, ip_meu, ip_cliente), 200, 0);
             }
         }
-        
+        printf("\nservidor saiu do login.");
 /* Espera qualquer comando ****************************************************/
         saiu = 0;
         while(!saiu){
+            printf("\nservidor entrou no qualquer comando.");
             if((numbytes = recv(nova_porta, buffer, 999, 0)) == -1) {
                 perror("\n ::::: Erro: Servidor nao conseguiu receber.\n");
                 break;
@@ -174,6 +184,11 @@ void * servidor(){
                                     saiu = 1;
                                     remove_ip(ips_string, ip_cliente);
                                     close(nova_porta); //Serah?
+                                }
+                                else{
+                                    if(!strcmp(protoin.command, "ping")){
+                                        send(nova_porta, pong(ip_meu, ip_cliente), 200, 0);
+                                    }
                                 }
                             }
                         }

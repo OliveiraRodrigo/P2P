@@ -76,7 +76,7 @@ int qual_comando(char * comando);
 
 char ** get_command();
 
-int run_command(char ** comando, char * ip_return, int * quit);
+int run_command(char ** comando, char * ip_return, int * esc_sessao, int * quit);
 
 char * get_my_ip();
 
