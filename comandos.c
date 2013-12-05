@@ -187,7 +187,7 @@ char * end_connection(char * ip_meu, char * ip_destino){
     
     //saida = " ";
     sprintf(saida, "{protocol:\"pcmj\", "
-                   "command:\"end-connection\", "
+                   "command:\"end-conection\", "
                    "sender:\"%s\", "
                    "receptor:\"%s\"}", ip_meu, ip_destino);
     
@@ -335,91 +335,172 @@ protocolo set_proto(char * entrada){
     protocolo proto;
     char * field = (char*) malloc(20*sizeof(char));
     char * data = (char*) malloc(200*sizeof(char));
-    
-    //Zera tudo
-    strcpy(proto.protocol, "x");
-    strcpy(proto.command, "x");
-    proto.status = 0;
-    strcpy(proto.passport, "x");
-    strcpy(proto.back, "x");
-    strcpy(proto.sender, "x");
-    strcpy(proto.receptor, "x");
-    proto.ok = 0;
+    char * seq = (char*) malloc(20*sizeof(char)); //Pra saber se esta na sequencia correta
+    char * ordem = (char*) malloc(20*sizeof(char)); //Sequencia correta dependendo do comando
     
     i = 0;
     if(entrada[i] == '{'){
-printf("%c",entrada[i]);
             i++;
-printf("%c",entrada[i]);
             while(entrada[i] != '}'){
                 j = 0;
                 while(entrada[i] == ' '){
                     i++;
-printf("%c",entrada[i]);
                 }
                 while(entrada[i] != ':'){
                     field[j] = entrada[i];
                     i++;
                     j++;
-printf("%c",entrada[i]);
                 }
                 i++;
-printf("%c",entrada[i]);
                 field[j] = '\0';
                 j = 0;
                 if(entrada[i] == '"'){
                     i++;
-printf("%c",entrada[i]);
                     while(entrada[i] != '"'){
+                        if(entrada[i] == '['){
+                            while(entrada[i] != ']'){
+                                data[j] = entrada[i];
+                                i++;
+                                j++;
+                            }
+                        }
                         data[j] = entrada[i];
                         i++;
                         j++;
-printf("%c",entrada[i]);
                     }
                     i++;
-printf("%c",entrada[i]);
                     data[j] = '\0';
                     j = 0;
                     if(!strcmp(field, "protocol")){
-                        //proto.protocol = (char*) malloc(10);
                         strcpy(proto.protocol, data);
-printf("%s",data);
+                        strcat(seq, "p");
                     }
                     else{
                         if(!strcmp(field, "command")){
-                            //proto.protocol = (char*) malloc(20);
                             strcpy(proto.command, data);
-printf("%s",data);
+                            strcat(seq, "c");
                         }
                         else{
                             if(!strcmp(field, "status")){
                                 proto.status = atoi(data);
-printf("%d",atoi(data));
+                                strcat(seq, "t");
                             }
                             else{
                                 if(!strcmp(field, "passport")){
-                                    //proto.protocol = (char*) malloc(32);
                                     strcpy(proto.passport, data);
-printf("%s",data);
+                                    strcat(seq, "k");
                                 }
                                 else{
                                     if(!strcmp(field, "back")){
-                                        //proto.protocol = (char*) malloc(200);
                                         strcpy(proto.back, data);
+                                        strcat(seq, "b");
                                         //archive_request_back eh um problema
-printf("%s",data);
                                     }
                                     else{
-                                        if(!strcmp(field, "sender")){
-                                            //proto.protocol = (char*) malloc(20);
-                                            strcpy(proto.sender, data);
-printf("%s",data);
+                                        if(!strcmp(field, "id")){
+                                            proto.file.id = atoi(data);
+                                            strcat(seq, "i");
                                         }
                                         else{
-                                            if(!strcmp(field, "receptor")){
-                                              //proto.protocol = (char*) malloc(20);
-                                                strcpy(proto.receptor, data);
-printf("%s",data);
+                                            if(!strcmp(field, "http_address")){
+                                                strcpy(proto.file.http, data);
+                                                strcat(seq, "h");
+                                            }
+                                            else{
+                                                if(!strcmp(field, "size")){
+                                                    strcpy(proto.file.size, data);
+                                                    strcat(seq, "z");
+                                                }
+                                                else{
+                                                    if(!strcmp(field, "md5")){
+                                                        strcpy(proto.file.md5, data);
+                                                        strcat(seq, "m");
+                                                    }
+                                                    else{
+                                                        if(!strcmp(field, "sender")){
+                                                            strcpy(proto.sender, data);
+                                                            strcat(seq, "s");
+                                                        }
+                                                        else{
+                                                            if(!strcmp(field, "receptor")){
+                                                                strcpy(proto.receptor, data);
+                                                                strcat(seq, "r");
+                                                            }
+                                                            else{
+                                                                //erro
+                                                                return proto;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    while(entrada[i] != ','){
+                        if(entrada[i] == ' '){
+                            i++;
+                        }
+                        else{
+                            //erro
+                            return proto;
+                        }
+                    }
+                    i++;
+                }
+            }
+    }
+    else{
+        //erro
+        return proto;
+    }
+    
+    //Testa a ordenacao do protocolo
+    if(!strcmp(proto.command,"ping")){
+        strcpy(ordem, "pcsr");
+    }
+    else{
+        if(!strcmp(proto.command,"pong")){
+            strcpy(ordem, "pctsr");
+        }
+        else{
+            if(!strcmp(proto.command,"authenticate")){
+                strcpy(ordem, "pcksr");
+            }
+            else{
+                if(!strcmp(proto.command,"authenticate-back")){
+                    strcpy(ordem, "pctsr");
+                }
+                else{
+                    if(!strcmp(proto.command,"agent-list")){
+                        strcpy(ordem, "pcsr");
+                    }
+                    else{
+                        if(!strcmp(proto.command,"agent-list-back")){
+                            strcpy(ordem, "pctbsr");
+                        }
+                        else{
+                            if(!strcmp(proto.command,"archive-list")){
+                                strcpy(ordem, "pcsr");
+                            }
+                            else{
+                                if(!strcmp(proto.command,"archive-list-back")){
+                                    strcpy(ordem, "pctbsr");
+                                }
+                                else{
+                                    if(!strcmp(proto.command,"archive-request")){
+                                        strcpy(ordem, "pcisr");
+                                    }
+                                    else{
+                                        if(!strcmp(proto.command,"archive-request-back")){
+                                            strcpy(ordem, "pctihzmsr");
+                                        }
+                                        else{
+                                            if(!strcmp(proto.command,"end-conection")){
+                                                strcpy(ordem, "pcsr");
                                             }
                                             else{
                                                 //erro
@@ -431,25 +512,11 @@ printf("%s",data);
                             }
                         }
                     }
-                    while(entrada[i] != ','){
-                        if(entrada[i] == ' '){
-                            i++;
-printf("%c",entrada[i]);
-                        }
-                        else{
-                            //erro
-                            return proto;
-                        }
-                    }
-                    i++;
-printf("%c",entrada[i]);
                 }
             }
+        }
     }
-    else{
-        //erro
-        return proto;
-    }
+    
     proto.ok = 1;
     return proto;
 }

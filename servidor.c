@@ -170,7 +170,7 @@ void * servidor(){
                                 }
                             }
                             else{
-                                if(!strcmp(protoin.command, "end-connection")){
+                                if(!strcmp(protoin.command, "end-conection")){
                                     saiu = 1;
                                     remove_ip(ips_string, ip_cliente);
                                     close(nova_porta); //Serah?

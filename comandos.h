@@ -20,13 +20,22 @@ extern "C" {
 
 #define MAX 50
 
+typedef struct{
+    char * type;        // "file" or "folder"
+    int    id;          // 1, 2, 3...
+    char * name;        // "nome do arquivo.txt"
+    char * size;        // "100", "15487"... (KB)
+    char * http;        // Endereco gerado para disponibilizacao do arquivo
+    char * md5;         // Assinatura do arquivo para validacao
+} archive_def;
+
 typedef struct proto{
     char protocol[5];
     char command[20];
     int  status;
     char passport[30];
     char back[200];
-    int id;
+    archive_def file;
     char sender[20];
     char receptor[20];
     int  ok;
@@ -36,15 +45,6 @@ typedef struct ips{
     char ip[MAX][20];
     int size;
 } ips_list;
-
-typedef struct{
-    char * type;        // "file" or "folder"
-    int    id;          // 1, 2, 3...
-    char * name;        // "nome do arquivo.txt"
-    char * size;        // "100", "15487"... (KB)
-    char * file;        // O arquivo em si (de algum jeito)(bin, hexa, base64...?)(char, int...?)
-    char * md5;
-} archive_def;
 
 void * cliente();
 
