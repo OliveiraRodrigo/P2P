@@ -31,34 +31,6 @@ void * cliente(){
     quit = 0;
     while(!quit){
         
-        /* Prompt */
-        printf("\n P2P:> ");
-        
-/* Recebe os parametros caracter a caracter ***********************************/
-        
-        /* Aloca espaco para 4 parametros com 50 caracteres cada */
-        /*comando = (char**) malloc(4*sizeof(char*));
-        for(i = 0; i < 4; i++){
-            comando[i] = (char*) malloc(50*sizeof(char));
-        }
-        
-        i = 0;
-        j = 0;
-        comando[i][j] = getchar();
-        j++;
-        while(comando[i][j-1] != '\n'){
-            comando[i][j] = getchar();
-            if(comando[i][j] == ' '){
-                comando[i][j] = '\0'; // Descarta o ' '.
-                j = 0;
-                i++;
-            }
-            else{
-                j++;
-            }
-        }
-        comando[i][j-1] = '\0'; // Descarta o '\n'.
-        */
 /* Envia ping, espera pong ****************************************************/
         pong = 0;
         while(!pong && !quit){
@@ -77,7 +49,7 @@ void * cliente(){
                     addr_destino = inet_addr(comando[1]);
                     
                     if((he=gethostbyaddr((char *) &addr_destino, sizeof(addr_destino), AF_INET)) == NULL) {
-                        printf("\n P2P:> Erro: Nao foi possivel localizar %s.\n", addr_destino);
+                        printf("\n P2P:> Erro: Nao foi possivel localizar '%s'.\n", comando[1]);
                         break;
                     }
                     
@@ -116,7 +88,7 @@ void * cliente(){
                     //printf("\n P2P:> Cliente recebeu: %s", buffer);
                     
                     //Testa se recebeu um pong ok.
-                    protoin = set_proto(buffer);
+                    protoin = set_proto(buffer/*"{protocol:\"pcmj\", command:\"ping\", sender:\"1.1.1.1\", receptor:\"2.2.2.2\"}"*/);
                     if(protoin.ok && !strcmp(protoin.command, "pong")){
                         pong = 1;
                         printf("\n P2P:> %s respondu corretamente.\n", ip_destino);
@@ -125,9 +97,10 @@ void * cliente(){
                         printf("\n P2P:> Erro: %s retornou codigo %d.\n", ip_destino, protoin.status);
                     }
                 }
+                else{
+                    printf("\n P2P:> Comando inexisteste: '%s'\n", comando[0]);
+                }
             }
-            /* Prompt */
-            printf("\n P2P:> ");
         }
         
 /* Envia authenticate, espera authenticate-back *******************************/
@@ -334,6 +307,7 @@ void * cliente(){
                 break;
         }*/
     }
+    //Aqui, quit == 1, entao enviar end-conection para os IPs da lista.
     
     //close(sua_porta);
     //return 0;

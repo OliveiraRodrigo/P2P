@@ -200,6 +200,9 @@ char ** get_command(){
     int i, j;
     char ** saida;
     
+    /* Prompt */
+    printf("\n P2P:> ");
+    
     /* Aloca espaco para 4 parametros com 50 caracteres cada */
         saida = (char**) malloc(4*sizeof(char*));
         for(i = 0; i < 4; i++){
@@ -224,7 +227,7 @@ char ** get_command(){
         saida[i][j-1] = '\0'; // Descarta o '\n'.
         return saida;
 }
-
+/*
 int qual_comando(char * comando){
     
     if(!strcmp(comando, "try"))
@@ -245,15 +248,17 @@ int qual_comando(char * comando){
         return 98;
     return 99;
 }
-
+*/
 int run_command(char ** comando, char * ip_return, int * quit_return){
     
     if(!strcmp(comando[0], "ip")){
         strcpy(ip_return, get_my_ip());
+        printf("\n P2P:> %s\n", ip_return);
         return 1;
     }
-    if(!strcmp(comando[0], "setip")){
+    if(!strcmp(comando[0], "setip")){ //get_mey_ip nao ta funfando no Linux
         strcpy(ip_return, comando[1]);
+        printf(" P2P:> Ok: usando %s como meu IP.\n", ip_return);
         return 1;
     }
     if(!strcmp(comando[0], "help")){
@@ -286,7 +291,7 @@ char * get_my_ip(){
     addr.sin_addr = *((struct in_addr *)he->h_addr);
     memset(&(addr.sin_zero), '\0', 8);
     strcpy(ip, inet_ntoa(addr.sin_addr));
-    printf("\n P2P:> %s\n", ip);
+    //printf("\n P2P:> %s\n", ip);
     return ip;
 }
 
@@ -394,34 +399,42 @@ protocolo set_proto(char * entrada){
     
     i = 0;
     if(entrada[i] == '{'){
+//printf("%c",entrada[i]);
             i++;
             while(entrada[i] != '}'){
                 j = 0;
                 while(entrada[i] == ' '){
+//printf("%c",entrada[i]);
                     i++;
                 }
                 while(entrada[i] != ':'){
+//printf("%c",entrada[i]);
                     field[j] = entrada[i];
                     i++;
                     j++;
                 }
+//printf("%c",entrada[i]);
                 i++;
                 field[j] = '\0';
                 j = 0;
                 if(entrada[i] == '"'){
+//printf("%c",entrada[i]);
                     i++;
                     while(entrada[i] != '"'){
                         if(entrada[i] == '['){
                             while(entrada[i] != ']'){
                                 data[j] = entrada[i];
+//printf("%c",entrada[i]);
                                 i++;
                                 j++;
                             }
                         }
                         data[j] = entrada[i];
+//printf("%c",entrada[i]);
                         i++;
                         j++;
                     }
+//printf("%c",entrada[i]);
                     i++;
                     data[j] = '\0';
                     j = 0;
@@ -448,7 +461,6 @@ protocolo set_proto(char * entrada){
                                     if(!strcmp(field, "back")){
                                         strcpy(proto.back, data);
                                         strcat(seq, "b");
-                                        //archive_request_back eh um problema
                                     }
                                     else{
                                         if(!strcmp(field, "id")){
@@ -482,6 +494,7 @@ protocolo set_proto(char * entrada){
                                                             }
                                                             else{
                                                                 //erro
+                                                                //printf(" --1-- ");
                                                                 return proto;
                                                             }
                                                         }
@@ -494,21 +507,22 @@ protocolo set_proto(char * entrada){
                             }
                         }
                     }
-                    while(entrada[i] != ','){
-                        if(entrada[i] == ' '){
-                            i++;
-                        }
-                        else{
-                            //erro
-                            return proto;
-                        }
+                    if(entrada[i] == ','){
+//printf("%c",entrada[i]);
+                        i++;
                     }
-                    i++;
+                }
+                else{
+                    //erro
+                    //printf(" --3-- ");
+                    return proto;
                 }
             }
+//printf("%c",entrada[i]);
     }
     else{
         //erro
+        //printf(" --4-- ");
         return proto;
     }
     
@@ -558,6 +572,7 @@ protocolo set_proto(char * entrada){
                                             }
                                             else{
                                                 //erro
+                                                //printf(" --5-- ");
                                                 return proto;
                                             }
                                         }
