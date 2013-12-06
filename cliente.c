@@ -37,51 +37,20 @@ void * cliente(){
 /* Recebe comandos enquanto um deles nao for "quit" ***************************/
     quit = 0;
     while(!quit){
-        
-/* Envia ping, espera pong ****************************************************/
-        pong = 0;
-        while(!pong && !quit){
-            printf("\nentrou no ping");
+			
             comando = get_command();
-            
             if(!run_command(comando, ip_meu, &esc_sessao, &quit)){
-                
+				
                 if(!strcmp(comando[0], "try")){
-// Se voltar pra ca, ele cria uma nova porta, entao nao conecta mais com o q estava antes                    
-                    temp_addr = addr_destino;
-                    addr_destino = inet_addr(comando[1]);
                     
-                    if((he=gethostbyaddr((char *) &addr_destino, sizeof(addr_destino), AF_INET)) == NULL) {
-                        printf("\n P2P:> Erro: Nao foi possivel localizar '%s'.\n", comando[1]);
-                        addr_destino = temp_addr;
-                        break;
-                    }
-                    
-                    if((porta_destino = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-                        perror("\n P2P:> Erro: Nao foi possivel criar a porta\n");
-                        break;
-                    }
-                    
-                    // prepara estrutura com endereco do servidor
-                    endereco_destino.sin_family = AF_INET; 
-                    endereco_destino.sin_port = htons(PORTA_SERVIDOR);
-                    endereco_destino.sin_addr = *((struct in_addr *)he->h_addr);
-                    memset(&(endereco_destino.sin_zero), '\0', 8);
-                    ip_destino = inet_ntoa(endereco_destino.sin_addr);
-                    
-                    if(connect(porta_destino,
-                      (struct sockaddr *)&endereco_destino,
-                      sizeof(struct sockaddr)) == -1) {
-                        perror("\n P2P:> Erro: conectando no servidor\n");
-                        break;
-                    }
-                    
+    				strcpy(ip_destino, comando[1]);
+				    porta_destino = porta(comando[1]);
+                
                     printf("\n P2P:> Enviando ping...");
-                    //printf("\n P2P:> %s", ping(ip_meu, ip_destino));
+                    printf("\n P2P:> %s", ping(ip_meu, ip_destino));
                     if(send(porta_destino, ping(ip_meu, ip_destino), 200, 0) == -1){
-                        perror("\n P2P:> Erro: nao conseguiu enviar 'ping'");
+                        perror("\n P2P:> Erro: nao conseguiu enviar 'ping'\n");
                     }
-                    
                     if((numbytes = recv(porta_destino, buffer, 999, 0)) == -1) {
                         perror("\n P2P:> Erro: nao conseguiu receber 'pong'\n");
                         break;
@@ -89,88 +58,112 @@ void * cliente(){
                     
                     buffer[numbytes] = '\0';
                     
-                    //printf("\n P2P:> Cliente recebeu: %s", buffer);
+                    printf("\n P2P:> Cliente recebeu: %s", buffer);
                     
                     //Testa se recebeu um pong ok.
                     protoin = set_proto(buffer/*"{protocol:\"pcmj\", command:\"ping\", sender:\"1.1.1.1\", receptor:\"2.2.2.2\"}"*/);
                     if(protoin.ok && !strcmp(protoin.command, "pong")){
+					//if(!strcmp(buffer, pong(ip_destino, ip_meu))){
                         pong = 1;
                         printf("\n P2P:> %s respondeu corretamente.\n", ip_destino);
                     }
                     else{
                         printf("\n P2P:> Erro: %s retornou codigo %d.\n", ip_destino, protoin.status);
                     }
+                    close(porta_destino);
                 }
                 else{
-                    printf("\n P2P:> Comando inesperado: '%s'\n", comando[0]);
-                }
-            }
-        //}
-        
-/* Envia authenticate, espera authenticate-back *******************************/
-        logado = 0;
-        esc_sessao = 0;
-        while(pong && !logado && !esc_sessao){
-            printf("\nentrou no login");
-            comando = get_command();
-            
-            if(!run_command(comando, ip_meu, &esc_sessao, &quit)){
+					if(!strcmp(comando[0], "login")){
+						
+        				strcpy(ip_destino, comando[1]);
+	    			    porta_destino = porta(comando[1]);
                 
-                if(!strcmp(comando[0], "login")){
-                    printf("\n P2P:> Enviando authenticate...");
-                    //printf("\n P2P:> %s", authenticate(ip_meu, ip_destino));
-                    if(send(porta_destino, authenticate(CHAVE, ip_meu, ip_destino), 200,0) == -1){
-                        perror("\n P2P:> Erro: nao conseguiu enviar 'authenticate'");
-                    }
-                    if((numbytes = recv(porta_destino, buffer, 999, 0)) == -1) {
-                        perror("\n P2P:> Erro: nao conseguiu receber 'pong'\n");
-                        break;
-                    }
-                    
-                    buffer[numbytes] = '\0';
-                    
-                    //printf("\n P2P:> Cliente recebeu: %s", buffer);
-                    
-                    //Testa se recebeu um authenticate-back ok.
-                    protoin = set_proto(buffer);
-                    if(protoin.ok){
-                        if(!strcmp(protoin.command, "authenticate-back")){
-                            if(protoin.status == 200){
-                                logado = 1;
-                                printf("\n P2P:> Autenticacao com %s aceita.\n", ip_destino);
-                            }
-                            else{
-                                printf("\n P2P:> Erro: autenticacao com %s falhou. Codigo %d.\n", ip_destino, protoin.status);
-                            }
-                        }
-                        else{
-                            printf("\n P2P:> Eu esperava 'authenticate-back'. %s enviou '%s'.\n", ip_destino, protoin.command);
-                        }
-                    }
-                    else{
-                        printf("\n P2P:> Erro: %s retornou um protocolo incompativel.\n", ip_destino);
-                    }
-                }
-                /*else{
-                if(!strcmp(comando[0], "try")){
-                    send(porta_destino, ping(ip_meu, ip_destino), 200, 0);
-                    numbytes = recv(porta_destino, buffer, 999, 0);
-                    buffer[numbytes] = '\0';
-                    printf("\n P2P:> Cliente recebeu: %s", buffer);
-                }*/
-                else{
-                    printf("\n P2P:> Comando inesperado: '%s'\n", comando[0]);
-                }
-            //}
-            }
-            
-///////////Colocar AQUI a parte "Executa qualquer comando".
-            
-        }//while do login
-        printf("\nsaiu do login");
-        pong = 0;
-        }//while do ping
-        printf("\nsaiu do ping");
+						printf("\n P2P:> Enviando authenticate...");
+						printf("\n P2P:> %s", authenticate(CHAVE, ip_meu, ip_destino));
+						if(send(porta_destino, authenticate(CHAVE, ip_meu, ip_destino), 200,0) == -1){
+							perror("\n P2P:> Erro: nao conseguiu enviar 'authenticate'\n");
+						}
+						if((numbytes = recv(porta_destino, buffer, 999, 0)) == -1) {
+							perror("\n P2P:> Erro: nao conseguiu receber 'authenticate-back'\n");
+							break;
+						}
+						
+						buffer[numbytes] = '\0';
+						
+						printf("\n P2P:> Cliente recebeu: %s", buffer);
+							
+						//Testa se recebeu um authenticate-back ok.
+						protoin = set_proto(buffer);
+						if(protoin.ok){
+							if(!strcmp(protoin.command, "authenticate-back")){
+								if(protoin.status == 200){
+									printf("\n P2P:> Autenticacao com %s aceita.\n", ip_destino);
+								}
+								else{
+									printf("\n P2P:> Erro: autenticacao com %s falhou. Codigo %d.\n", ip_destino, protoin.status);
+								}
+							}
+							else{
+								printf("\n P2P:> Eu esperava 'authenticate-back'. %s enviou '%s'.\n", ip_destino, protoin.command);
+							}
+						}
+						else{
+							printf("\n P2P:> Erro: %s retornou um protocolo incompativel.\n", ip_destino);
+						}
+						close(porta_destino);
+					}
+					else{
+//////////////////////////////////////						
+						if(!strcmp(comando[0], "list-users")){
+						
+							strcpy(ip_destino, comando[1]);
+							porta_destino = porta(comando[1]);
+					
+							printf("\n P2P:> Enviando agent-list...");
+							printf("\n P2P:> %s", agent_list(ip_meu, ip_destino));
+							if(send(porta_destino, agent_list(ip_meu, ip_destino), 200,0) == -1){
+								perror("\n P2P:> Erro: nao conseguiu enviar 'authenticate'\n");
+							}
+							if((numbytes = recv(porta_destino, buffer, 999, 0)) == -1) {
+								perror("\n P2P:> Erro: nao conseguiu receber 'agent-list-back'\n");
+								break;
+							}
+							
+							buffer[numbytes] = '\0';
+							
+							printf("\n P2P:> Cliente recebeu: %s", buffer);
+								
+							//Testa se recebeu um agent-list-back ok.
+							protoin = set_proto(buffer);
+							if(protoin.ok){
+								if(!strcmp(protoin.command, "agent-list-back")){
+									if(protoin.status == 200){
+										printf("\n P2P:> IPs: \"%s\"", protoin.back);
+									}
+									else{
+										printf("\n P2P:> Erro: %s informou codigo %d.\n", ip_destino, protoin.status);
+									}
+								}
+								else{
+									printf("\n P2P:> Eu esperava 'agent-list-back'. %s enviou '%s'.\n", ip_destino, protoin.command);
+								}
+							}
+							else{
+								printf("\n P2P:> Erro: %s retornou um protocolo incompativel.\n", ip_destino);
+							}
+							close(porta_destino);
+						}
+						else{
+							
+							
+							
+							
+							close(porta_destino);
+						}
+					}
+				}
+			}
+            //rodou comando interno
 
 /* Executa qualquer comando ***************************************************/
 /*
@@ -355,10 +348,48 @@ void * cliente(){
                 printf("\n P2P:> Comando inexistente: '%s'", comando[0]);
                 break;
         }*/
-    }
+		}
     //Aqui, quit == 1, entao enviar end-conection para os IPs da lista.
     
-    //close(sua_porta);
+    close(porta_destino);
     //return 0;
     
+}
+
+int porta(char * ip_destino){
+	
+    int porta_destino, numbytes, codigo;
+    struct sockaddr_in endereco_destino;
+    struct hostent *he;
+    long addr_destino, temp_addr;
+    //char * ip_destino = (char*) malloc(20*sizeof(char));
+	
+                    //temp_addr = addr_destino;
+                    addr_destino = inet_addr(ip_destino);
+                    
+                    if((he=gethostbyaddr((char *) &addr_destino, sizeof(addr_destino), AF_INET)) == NULL) {
+                        printf("\n P2P:> Erro: Nao foi possivel localizar '%s'.\n", ip_destino);
+                        //addr_destino = temp_addr;
+                        return 1;
+                    }
+                    
+                    if((porta_destino = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+                        perror("\n P2P:> Erro: Nao foi possivel criar a porta\n");
+                        return 1;
+                    }
+                    
+                    // prepara estrutura com endereco do servidor
+                    endereco_destino.sin_family = AF_INET; 
+                    endereco_destino.sin_port = htons(PORTA_SERVIDOR);
+                    endereco_destino.sin_addr = *((struct in_addr *)he->h_addr);
+                    memset(&(endereco_destino.sin_zero), '\0', 8);
+                    //ip_destino = inet_ntoa(endereco_destino.sin_addr);
+                    
+                    if(connect(porta_destino,
+                      (struct sockaddr *)&endereco_destino,
+                      sizeof(struct sockaddr)) == -1) {
+                        perror("\n P2P:> Erro: conectando no servidor\n");
+                        return 1;
+                    }
+                    return porta_destino;
 }

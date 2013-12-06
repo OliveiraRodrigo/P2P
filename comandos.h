@@ -30,15 +30,15 @@ typedef struct{
 } archive_def;
 
 typedef struct proto{
-    char protocol[5];
-    char command[20];
-    int  status;
-    char passport[30];
-    char back[200];
-    archive_def file;
-    char sender[20];
-    char receptor[20];
-    int  ok;
+    char protocol[5];   // Nome do protocolo
+    char command[20];   // Identificacao do comando
+    int  status;        // Codigo de erro ou validacao
+    char passport[30];  // Chave de autenticacao
+    char back[200];     // Dado retornado
+    archive_def file;   // Informacoes sobre arquivo
+    char sender[20];    // IP Remetente
+    char recipient[20]; // IP Destinatario
+    int  ok;            // Construcao correta do protocolo
 } protocolo;
 
 typedef struct ips{
@@ -80,15 +80,17 @@ int run_command(char ** comando, char * ip_return, int * esc_sessao, int * quit)
 
 char * get_my_ip();
 
-int insert_ip(char * ips_string, char * novo_ip);
+int insert_ip(char ips_string[50][20], char * novo_ip);
 
-int remove_ip(char * ips_string, char * target);
+int remove_ip(char ips_string[50][20], char * target);
 
-//char ** get_ips_list();
+char * get_ips_string(char ips_string[50][20]);
 
 protocolo set_proto(char * entrada);
 
-//int set_ips_list(char * proto_back);
+int set_ips_array(char ips_string[50][20], char * proto_back);
+
+int ips_size(int modifier);
 
 void help();
 
