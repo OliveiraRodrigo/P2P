@@ -21,7 +21,6 @@ extern "C" {
 #define MAX 50
 
 typedef struct{
-    char * type;        // "file" or "folder"
     int    id;          // 1, 2, 3...
     char * name;        // "nome do arquivo.txt"
     char * size;        // "100", "15487"... (KB)
@@ -91,6 +90,8 @@ protocolo set_proto(char * entrada);
 int set_ips_array(char ips_string[50][20], char * proto_back);
 
 int ips_size(int modifier);
+
+int find_ip(char ips_array[50][20], char * target);
 
 void help();
 

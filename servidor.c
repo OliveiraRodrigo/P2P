@@ -15,7 +15,7 @@
 
 void * servidor(){
     
-    int porta, nova_porta, tamanho, numbytes;
+    int porta, nova_porta, tamanho, numbytes, i;
     int ping, logado, saiu;
     struct sockaddr_in endereco_meu;
     struct sockaddr_in endereco_cliente;
@@ -54,13 +54,23 @@ void * servidor(){
         exit(1);
     }
     
-    //Teste
-    insert_ip(ips, "111.222.333.444");
-	insert_ip(ips, "2.3.8.444");
-	insert_ip(ips, "199.5.55.5");
-        
     tamanho = sizeof(struct sockaddr_in);
-    //printf("\n Servidor Peer on-line, aguardando conexões.\n");
+    
+    /*Teste
+    insert_ip(ips, "111.222.333.444");
+    insert_ip(ips, "2.3.8.444");
+    insert_ip(ips, "199.5.55.5");
+    for(i = 0; i < 10; i++){
+        files[i].id = i;
+        files[i].name = (char*) malloc(50*sizeof(char));
+        sprintf(files[i].name, "arq%d.txt", i*3);
+        files[i].size = (char*) malloc(20*sizeof(char));
+        sprintf(files[i].size, "%d", i*30+215);
+        files[i].http = (char*) malloc(50*sizeof(char));
+        sprintf(files[i].http, "http://%s/%s", ip_meu, files[i].name);
+        files[i].md5 = (char*) malloc(50*sizeof(char));
+        strcpy(files[i].md5, "Breve.Aguarde!");
+    }*/
     
 /* Aguarda conexoes ***********************************************************/
     while (1){
@@ -68,15 +78,13 @@ void * servidor(){
         /*Fica esperando aqui*/
         nova_porta = accept(porta, (struct sockaddr*)&endereco_cliente, &tamanho);
         
-        strcpy(ip_cliente, inet_ntoa(endereco_cliente.sin_addr));
-        //printf("\nip_cliente: %s", ip_cliente);
-        //printf("\nip_meu: %s", ip_meu);
-        
         if(nova_porta==-1){
             perror("\n ::::: Erro: servidor: accept retornou erro\n");
-            //exit(1);
-            break;
+            exit(1);
         }
+        
+        /* Pega o IP do cliente atual */
+        strcpy(ip_cliente, inet_ntoa(endereco_cliente.sin_addr));
         
 /* Recebe dados *******************************************************/
         ping = 0;
@@ -86,78 +94,78 @@ void * servidor(){
             break;
         }
         buffer[numbytes] = '\0';
-        printf("\n ::::: Servidor recebeu: %s\n", buffer);
+        //printf("\n ::::: Servidor recebeu: %s\n", buffer);
         protoin = set_proto(buffer);
 /**********************************************************************/
-
+        
         if(protoin.ok){
-			if(!strcmp(protoin.command, "ping")){
-				//printf("\n ::::: Servidor enviando pong...\n");
-				if (send(nova_porta, pong(ip_meu, ip_cliente), 200, 0) == -1){
-					perror("\n ::::: Erro: servidor nao conseguiu enviar 'pong'.");
-				}
-			}
-			else{
+            if(!strcmp(protoin.command, "ping")){
+                //printf("\n ::::: Servidor enviando pong...\n");
+                if (send(nova_porta, pong(ip_meu, ip_cliente), 200, 0) == -1){
+                    perror("\n ::::: Erro: servidor nao conseguiu enviar 'pong'.");
+                }
+            }
+            else{
                 if(!strcmp(protoin.command, "authenticate")){
-					if(!strcmp(protoin.passport, CHAVE)){
-						printf("\n ::::: Servidor enviando authenticate-back...\n");
-						if(send(nova_porta, authenticate_back(200, ip_meu, ip_cliente), 200, 0) == -1){
-							perror("\n ::::: Erro: servidor nao conseguiu enviar 'authenticate-back'.");
-						}
-						insert_ip(ips, ip_cliente);
-					}
-					else{
-						send(nova_porta, authenticate_back(203, ip_meu, ip_cliente), 200, 0);
-					}
-				}
-				else{
-					if(1/*ta na lista*/){
-						if(!strcmp(protoin.command, "agent-list")){
-							if(send(nova_porta, agent_list_back(200, get_ips_string(ips), ip_meu, ip_cliente), 200, 0) == -1){
-								perror("\n ::::: Erro: servidor nao conseguiu enviar 'agent-list-back'.");
-							}
-						}
-						else{
-							if(!strcmp(protoin.command, "archive-list")){
-								if(send(nova_porta, archive_list_back(200, files, ip_meu, ip_cliente), 200, 0) == -1){
-									perror("\n ::::: Erro: servidor nao conseguiu enviar 'agent-list-back'.");
-								}
-							}
-							else{
-								if(!strcmp(protoin.command, "archive-request")){
-									if(1/*tem_file(protoin.id)*/){
-										if(send(nova_porta, archive_request_back(302, files[0], ip_meu, ip_cliente), 200, 0) == -1){
-											perror("\n ::::: Erro: servidor nao conseguiu enviar 'agent-request-back'.");
-										}
-									}
-									else{
-										send(nova_porta, archive_request_back(404, files[0], ip_meu, ip_cliente), 200, 0);
-									}
-								}
-								else{
-									if(!strcmp(protoin.command, "end-conection")){
-										saiu = 1;
-										remove_ip(ips, ip_cliente);
-									}
-									else{
-										//comando nao reconhecido
-										send(nova_porta, authenticate_back(400, ip_meu, ip_cliente), 200, 0);
-									}
-								}
-							}
-						}
-					}
-					else{
-						//nao ta na lista
-					}
-				}
-			}
-		}
-		else{
-			//proto nao ok
+                    if(!strcmp(protoin.passport, CHAVE)){
+                        //printf("\n ::::: Servidor enviando authenticate-back...\n");
+                        if(send(nova_porta, authenticate_back(200, ip_meu, ip_cliente), 200, 0) == -1){
+                            perror("\n ::::: Erro: servidor nao conseguiu enviar 'authenticate-back'.");
+                        }
+                        insert_ip(ips, ip_cliente);
+                    }
+                    else{
+                        send(nova_porta, authenticate_back(203, ip_meu, ip_cliente), 200, 0);
+                    }
+                }
+                else{
+                    if(find_ip(ips, ip_cliente)){
+                        if(!strcmp(protoin.command, "agent-list")){
+                            if(send(nova_porta, agent_list_back(200, get_ips_string(ips), ip_meu, ip_cliente), 200, 0) == -1){
+                                perror("\n ::::: Erro: servidor nao conseguiu enviar 'agent-list-back'.");
+                            }
+                        }
+                        else{
+                            if(!strcmp(protoin.command, "archive-list")){
+                                if(send(nova_porta, archive_list_back(200, files, ip_meu, ip_cliente), 200, 0) == -1){
+                                    perror("\n ::::: Erro: servidor nao conseguiu enviar 'agent-list-back'.");
+                                }
+                            }
+                            else{
+                                if(!strcmp(protoin.command, "archive-request")){
+                                    if(1/*tem_file(protoin.id)*/){
+                                        if(send(nova_porta, archive_request_back(302, files[2], ip_meu, ip_cliente), 200, 0) == -1){
+                                            perror("\n ::::: Erro: servidor nao conseguiu enviar 'agent-request-back'.");
+                                        }
+                                    }
+                                    else{
+                                        send(nova_porta, archive_request_back(404, files[0], ip_meu, ip_cliente), 200, 0);
+                                    }
+                                }
+                                else{
+                                    if(!strcmp(protoin.command, "end-conection")){
+                                        saiu = 1;
+                                        remove_ip(ips, ip_cliente);
+                                    }
+                                    else{
+                                        //comando nao reconhecido
+                                        send(nova_porta, authenticate_back(400, ip_meu, ip_cliente), 200, 0);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        send(nova_porta, authenticate_back(401, ip_meu, ip_cliente), 200, 0);
+                    }
+                }
+            }
+        }
+        else{
+            //proto nao ok
             send(nova_porta, authenticate_back(400, ip_meu, ip_cliente), 200, 0);
-		}
-		
+        }
+        
         /*if (fork()==0){ // se for o filho
             //printf("\nxxxxx fork == 0 xxxxx\n");
             close(porta); // o filho nao aceita conexoes a mais
@@ -167,6 +175,6 @@ void * servidor(){
         else{
             //printf("\nxxxxx fork != 0 xxxxx\n");
         }*/
-        close(nova_porta); /* essa parte somente o pai executa */
+        close(nova_porta); // essa parte somente o pai executa
     }
 }

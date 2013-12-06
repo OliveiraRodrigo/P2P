@@ -89,7 +89,7 @@ char * agent_list_back(int code, char * ips_string, char * ip_sender, char * ip_
     sprintf(saida, "{\"protocol\":\"pcmj\","
                    "\"command\":\"agent-list-back\","
                    "\"status\":\"%d\","
-                   "\"back\":\"[%s]\","
+                   "\"back\":[%s],"
                    "\"sender\":\"%s\","
                    "\"receptor\":\"%s\"}\n", code, ips_string, ip_sender, ip_recipient);
     
@@ -115,8 +115,7 @@ char * archive_list_back(int code, archive_def * archs, char * ip_sender, char *
     int i;
     
     i = 0;
-    sprintf(archs_list, "{\"%s\":", archs[i].type);
-    sprintf(archs_list, "%s\"id\":\"%d\",", archs_list, archs[i].id);
+    sprintf(archs_list, "{\"id\":%d,", archs[i].id);
     sprintf(archs_list, "%s\"nome\":\"%s\",", archs_list, archs[i].name);
     sprintf(archs_list, "%s\"size\":\"%s\"}", archs_list, archs[i].size);
     i++;
@@ -124,8 +123,7 @@ char * archive_list_back(int code, archive_def * archs, char * ip_sender, char *
 ////////////////////////////////////////////////////////////////////////////////
     while(archs){ // *archs
 ////////////////////////////////////////////////////////////////////////////////
-        sprintf(archs_list, "%s,{\"%s\":", archs_list, archs[i].type);
-        sprintf(archs_list, "%s\"id\":\"%d\",", archs_list, archs[i].id);
+        sprintf(archs_list, "%s,{\"id\":%d,", archs_list, archs[i].id);
         sprintf(archs_list, "%s\"nome\":\"%s\",", archs_list, archs[i].name);
         sprintf(archs_list, "%s\"size\":\"%s\"}", archs_list, archs[i].size);
         i++;
@@ -135,7 +133,7 @@ char * archive_list_back(int code, archive_def * archs, char * ip_sender, char *
     sprintf(saida, "{\"protocol\":\"pcmj\","
                    "\"command\":\"archive-list-back\","
                    "\"status\":\"%d\","
-                   "\"back\":\"%s\","
+                   "\"back\":[%s],"
                    "\"sender\":\"%s\","
                    "\"receptor\":\"%s\"}\n", code, archs_list, ip_sender, ip_recipient);
     
@@ -148,7 +146,7 @@ char * archive_request(char * arch_id, char * ip_sender, char * ip_recipient){
     
     sprintf(saida, "{\"protocol\":\"pcmj\","
                    "\"command\":\"archive-request\","
-                   "\"id\":\"%s\","
+                   "\"id\":%s,"
                    "\"sender\":\"%s\","
                    "\"receptor\":\"%s\"}\n", arch_id, ip_sender, ip_recipient);
     
@@ -162,7 +160,7 @@ char * archive_request_back(int code, archive_def arch, char * ip_sender, char *
     sprintf(saida, "{\"protocol\":\"pcmj\","
                    "\"command\":\"archive-request-back\","
                    "\"status\":\"%d\","
-                   "\"id\":\"%d\","
+                   "\"id\":%d,"
                    "\"http_address\":\"%s\","
                    "\"size\":\"%s\"," //redundante
                    "\"md5\":\"%s\","
@@ -306,7 +304,7 @@ int insert_ip(char ips_array[50][20], char * novo_ip){
     
     int i = 0;
     
-    while(i < MAX){
+    while(i < ips_size(0)){
         //procura se ja nao tem
         if(!strcmp(ips_array[i], novo_ip)){
             return 1;
@@ -338,7 +336,7 @@ int remove_ip(char ips_array[50][20], char * target){
     
     for(i = 0; i < size; i++){
         if(!strcmp(ips_array[i], target)){
-            while(i+1 < MAX){
+            while(i+1 < size){
                 strcpy(ips_array[i], ips_array[i+1]);
                 i++;
             }
@@ -355,6 +353,21 @@ int ips_size(int modifier){
     return i;
 }
 
+int find_ip(char ips_array[50][20], char * target){
+    
+    int i = 0;
+    
+    while(i < ips_size(0)){
+        if(!strcmp(ips_array[i], target)){
+            return 1;
+        }
+        else{
+            i++;
+        }
+    }
+    return 0;
+}
+/* Desnecessaria
 int set_ips_array(char ips_array[50][20], char * proto_back){
     
     int i, j, size;
@@ -383,20 +396,20 @@ int set_ips_array(char ips_array[50][20], char * proto_back){
     }
     return 0;
 }
-
+*/
 char * get_ips_string(char ips_array[50][20]){
     
     int i, size;
     char * saida;
     
     size = ips_size(0);
-    saida = (char*) malloc(20*size*sizeof(char));
+    saida = (char*) malloc(1000*size*sizeof(char));
 
     i = 0;
-    strcpy(saida, ips_array[i]);
+    sprintf(saida, "\"%s\"", ips_array[i]);
     i++;
     while(i < size){
-        sprintf(saida, "%s,%s", saida, ips_array[i]);
+        sprintf(saida, "%s,\"%s\"", saida, ips_array[i]);
         i++;
     }
     
@@ -411,58 +424,59 @@ protocolo set_proto(char * entrada){
     char * data = (char*) malloc(200*sizeof(char));
     char * seq = (char*) malloc(20*sizeof(char)); //Pra saber se esta na sequencia correta
     char * ordem = (char*) malloc(20*sizeof(char)); //Sequencia correta dependendo do comando
-printf("\nHere we go!\n");
+//printf("\nHere we go!\n");
     i = 0;
     if(entrada[i] == '{'){
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
             i++;
             while(entrada[i] != '}'){
                 j = 0;
                 while(entrada[i] == ' '){
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
                     i++;
                 }
                 if(entrada[i] == '"'){
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
                     i++;
                     while(entrada[i] != '"'){
                         field[j] = entrada[i];
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
                         i++;
                         j++;
                     }
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
                     i++;
                     field[j] = '\0';
                     j = 0;
                     if(entrada[i] != ':'){
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
                         //erro
                         printf(" --00-- ");
                         return proto;
                     }
                     else{
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
                         i++;
                     }
                 if(entrada[i] == '['){
-//printf("%c",entrada[i]);
+////printf("%c",entrada[i]);
                     //i++;
                     while(entrada[i] != ']'){
 						data[j] = entrada[i];
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
 						i++;
 						j++;
 					}
 					data[j] = entrada[i];
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
 					i++;
+                                        j++;
 					data[j] = '\0';
 					j = 0;
 				}
 				else{
                     if(entrada[i] == '"'){
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
 						i++;
                     while(entrada[i] != '"'){
                         //if(entrada[i] == '['){
@@ -472,11 +486,11 @@ printf("%c",entrada[i]);
                                     //i++;
                                     //while(entrada[i] != '}'){
                                         data[j] = entrada[i];
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
                                         i++;
                                         j++;
                                     }
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
 									i++;
 									data[j] = '\0';
 									j = 0;
@@ -488,7 +502,7 @@ printf("%c",entrada[i]);
                         //j++;
                     }
                     else{
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
 						//erro
 						printf(" --x-- ");
 						return proto;
@@ -564,7 +578,7 @@ printf("%c",entrada[i]);
                         }
                     }
                     if(entrada[i] == ','){
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
                         i++;
                     }
                 //}
@@ -575,7 +589,7 @@ printf("%c",entrada[i]);
                 //}
                 }
                 else{
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
                     //erro
                     printf(" --3-- ");
                     return proto;
@@ -583,7 +597,7 @@ printf("%c",entrada[i]);
             }
     }
     else{
-printf("%c",entrada[i]);
+//printf("%c",entrada[i]);
         //erro
         printf(" --4-- ");
         return proto;
@@ -650,8 +664,8 @@ printf("%c",entrada[i]);
         }
     }*/
     
-printf("%c",entrada[i]);
-printf("\nHere we came!\n");
+//printf("%c",entrada[i]);
+//printf("\nHere we came!\n");
     proto.ok = 1;
     return proto;
 }
