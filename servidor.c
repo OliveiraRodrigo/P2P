@@ -25,7 +25,7 @@ void * servidor(){
     char * ip_meu     = (char*) malloc(20*sizeof(char));
     char * ip_cliente = (char*) malloc(20*sizeof(char));
     protocolo protoin;
-    archive_def * files;
+    archive_def files[10];
     
     strcpy(ip_meu, get_my_ip());
     
@@ -56,7 +56,7 @@ void * servidor(){
     
     tamanho = sizeof(struct sockaddr_in);
     
-    /*Teste
+    /*Teste*/
     insert_ip(ips, "111.222.333.444");
     insert_ip(ips, "2.3.8.444");
     insert_ip(ips, "199.5.55.5");
@@ -70,7 +70,7 @@ void * servidor(){
         sprintf(files[i].http, "http://%s/%s", ip_meu, files[i].name);
         files[i].md5 = (char*) malloc(50*sizeof(char));
         strcpy(files[i].md5, "Breve.Aguarde!");
-    }*/
+    }
     
 /* Aguarda conexoes ***********************************************************/
     while (1){
@@ -128,14 +128,14 @@ void * servidor(){
                         else{
                             if(!strcmp(protoin.command, "archive-list")){
                                 if(send(nova_porta, archive_list_back(200, files, ip_meu, ip_cliente), 200, 0) == -1){
-                                    perror("\n ::::: Erro: servidor nao conseguiu enviar 'agent-list-back'.");
+                                    perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-list-back'.");
                                 }
                             }
                             else{
                                 if(!strcmp(protoin.command, "archive-request")){
                                     if(1/*tem_file(protoin.id)*/){
                                         if(send(nova_porta, archive_request_back(302, files[2], ip_meu, ip_cliente), 200, 0) == -1){
-                                            perror("\n ::::: Erro: servidor nao conseguiu enviar 'agent-request-back'.");
+                                            perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-request-back'.");
                                         }
                                     }
                                     else{
@@ -143,7 +143,7 @@ void * servidor(){
                                     }
                                 }
                                 else{
-                                    if(!strcmp(protoin.command, "end-conection")){
+                                    if(!strcmp(protoin.command, "end-connection")){
                                         saiu = 1;
                                         remove_ip(ips, ip_cliente);
                                     }
