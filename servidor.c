@@ -9,17 +9,23 @@
 #include "comandos.h"
 
 #define PORTA_SERVIDOR 9876
+#define MAX 50 // Quantos IPs na lista
+#define TAM 20 // Caracteres no IP
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
 
 void * servidor(){
     
-    int porta, nova_porta, tamanho, numbytes, logado;
+    int porta, nova_porta, tamanho, numbytes, i;
+    int ping, logado, saiu;
     struct sockaddr_in endereco_meu;
     struct sockaddr_in endereco_cliente;
-    char buffer[255];
+    char buffer[1000];
+    char ips[50][20];
+    char * ips_string = (char*) malloc(1000*sizeof(char));
     char * ip_meu     = (char*) malloc(20*sizeof(char));
     char * ip_cliente = (char*) malloc(20*sizeof(char));
-    //ips_list ips_in;
+    protocolo protoin;
+    archive_def files[10];
     
     strcpy(ip_meu, get_my_ip());
     
@@ -48,109 +54,127 @@ void * servidor(){
         exit(1);
     }
     
-    //printf("\n Servidor Peer on-line, aguardando conexões.\n");
+    tamanho = sizeof(struct sockaddr_in);
     
-    /* agora verifica se ha conexoes */
+    /*Teste*/
+    insert_ip(ips, "111.222.333.444");
+    insert_ip(ips, "2.3.8.444");
+    insert_ip(ips, "199.5.55.5");
+    for(i = 0; i < 10; i++){
+        files[i].id = i;
+        files[i].name = (char*) malloc(50*sizeof(char));
+        sprintf(files[i].name, "arq%d.txt", i*3);
+        files[i].size = (char*) malloc(20*sizeof(char));
+        sprintf(files[i].size, "%d", i*30+215);
+        files[i].http = (char*) malloc(50*sizeof(char));
+        sprintf(files[i].http, "http://%s/%s", ip_meu, files[i].name);
+        files[i].md5 = (char*) malloc(50*sizeof(char));
+        strcpy(files[i].md5, "Breve.Aguarde!");
+    }
+    
+/* Aguarda conexoes ***********************************************************/
     while (1){
-        tamanho = sizeof(struct sockaddr_in);
         
         /*Fica esperando aqui*/
         nova_porta = accept(porta, (struct sockaddr*)&endereco_cliente, &tamanho);
         
-        strcpy(ip_cliente, inet_ntoa(endereco_cliente.sin_addr));
-        //printf("\nip_cliente: %s", ip_cliente);
-        //printf("\nip_meu: %s", ip_meu);
-        
-        if (nova_porta==-1){
+        if(nova_porta==-1){
             perror("\n ::::: Erro: servidor: accept retornou erro\n");
-            //exit(1);
-            break;
+            exit(1);
         }
         
-        if ((numbytes = recv(nova_porta, buffer, 254, 0)) == -1) {
-            perror("\n ::::: Erro: Servidor nao conseguiu receber 'ping'.\n");
-            //exit(1);
+        /* Pega o IP do cliente atual */
+        strcpy(ip_cliente, inet_ntoa(endereco_cliente.sin_addr));
+        
+/* Recebe dados *******************************************************/
+        ping = 0;
+        //printf("\nservidor entrou no ping.");
+        if((numbytes = recv(nova_porta, buffer, 999, 0)) == -1) {
+            perror("\n ::::: Erro: Servidor nao conseguiu receber.\n");
             break;
         }
         buffer[numbytes] = '\0';
         //printf("\n ::::: Servidor recebeu: %s\n", buffer);
+        protoin = set_proto(buffer);
+/**********************************************************************/
         
-        // Testa se foi um ping que foi recebido.
-        //printf("\n ::::: ping pra comparar: %s", ping(ip_cliente, ip_meu));
-        if(!strcmp(buffer, ping(ip_cliente, ip_meu))){
-            
-            //printf("\n ::::: Servidor enviando pong...\n");
-            if (send(nova_porta, pong(ip_meu, ip_cliente), 200, 0) == -1){
-                perror("\n ::::: Erro: servidor nao conseguiu enviar 'pong'.");
+        if(protoin.ok){
+            if(!strcmp(protoin.command, "ping")){
+                //printf("\n ::::: Servidor enviando pong...\n");
+                if (send(nova_porta, pong(ip_meu, ip_cliente), 200, 0) == -1){
+                    perror("\n ::::: Erro: servidor nao conseguiu enviar 'pong'.");
+                }
             }
             else{
-                //Espera um 'authenticate'
-                logado = 0;
-                while(!logado){
-                    if ((numbytes = recv(nova_porta, buffer, 254, 0)) == -1) {
-                        perror("\n ::::: Erro: Servidor nao conseguiu receber 'authenticate'.\n");
-                        //exit(1);
-                        break;
-                    }
-                    buffer[numbytes] = '\0';
-                    //printf("\n ::::: Servidor recebeu: %s\n", buffer);
-                    
-                    // Testa se recebeu um authenticate correto.
-                    if(!strcmp(buffer, authenticate(CHAVE, ip_cliente, ip_meu))){
-                        // Autenticacao aceita
+                if(!strcmp(protoin.command, "authenticate")){
+                    if(!strcmp(protoin.passport, CHAVE)){
                         //printf("\n ::::: Servidor enviando authenticate-back...\n");
-                        logado = 1;
-                        if (send(nova_porta, authenticate_back(200, ip_meu, ip_cliente), 200, 0) == -1){
+                        if(send(nova_porta, authenticate_back(200, ip_meu, ip_cliente), 200, 0) == -1){
                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'authenticate-back'.");
                         }
-                        else{
-                            //Espera outras solicitacoes do cliente.
-                            
-                            //Espera agent-list
-                            if ((numbytes = recv(nova_porta, buffer, 254, 0)) == -1) {
-                                perror("\n ::::: Erro: Servidor nao conseguiu receber.\n");
-                                //exit(1);
-                                break;
-                            }
-
-                            buffer[numbytes] = '\0';
-                            
-                            //Testa se recebeu agent_list
-                            
-                            //Envia agent-list-back
-                            insert_ip("123.45.6.7");
-                            insert_ip("5.55.5.555");
-                            insert_ip("7.0.0.0");
-                            if (send(nova_porta, agent_list_back(200, get_ips_list(), ip_meu, ip_cliente), 200, 0) == -1){
+                        insert_ip(ips, ip_cliente);
+                    }
+                    else{
+                        send(nova_porta, authenticate_back(203, ip_meu, ip_cliente), 200, 0);
+                    }
+                }
+                else{
+                    if(find_ip(ips, ip_cliente)){
+                        if(!strcmp(protoin.command, "agent-list")){
+                            if(send(nova_porta, agent_list_back(200, get_ips_string(ips), ip_meu, ip_cliente), 200, 0) == -1){
                                 perror("\n ::::: Erro: servidor nao conseguiu enviar 'agent-list-back'.");
                             }
                         }
+                        else{
+                            if(!strcmp(protoin.command, "archive-list")){
+                                if(send(nova_porta, archive_list_back(200, files, ip_meu, ip_cliente), 200, 0) == -1){
+                                    perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-list-back'.");
+                                }
+                            }
+                            else{
+                                if(!strcmp(protoin.command, "archive-request")){
+                                    if(1/*tem_file(protoin.id)*/){
+                                        if(send(nova_porta, archive_request_back(302, files[2], ip_meu, ip_cliente), 200, 0) == -1){
+                                            perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-request-back'.");
+                                        }
+                                    }
+                                    else{
+                                        send(nova_porta, archive_request_back(404, files[0], ip_meu, ip_cliente), 200, 0);
+                                    }
+                                }
+                                else{
+                                    if(!strcmp(protoin.command, "end-connection")){
+                                        saiu = 1;
+                                        remove_ip(ips, ip_cliente);
+                                    }
+                                    else{
+                                        //comando nao reconhecido
+                                        send(nova_porta, authenticate_back(400, ip_meu, ip_cliente), 200, 0);
+                                    }
+                                }
+                            }
+                        }
                     }
-                    // Autenticacao nao aceita: envia codigo 203.
-                    if (send(nova_porta, authenticate_back(203, ip_meu, ip_cliente), 200, 0) == -1){
-                        perror("\n ::::: Erro: servidor nao conseguiu enviar 'authenticate-back'.");
+                    else{
+                        send(nova_porta, authenticate_back(401, ip_meu, ip_cliente), 200, 0);
                     }
                 }
             }
-            
-            if (fork()==0){ // se for o filho
-                //printf("\nxxxxx fork == 0 xxxxx\n");
-                close(porta); /* o filho nao aceita conexoes a mais */
-                
-                /*if (send(nova_porta, pong(ip_meu, ip_cliente), 200, 0) == -1){
-                    perror("\n ::::: Erro: servidor nao conseguiu mandar mensagem");
-                }*/
-                
-                close(nova_porta);
-                exit(0); // tao logo termine, o filho pode sair
-            }
-            else{
-                //printf("\nxxxxx fork != 0 xxxxx\n");
-            }
         }
         else{
-            send(nova_porta, "Erro no seu ping.", 200, 0);
+            //proto nao ok
+            send(nova_porta, authenticate_back(400, ip_meu, ip_cliente), 200, 0);
         }
-        //close(nova_porta); /* essa parte somente o pai executa */
+        
+        /*if (fork()==0){ // se for o filho
+            //printf("\nxxxxx fork == 0 xxxxx\n");
+            close(porta); // o filho nao aceita conexoes a mais
+            //close(nova_porta);
+            //exit(0); // tao logo termine, o filho pode sair
+        }
+        else{
+            //printf("\nxxxxx fork != 0 xxxxx\n");
+        }*/
+        close(nova_porta); // essa parte somente o pai executa
     }
 }

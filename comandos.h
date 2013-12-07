@@ -20,29 +20,30 @@ extern "C" {
 
 #define MAX 50
 
+typedef struct{
+    int    id;          // 1, 2, 3...
+    char * name;        // "nome do arquivo.txt"
+    char * size;        // "100", "15487"... (KB)
+    char * http;        // Endereco gerado para disponibilizacao do arquivo
+    char * md5;         // Assinatura do arquivo para validacao
+} archive_def;
+
 typedef struct proto{
-    char protocol[5];
-    char command[20];
-    int    status;
-    char passport[30];
-    char back[200];
-    char sender[20];
-    char receptor[20];
+    char protocol[5];   // Nome do protocolo
+    char command[20];   // Identificacao do comando
+    int  status;        // Codigo de erro ou validacao
+    char passport[30];  // Chave de autenticacao
+    char back[200];     // Dado retornado
+    archive_def file;   // Informacoes sobre arquivo
+    char sender[20];    // IP Remetente
+    char recipient[20]; // IP Destinatario
+    int  ok;            // Construcao correta do protocolo
 } protocolo;
 
 typedef struct ips{
     char ip[MAX][20];
     int size;
 } ips_list;
-
-typedef struct{
-    char * type;        // "file" or "folder"
-    int    id;          // 1, 2, 3...
-    char * name;        // "nome do arquivo.txt"
-    char * size;        // "100", "15487"... (KB)
-    char * file;        // O arquivo em si (de algum jeito)(bin, hexa, base64...?)(char, int...?)
-    char * md5;
-} archive_def;
 
 void * cliente();
 
@@ -54,7 +55,7 @@ char * pong(char * meu_ip, char * seu_ip);
 
 char * agent_list(char * meu_ip, char * seu_ip);
 
-char * agent_list_back();
+char * agent_list_back(int code, char * ips_string, char * ip_meu, char * ip_destino);
 
 char * authenticate(char * pass, char * ip_meu, char * ip_destino);
 
@@ -72,13 +73,25 @@ char * end_connection(char * ip_meu, char * ip_destino);
 
 int qual_comando(char * comando);
 
+char ** get_command();
+
+int run_command(char ** comando, char * ip_return, int * esc_sessao, int * quit);
+
 char * get_my_ip();
 
-char * insert_ip(char * novo_ip);
+int insert_ip(char ips_string[50][20], char * novo_ip);
 
-char ** get_ips_list();
+int remove_ip(char ips_string[50][20], char * target);
+
+char * get_ips_string(char ips_string[50][20]);
 
 protocolo set_proto(char * entrada);
 
-int set_ips_list(char * proto_back);
+int set_ips_array(char ips_string[50][20], char * proto_back);
+
+int ips_size(int modifier);
+
+int find_ip(char ips_array[50][20], char * target);
+
+void help();
 
