@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
+#include <pthread.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -9,25 +10,16 @@
 #include "comandos.h"
 
 #define PORTA_SERVIDOR 9876
+#define MAX_THREADS 10 // Quantas conexoes simultaneas
 #define MAX 50 // Quantos IPs na lista
 #define TAM 20 // Caracteres no IP
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
 
-void * servidor(){
+
+int servidor(){
     
-    int porta, nova_porta, tamanho, numbytes, i;
-    int ping, logado, saiu;
+    int porta;
     struct sockaddr_in endereco_meu;
-    struct sockaddr_in endereco_cliente;
-    char buffer[1000];
-    char ips[50][20];
-    char * ips_string = (char*) malloc(1000*sizeof(char));
-    char * ip_meu     = (char*) malloc(20*sizeof(char));
-    char * ip_cliente = (char*) malloc(20*sizeof(char));
-    protocolo protoin;
-    archive_def files[10];
-    
-    strcpy(ip_meu, get_my_ip());
     
     /* cria socket. PF_INET define IPv4, SOCK_STREAM define TCP */
     porta = socket(PF_INET, SOCK_STREAM, 0);
@@ -54,29 +46,60 @@ void * servidor(){
         exit(1);
     }
     
+    return porta;
+
+}
+
+/* Aguarda conexoes ***********************************************************/
+void * start_connection(void* server_port){
+    
+    int porta, nova_porta, tamanho, numbytes, i, repete;
+    static int num_threads = 0;
+    char ip_meu[20];
+    char ip_cliente[20];
+    char buffer[1000];
+    static char ips[50][20];
+    struct sockaddr_in endereco_cliente;
+    pthread_t new_thread;
+    protocolo protoin;
+    static archive_def files[100];
+    
+    porta = (int) server_port;
     tamanho = sizeof(struct sockaddr_in);
+    strcpy(ip_meu, get_my_ip());
     
     /*Teste*/
-    insert_ip(ips, "111.222.333.444");
-    insert_ip(ips, "2.3.8.444");
-    insert_ip(ips, "199.5.55.5");
-    for(i = 0; i < 10; i++){
+    insert_ip(1, ips, "111.222.333.444");
+    insert_ip(1, ips, "2.3.8.444");
+    insert_ip(1, ips, "199.5.55.5");
+    for(i = 1; i <= 10; i++){
         files[i].id = i;
-        files[i].name = (char*) malloc(50*sizeof(char));
-        sprintf(files[i].name, "arq%d.txt", i*3);
-        files[i].size = (char*) malloc(20*sizeof(char));
-        sprintf(files[i].size, "%d", i*30+215);
-        files[i].http = (char*) malloc(50*sizeof(char));
+        sprintf(files[i].name, "arq%d.txt", i/**3*/);
+        sprintf(files[i].size, "%d", i/**30+215*/);
         sprintf(files[i].http, "http://%s/%s", ip_meu, files[i].name);
-        files[i].md5 = (char*) malloc(50*sizeof(char));
         strcpy(files[i].md5, "Breve.Aguarde!");
     }
+    /*Enviar quando solicitado arquivo inexistente*/
+    files[0].id = 0;
+    strcpy(files[0].name, "Arquivo nao existe");
+    strcpy(files[0].size, "0");
+    strcpy(files[0].http, ":(");
+    strcpy(files[0].md5, " ");
     
-/* Aguarda conexoes ***********************************************************/
-    while (1){
+    repete = 1;
+    while(repete){
         
         /*Fica esperando aqui*/
         nova_porta = accept(porta, (struct sockaddr*)&endereco_cliente, &tamanho);
+        
+        /* Ao aceitar uma conexao, cria uma nova thread para esperar nova conexao. */
+        /* Se o numero de threads chegou ao limite, nao abre uma nova, mas repete 
+         * a atual, quando terminar de tratar a conexao corrente. */
+        if(num_threads < MAX_THREADS){
+            pthread_create(&new_thread, NULL, start_connection, (void*) porta);
+            num_threads++;
+            repete = 0;
+        }
         
         if(nova_porta==-1){
             perror("\n ::::: Erro: servidor: accept retornou erro\n");
@@ -87,8 +110,6 @@ void * servidor(){
         strcpy(ip_cliente, inet_ntoa(endereco_cliente.sin_addr));
         
 /* Recebe dados *******************************************************/
-        ping = 0;
-        //printf("\nservidor entrou no ping.");
         if((numbytes = recv(nova_porta, buffer, 999, 0)) == -1) {
             perror("\n ::::: Erro: Servidor nao conseguiu receber.\n");
             break;
@@ -112,29 +133,30 @@ void * servidor(){
                         if(send(nova_porta, authenticate_back(200, ip_meu, ip_cliente), 200, 0) == -1){
                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'authenticate-back'.");
                         }
-                        insert_ip(ips, ip_cliente);
+                        insert_ip(1, ips, ip_cliente);
                     }
                     else{
                         send(nova_porta, authenticate_back(203, ip_meu, ip_cliente), 200, 0);
                     }
                 }
                 else{
-                    if(find_ip(ips, ip_cliente)){
+                    /* A partir daqui so aceita se o cliente estiver logado */
+                    if(server_find_ip(ips, ip_cliente)){
                         if(!strcmp(protoin.command, "agent-list")){
-                            if(send(nova_porta, agent_list_back(200, get_ips_string(ips), ip_meu, ip_cliente), 200, 0) == -1){
+                            if(send(nova_porta, agent_list_back(200, get_ips_string(ips), ip_meu, ip_cliente), 999, 0) == -1){
                                 perror("\n ::::: Erro: servidor nao conseguiu enviar 'agent-list-back'.");
                             }
                         }
                         else{
                             if(!strcmp(protoin.command, "archive-list")){
-                                if(send(nova_porta, archive_list_back(200, files, ip_meu, ip_cliente), 200, 0) == -1){
+                                if(send(nova_porta, archive_list_back(200, files, 10, ip_meu, ip_cliente), 999, 0) == -1){
                                     perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-list-back'.");
                                 }
                             }
                             else{
                                 if(!strcmp(protoin.command, "archive-request")){
-                                    if(1/*tem_file(protoin.id)*/){
-                                        if(send(nova_porta, archive_request_back(302, files[2], ip_meu, ip_cliente), 200, 0) == -1){
+                                    if(tem_arch(files, 11, protoin.file.id)){
+                                        if(send(nova_porta, archive_request_back(302, files[protoin.file.id], ip_meu, ip_cliente), 200, 0) == -1){
                                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-request-back'.");
                                         }
                                     }
@@ -144,8 +166,7 @@ void * servidor(){
                                 }
                                 else{
                                     if(!strcmp(protoin.command, "end-connection")){
-                                        saiu = 1;
-                                        remove_ip(ips, ip_cliente);
+                                        remove_ip(1, ips, ip_cliente);
                                     }
                                     else{
                                         //comando nao reconhecido
@@ -165,16 +186,15 @@ void * servidor(){
             //proto nao ok
             send(nova_porta, authenticate_back(400, ip_meu, ip_cliente), 200, 0);
         }
-        
-        /*if (fork()==0){ // se for o filho
-            //printf("\nxxxxx fork == 0 xxxxx\n");
-            close(porta); // o filho nao aceita conexoes a mais
-            //close(nova_porta);
-            //exit(0); // tao logo termine, o filho pode sair
-        }
-        else{
-            //printf("\nxxxxx fork != 0 xxxxx\n");
-        }*/
-        close(nova_porta); // essa parte somente o pai executa
     }
+    /*if (fork()==0){ // se for o filho
+        //printf("\nxxxxx fork == 0 xxxxx\n");
+        close(porta); // o filho nao aceita conexoes a mais
+        //close(nova_porta);
+        //exit(0); // tao logo termine, o filho pode sair
+    }
+    else{
+        //printf("\nxxxxx fork != 0 xxxxx\n");
+    }*/
+    close(nova_porta); // essa parte somente o pai executa
 }

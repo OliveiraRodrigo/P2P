@@ -13,15 +13,16 @@
 
 void * cliente(){
     
-    int i, j, pong, logado, logout, seq, esc_sessao, quit;
+    int i, j, pong, logado, logout, seq, quit;
     int porta_destino, numbytes, codigo;
     struct sockaddr_in endereco_destino;
     struct hostent *he;
     long addr_destino, temp_addr;
     char buffer[1000];
+    char ips[50][20];
     char ** comando;
-    char * ip_meu     = (char*) malloc(20*sizeof(char));
-    char * ip_destino = (char*) malloc(20*sizeof(char));
+    char ip_meu[20];
+    char ip_destino[20];
     protocolo protoin;
     archive_def * files;
     
@@ -39,7 +40,7 @@ void * cliente(){
     while(!quit){
         
         comando = get_command();
-        if(!run_command(comando, ip_meu, &esc_sessao, &quit)){
+        if(!run_command(comando, ip_meu, &quit)){
             
             if(!strcmp(comando[0], "try")){
                 
@@ -101,6 +102,8 @@ void * cliente(){
                                     if(!strcmp(protoin.command, "authenticate-back")){
                                         if(protoin.status == 200){
                                             printf("\n P2P:> Autenticacao com %s aceita.\n", ip_destino);
+                                            //Salva o IP para desconectar ao sair.
+                                            insert_ip(0, ips, ip_destino);
                                         }
                                         else{
                                             printf("\n P2P:> Erro: autenticacao com %s falhou. Codigo %d.\n", ip_destino, protoin.status);
@@ -192,7 +195,7 @@ void * cliente(){
                                         if(protoin.ok){
                                             if(!strcmp(protoin.command, "archive-list-back")){
                                                 if(protoin.status == 200){
-                                                    printf("\n P2P:> Arquivos: \"%s\"", protoin.back);
+                                                    printf("\n P2P:> Arquivos de %s:\n\n\"%s\"\n", ip_destino, protoin.back);
                                                 }
                                                 else{
                                                     printf("\n P2P:> Erro: %s informou codigo %d.\n", ip_destino, protoin.status);
@@ -224,7 +227,7 @@ void * cliente(){
                                 if(porta_destino != -1){
                                     
                                     printf("\n P2P:> Enviando archive-request...");
-                                    //printf("\n P2P:> %s", archive_request(comandos[1], ip_meu, ip_destino));
+                                    //printf("\n P2P:> %s", archive_request(comando[1], ip_meu, ip_destino));
                                     
                                     if(send(porta_destino, archive_request(comando[1], ip_meu, ip_destino), 200,0) != -1){
                                         
@@ -238,10 +241,11 @@ void * cliente(){
                                             if(protoin.ok){
                                                 if(!strcmp(protoin.command, "archive-request-back")){
                                                     if(protoin.status == 302){
-                                                        printf("\n P2P:> %s enviou o link do arquivo %d: %s",
+                                                        printf("\n P2P:> %s enviou os dados do arquivo %d:\n\n\t Link: %s\n\t MD5:  %s\n",
                                                                 ip_destino,
                                                                 protoin.file.id,
-                                                                protoin.file.http);
+                                                                protoin.file.http,
+                                                                protoin.file.md5);
                                                     }
                                                     else{
                                                         printf("\n P2P:> Erro: %s informou codigo %d.\n", ip_destino, protoin.status);
@@ -281,6 +285,8 @@ void * cliente(){
                                         else{
                                             perror("\n P2P:> Erro: nao conseguiu enviar 'end-connection'\n");
                                         }
+                                        //Remove o IP da lista, pois, ao sair, deste eu ja estou desconectado.
+                                        remove_ip(0, ips, ip_destino);
                                         close(porta_destino);
                                     }
                                 }
@@ -291,6 +297,12 @@ void * cliente(){
                         }
                     }
                 }
+            }
+        }
+        if(quit){
+            //Envia end-connection para todos os IPs com quem estou conectado.
+            for(i = 0; i < client_ips_size(0); i++){
+                send(porta_destino, end_connection(ip_meu, ips[i]), 200,0);
             }
         }
     }

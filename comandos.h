@@ -22,10 +22,10 @@ extern "C" {
 
 typedef struct{
     int    id;          // 1, 2, 3...
-    char * name;        // "nome do arquivo.txt"
-    char * size;        // "100", "15487"... (KB)
-    char * http;        // Endereco gerado para disponibilizacao do arquivo
-    char * md5;         // Assinatura do arquivo para validacao
+    char name[50];      // "nome do arquivo.txt"
+    char size[10];      // "100", "15487"... (KB)
+    char http[100];     // Endereco gerado para disponibilizacao do arquivo
+    char md5[50];       // Assinatura do arquivo para validacao
 } archive_def;
 
 typedef struct proto{
@@ -47,7 +47,11 @@ typedef struct ips{
 
 void * cliente();
 
-void * servidor();
+int porta(char * ip_destino);
+
+int servidor();
+
+void * start_connection(void *porta);
 
 char * ping(char * meu_ip, char * seu_ip);
 
@@ -63,7 +67,7 @@ char * authenticate_back(int code, char * ip_meu, char * ip_destino);
 
 char * archive_list(char * ip_meu, char * ip_destino);
 
-char * archive_list_back(int code, archive_def * archs, char * ip_meu, char * ip_destino);
+char * archive_list_back(int code, archive_def * archs, int quant_archs, char * ip_sender, char * ip_recipient);
 
 char * archive_request(char * arch_id, char * ip_meu, char * ip_destino);
 
@@ -75,23 +79,31 @@ int qual_comando(char * comando);
 
 char ** get_command();
 
-int run_command(char ** comando, char * ip_return, int * esc_sessao, int * quit);
+int run_command(char ** comando, char * ip_return, int * quit);
 
 char * get_my_ip();
 
-int insert_ip(char ips_string[50][20], char * novo_ip);
+/* quem: 0 = lista de IPs do cliente,
+ *       1 = lista de IPs so servidor */
+int insert_ip(int quem, char ips_string[50][20], char * novo_ip);
 
-int remove_ip(char ips_string[50][20], char * target);
+int remove_ip(int quem, char ips_string[50][20], char * target);
 
 char * get_ips_string(char ips_string[50][20]);
 
+int tem_arch(archive_def * archs, int quant_archs, int id);
+
 protocolo set_proto(char * entrada);
 
-int set_ips_array(char ips_string[50][20], char * proto_back);
+//int set_ips_array(char ips_string[50][20], char * proto_back);
 
-int ips_size(int modifier);
+int server_ips_size(int modifier);
 
-int find_ip(char ips_array[50][20], char * target);
+int server_ips_size(int modifier);
+
+int client_ips_size(int modifier);
+
+int server_find_ip(char ips_array[50][20], char * target);
 
 void help();
 
