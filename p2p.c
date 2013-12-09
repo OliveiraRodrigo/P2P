@@ -18,19 +18,21 @@ int main(int argc, char** argv) {
     pthread_t thread_cliente;
     int fim_servidor, fim_cliente;
     
+    int porta = servidor();
+    
     printf("\n\n\n\n\n\n\n\n\n\n");
     printf("\n== P2P =====================================\n");
     printf("\n __________________________________________\n");
     printf("\n Bem-vindo ao programa P2P!\n");
     
-    pthread_create(&thread_servidor, NULL, servidor, NULL/*(void*)&args*/);
+    pthread_create(&thread_servidor, NULL, start_connection, (void*) porta);
     //servidor();
     
-    //pthread_create(&thread_cliente, NULL, cliente, NULL/*(void*)argv*/);
-    cliente();
+    pthread_create(&thread_cliente, NULL, cliente, NULL);
+    //cliente();
     
-    //pthread_join(cliente, NULL);
-    //pthread_join(servidor, NULL);
+    //pthread_join(thread_servidor, NULL);
+    pthread_join(thread_cliente, NULL);
     
     return (EXIT_SUCCESS);
 }

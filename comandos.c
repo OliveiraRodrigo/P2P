@@ -108,26 +108,34 @@ char * archive_list(char * ip_sender, char * ip_recipient){
     return saida;
 }
 
-char * archive_list_back(int code, archive_def * archs, char * ip_sender, char * ip_recipient){
+char * archive_list_back(int code, archive_def * archs, int quant_archs, char * ip_sender, char * ip_recipient){
     
     char * saida       = (char*) malloc(200  * sizeof(char));
     char * archs_list  = (char*) malloc(2000 * sizeof(char));
     int i;
     
+    strcpy(archs_list, " ");
+    
     i = 0;
-    sprintf(archs_list, "{\"id\":%d,", archs[i].id);
-    sprintf(archs_list, "%s\"nome\":\"%s\",", archs_list, archs[i].name);
-    sprintf(archs_list, "%s\"size\":\"%s\"}", archs_list, archs[i].size);
-    i++;
-    archs++;
+    if(quant_archs > 0){
+        sprintf(archs_list, "{\"id\":%d,", archs[i].id);
+//printf("{\"id\":%d,", archs[i].id);
+        sprintf(archs_list, "%s\"nome\":\"%s\",", archs_list, archs[i].name);
+//printf("\"nome\":\"%s\",", archs[i].name);
+        sprintf(archs_list, "%s\"size\":\"%s\"}", archs_list, archs[i].size);
+//printf("\"size\":\"%s\"}", archs[i].size);
+        i++;
+    }
 ////////////////////////////////////////////////////////////////////////////////
-    while(archs){ // *archs
+    while(i < quant_archs){
 ////////////////////////////////////////////////////////////////////////////////
         sprintf(archs_list, "%s,{\"id\":%d,", archs_list, archs[i].id);
+//printf(",{\"id\":%d,", archs[i].id);
         sprintf(archs_list, "%s\"nome\":\"%s\",", archs_list, archs[i].name);
+//printf("\"nome\":\"%s\",", archs[i].name);
         sprintf(archs_list, "%s\"size\":\"%s\"}", archs_list, archs[i].size);
+//printf("\"size\":\"%s\"}", archs[i].size);
         i++;
-        archs++;
     }
     
     sprintf(saida, "{\"protocol\":\"pcmj\","
@@ -239,14 +247,14 @@ int qual_comando(char * comando){
     return 99;
 }
 */
-int run_command(char ** comando, char * ip_return, int * esc_return, int * quit_return){
+int run_command(char ** comando, char * ip_return, int * quit_return){
     
     if(!strcmp(comando[0], "ip")){
         strcpy(ip_return, get_my_ip());
         printf(" P2P:> %s\n", ip_return);
         return 1;
     }
-    if(!strcmp(comando[0], "setip")){ //get_mey_ip nao ta funfando no Linux
+    if(!strcmp(comando[0], "setip")){ //caso o get_my_ip nao funfe
         strcpy(ip_return, comando[1]);
         printf(" P2P:> Ok: usando %s como meu IP.\n", ip_return);
         return 1;
@@ -255,13 +263,7 @@ int run_command(char ** comando, char * ip_return, int * esc_return, int * quit_
         help();
         return 1;
     }
-    if(!strcmp(comando[0], "z")){
-        printf(" P2P:> Encerrou sessao atual de login.\n");
-        *esc_return = 1;
-        return 1;
-    }
     if(!strcmp(comando[0], "q")){ //"quit"
-        *esc_return = 1;
         *quit_return = 1;
         return 1;
     }
@@ -300,11 +302,17 @@ char * get_my_ip(){
     return ip;
 }
 
-int insert_ip(char ips_array[50][20], char * novo_ip){
+int insert_ip(int quem, char ips_array[50][20], char * novo_ip){
     
-    int i = 0;
+    int i, size;
     
-    while(i < ips_size(0)){
+    if(quem == 0) //cliente
+        size = client_ips_size(0);
+    else //servidor
+        size = server_ips_size(0);
+    
+    i = 0;
+    while(i < size){
         //procura se ja nao tem
         if(!strcmp(ips_array[i], novo_ip)){
             return 1;
@@ -314,21 +322,26 @@ int insert_ip(char ips_array[50][20], char * novo_ip){
         }
     }
     
-    i = ips_size(0);
-    
+    i = size;
     if(i < MAX-1){
         strcpy(ips_array[i], novo_ip);
-        ips_size(1);
+        if(quem == 0)
+            client_ips_size(1);
+        else
+            server_ips_size(1);
         return 0;
     }
     return 1;
 }
 
-int remove_ip(char ips_array[50][20], char * target){
+int remove_ip(int quem, char ips_array[50][20], char * target){
     
     int i, size;
     
-    size = ips_size(0);
+    if(quem == 0) //cliente
+        size = client_ips_size(0);
+    else //servidor
+        size = server_ips_size(0);
     
     if(size == 0){
         return 1;
@@ -340,24 +353,21 @@ int remove_ip(char ips_array[50][20], char * target){
                 strcpy(ips_array[i], ips_array[i+1]);
                 i++;
             }
-            ips_size(-1);
+            if(quem == 0)
+                client_ips_size(-1);
+            else
+                server_ips_size(-1);
             return 0;
         }
     }
     return 1;
 }
 
-int ips_size(int modifier){
-    static int i = 0;
-    i += modifier;
-    return i;
-}
-
-int find_ip(char ips_array[50][20], char * target){
+int server_find_ip(char ips_array[50][20], char * target){
     
     int i = 0;
     
-    while(i < ips_size(0)){
+    while(i < server_ips_size(0)){
         if(!strcmp(ips_array[i], target)){
             return 1;
         }
@@ -366,6 +376,18 @@ int find_ip(char ips_array[50][20], char * target){
         }
     }
     return 0;
+}
+
+int server_ips_size(int modifier){
+    static int i = 0;
+    i += modifier;
+    return i;
+}
+
+int client_ips_size(int modifier){
+    static int i = 0;
+    i += modifier;
+    return i;
 }
 /* Desnecessaria
 int set_ips_array(char ips_array[50][20], char * proto_back){
@@ -402,7 +424,7 @@ char * get_ips_string(char ips_array[50][20]){
     int i, size;
     char * saida;
     
-    size = ips_size(0);
+    size = server_ips_size(0);
     saida = (char*) malloc(1000*size*sizeof(char));
 
     i = 0;
@@ -416,6 +438,18 @@ char * get_ips_string(char ips_array[50][20]){
     return saida;
 }
 
+int tem_arch(archive_def * archs, int quant_archs, int id){
+    
+    int i;
+    
+    for(i = 0; i < quant_archs; i++){
+        if(id == archs[i].id){
+            return 1;
+        }
+    }
+    return 0;
+}
+
 protocolo set_proto(char * entrada){
     
     int i, j;
@@ -427,88 +461,78 @@ protocolo set_proto(char * entrada){
 //printf("\nHere we go!\n");
     i = 0;
     if(entrada[i] == '{'){
-//printf("%c",entrada[i]);
+//printf("%s",entrada[i]);
             i++;
             while(entrada[i] != '}'){
                 j = 0;
                 while(entrada[i] == ' '){
-//printf("%c",entrada[i]);
+//printf("%s",entrada[i]);
                     i++;
                 }
                 if(entrada[i] == '"'){
-//printf("%c",entrada[i]);
+//printf("%s",entrada[i]);
                     i++;
                     while(entrada[i] != '"'){
                         field[j] = entrada[i];
-//printf("%c",entrada[i]);
+//printf("%s",entrada[i]);
                         i++;
                         j++;
                     }
-//printf("%c",entrada[i]);
+//printf("%s",entrada[i]);
                     i++;
                     field[j] = '\0';
                     j = 0;
                     if(entrada[i] != ':'){
-//printf("%c",entrada[i]);
+//printf("%s",entrada[i]);
                         //erro
                         printf(" --00-- ");
                         return proto;
                     }
                     else{
-//printf("%c",entrada[i]);
+//printf("%s",entrada[i]);
                         i++;
                     }
-                if(entrada[i] == '['){
-////printf("%c",entrada[i]);
-                    //i++;
-                    while(entrada[i] != ']'){
-						data[j] = entrada[i];
-//printf("%c",entrada[i]);
-						i++;
-						j++;
-					}
-					data[j] = entrada[i];
-//printf("%c",entrada[i]);
-					i++;
-                                        j++;
-					data[j] = '\0';
-					j = 0;
-				}
-				else{
-                    if(entrada[i] == '"'){
-//printf("%c",entrada[i]);
-						i++;
-                    while(entrada[i] != '"'){
-                        //if(entrada[i] == '['){
-                        //    i++;
-                            //while(entrada[i] != ']'){
-                                //if(entrada[i] == '{'){
-                                    //i++;
-                                    //while(entrada[i] != '}'){
-                                        data[j] = entrada[i];
-//printf("%c",entrada[i]);
-                                        i++;
-                                        j++;
-                                    }
-//printf("%c",entrada[i]);
-									i++;
-									data[j] = '\0';
-									j = 0;
-                                //}
-                            //}
-                        //}
-                        //data[j] = entrada[i];
-                        //i++;
-                        //j++;
+                    if(entrada[i] == '['){
+                        while(entrada[i] != ']'){
+                            data[j] = entrada[i];
+//printf("%s",entrada[i]);
+                            i++;
+                            j++;
+                        }
+                        data[j] = entrada[i];
+//printf("%s",entrada[i]);
+                        i++;
+                        j++;
+                        data[j] = '\0';
+                        j = 0;
                     }
                     else{
-//printf("%c",entrada[i]);
-						//erro
-						printf(" --x-- ");
-						return proto;
-					}
-				}
-                    if(!strcmp(field, "protocol")){
+                        if(entrada[i] == '"'){
+//printf("%s",entrada[i]);
+                            i++;
+                            while(entrada[i] != '"'){
+                                data[j] = entrada[i];
+//printf("%s",entrada[i]);
+                                i++;
+                                j++;
+                            }
+//printf("%s",entrada[i]);
+                            i++;
+                            data[j] = '\0';
+                            j = 0;
+                    }
+                    else{
+                        while(entrada[i] != ','){
+                            data[j] = entrada[i];
+                            i++;
+                            j++;
+                        }
+                        //Aqui nao incrementa o i, pois vai ser incrementado quando achar a virgula, mais abaixo.
+                        data[j] = '\0';
+                        j = 0;
+                    }
+                }
+                if(!strcmp(field, "protocol")){
                         strcpy(proto.protocol, data);
                         strcat(seq, "p");
                     }
@@ -578,18 +602,12 @@ protocolo set_proto(char * entrada){
                         }
                     }
                     if(entrada[i] == ','){
-//printf("%c",entrada[i]);
+//printf("%s",entrada[i]);
                         i++;
                     }
-                //}
-                //else{
-                    //erro
-                //    printf(" --2-- ");
-                //    return proto;
-                //}
                 }
                 else{
-//printf("%c",entrada[i]);
+//printf("%s",entrada[i]);
                     //erro
                     printf(" --3-- ");
                     return proto;
@@ -597,14 +615,14 @@ protocolo set_proto(char * entrada){
             }
     }
     else{
-//printf("%c",entrada[i]);
+//printf("%s",entrada[i]);
         //erro
         printf(" --4-- ");
         return proto;
     }
     
     //Testa a ordenacao do protocolo
-    /*Mas me disseram que nao importa a ordem
+    /*Mas depois me disseram que nao importa a ordem, VTNC
     if(!strcmp(proto.command,"ping")){
         strcpy(ordem, "pcsr");
     }
@@ -664,7 +682,7 @@ protocolo set_proto(char * entrada){
         }
     }*/
     
-//printf("%c",entrada[i]);
+//printf("%s",entrada[i]);
 //printf("\nHere we came!\n");
     proto.ok = 1;
     return proto;
@@ -677,20 +695,21 @@ void help(){
     printf("\n"
            " try <IP>             Manda um ping pra <IP> e espera dele um pong.\n"
            "\n"
-           " login                Tenta autenticar-se com o mesmo IP.\n"
+           " login <IP>           Tenta autenticar-se com <IP>.\n"
            "\n"
-           " list-users           Solicita a lista de usuarios do peer atual.\n"
-           "                      Insere na lista local os IPs recebidos e retorna\n"
-           "                      a lista para o usuario. Precisa estar logado.\n"
+           "                      A partir daqui precisa estar logado!\n" 
+           "\n" 
+           " list-users <IP>      Solicita a lista de usuarios de <IP>.\n"
+           "                      Retorna a lista para o usuario.\n"
            "\n"
-           " list-files           Solicita a lista de arquivos do peer atual.\n"
-           "                      Retorna a lista para o usuario. Precisa estar logado.\n"
+           " list-files <IP>      Solicita a lista de arquivos de <IP>.\n"
+           "                      Retorna a lista para o usuario.\n"
            "\n"
-           " down <id>            Solicita ao peer atual o arquivo de id:\"<id>\".\n"
-           "                      Se confirmada a disponibilidade, recebe o arquivo.\n"
-           "                      Precisa estar logado.\n"
+           " down <id> <IP>       Solicita a <IP> o arquivo de id:<id>.\n"
+           "                      Se confirmada a disponibilidade, recebe o arquivo\n"
+           "                      e o MD5 do mesmo.\n"
            "\n"
-           " logout               Desconecta-se do peer atual e solicita a exclusao\n"
+           " logout <IP>          Desconecta-se de <IP> e solicita a exclusao\n"
            "                      da lista de IPs deste.\n"
            "\n"
            " quit                 Executa logout e sai do programa.\n"
