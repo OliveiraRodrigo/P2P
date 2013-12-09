@@ -234,7 +234,7 @@ void * cliente(){
                                         if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
                                             
                                             buffer[numbytes] = '\0';
-                                            printf("\n P2P:> Cliente recebeu: %s", buffer);
+                                            //printf("\n P2P:> Cliente recebeu: %s", buffer);
                                             protoin = set_proto(buffer);
                                             
                                             //Testa se recebeu um archive-list-back ok.

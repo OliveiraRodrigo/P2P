@@ -85,7 +85,7 @@ char * agent_list(char * ip_sender, char * ip_recipient){
 
 char * agent_list_back(int code, char * ips_string, char * ip_sender, char * ip_recipient){
     
-    char * saida     = (char*) malloc(200 * sizeof(char));
+    char * saida     = (char*) malloc(1000 * sizeof(char));
     
     sprintf(saida, "{\"protocol\":\"pcmj\","
                    "\"command\":\"agent-list-back\","
@@ -111,7 +111,7 @@ char * archive_list(char * ip_sender, char * ip_recipient){
 
 char * archive_list_back(int code, archive_def * archs, int quant_archs, char * ip_sender, char * ip_recipient){
     
-    char * saida       = (char*) malloc(200  * sizeof(char));
+    char * saida       = (char*) malloc(2000  * sizeof(char));
     char * archs_list  = (char*) malloc(2000 * sizeof(char));
     int i;
     
@@ -120,22 +120,14 @@ char * archive_list_back(int code, archive_def * archs, int quant_archs, char * 
     i = 0;
     if(quant_archs > 0){
         sprintf(archs_list, "{\"id\":%d,", archs[i].id);
-//printf("{\"id\":%d,", archs[i].id);
         sprintf(archs_list, "%s\"nome\":\"%s\",", archs_list, archs[i].name);
-//printf("\"nome\":\"%s\",", archs[i].name);
         sprintf(archs_list, "%s\"size\":\"%s\"}", archs_list, archs[i].size);
-//printf("\"size\":\"%s\"}", archs[i].size);
         i++;
     }
-////////////////////////////////////////////////////////////////////////////////
     while(i < quant_archs){
-////////////////////////////////////////////////////////////////////////////////
         sprintf(archs_list, "%s,{\"id\":%d,", archs_list, archs[i].id);
-//printf(",{\"id\":%d,", archs[i].id);
         sprintf(archs_list, "%s\"nome\":\"%s\",", archs_list, archs[i].name);
-//printf("\"nome\":\"%s\",", archs[i].name);
         sprintf(archs_list, "%s\"size\":\"%s\"}", archs_list, archs[i].size);
-//printf("\"size\":\"%s\"}", archs[i].size);
         i++;
     }
     
@@ -164,7 +156,7 @@ char * archive_request(char * arch_id, char * ip_sender, char * ip_recipient){
 
 char * archive_request_back(int code, archive_def arch, char * ip_sender, char * ip_recipient){
     
-    char * saida = (char*) malloc(200  * sizeof(char));
+    char * saida = (char*) malloc(1000  * sizeof(char));
     
     sprintf(saida, "{\"protocol\":\"pcmj\","
                    "\"command\":\"archive-request-back\","

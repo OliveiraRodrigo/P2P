@@ -75,8 +75,6 @@ char * archive_request_back(int code, archive_def arch, char * ip_meu, char * ip
 
 char * end_connection(char * ip_meu, char * ip_destino);
 
-int qual_comando(char * comando);
-
 char ** get_command();
 
 int run_command(char ** comando, char * ip_return, int * quit);
