@@ -18,5 +18,7 @@ int main(void){
             ch = getc(fp);
         }
         fclose(fp);
-    }        
+    }
+    
+        
 }
