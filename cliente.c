@@ -51,7 +51,7 @@ void * cliente(){
                     printf("\n P2P:> Enviando ping...");
                     //printf("\n P2P:> %s", ping(ip_meu, ip_destino));
                     
-                    if(send(porta_destino, ping(ip_meu, ip_destino), 200, 0) != -1){
+                    if(send(porta_destino, ping(ip_meu, ip_destino), 999, 0) != -1){
                         
                         if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
                             
@@ -89,7 +89,7 @@ void * cliente(){
                         printf("\n P2P:> Enviando authenticate...");
                         //printf("\n P2P:> %s", authenticate(CHAVE, ip_meu, ip_destino));
                         
-                        if(send(porta_destino, authenticate(CHAVE, ip_meu, ip_destino), 200,0) != -1){
+                        if(send(porta_destino, authenticate(CHAVE, ip_meu, ip_destino), 999,0) != -1){
                             
                             if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
                                 
@@ -137,7 +137,7 @@ void * cliente(){
                             printf("\n P2P:> Enviando agent-list...");
                             //printf("\n P2P:> %s", agent_list(ip_meu, ip_destino));
                             
-                            if(send(porta_destino, agent_list(ip_meu, ip_destino), 200,0) != -1){
+                            if(send(porta_destino, agent_list(ip_meu, ip_destino), 999,0) != -1){
                                 
                                 if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
                                     
@@ -183,7 +183,7 @@ void * cliente(){
                                 printf("\n P2P:> Enviando archive-list...");
                                 //printf("\n P2P:> %s", archive_list(ip_meu, ip_destino));
                                 
-                                if(send(porta_destino, archive_list(ip_meu, ip_destino), 200,0) != -1){
+                                if(send(porta_destino, archive_list(ip_meu, ip_destino), 999,0) != -1){
                                     
                                     if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
                                         
@@ -229,12 +229,12 @@ void * cliente(){
                                     printf("\n P2P:> Enviando archive-request...");
                                     //printf("\n P2P:> %s", archive_request(comando[1], ip_meu, ip_destino));
                                     
-                                    if(send(porta_destino, archive_request(comando[1], ip_meu, ip_destino), 200,0) != -1){
+                                    if(send(porta_destino, archive_request(comando[1], ip_meu, ip_destino), 999,0) != -1){
                                         
                                         if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
                                             
                                             buffer[numbytes] = '\0';
-                                            //printf("\n P2P:> Cliente recebeu: %s", buffer);
+                                            printf("\n P2P:> Cliente recebeu: %s", buffer);
                                             protoin = set_proto(buffer);
                                             
                                             //Testa se recebeu um archive-list-back ok.
@@ -279,7 +279,7 @@ void * cliente(){
                                         printf("\n P2P:> Enviando end-connection...");
                                         //printf("\n P2P:> %s", end-connection(ip_meu, ip_destino));
                                         
-                                        if(send(porta_destino, end_connection(ip_meu, ip_destino), 200,0) != -1){
+                                        if(send(porta_destino, end_connection(ip_meu, ip_destino), 999,0) != -1){
                                             printf("\n P2P:> Desconectado de %s.\n", ip_destino);
                                         }
                                         else{
@@ -302,7 +302,7 @@ void * cliente(){
         if(quit){
             //Envia end-connection para todos os IPs com quem estou conectado.
             for(i = 0; i < client_ips_size(0); i++){
-                send(porta_destino, end_connection(ip_meu, ips[i]), 200,0);
+                send(porta_destino, end_connection(ip_meu, ips[i]), 999,0);
             }
         }
     }

@@ -226,28 +226,7 @@ char ** get_command(){
         saida[i][j-1] = '\0'; // Descarta o '\n'.
         return saida;
 }
-/*
-int qual_comando(char * comando){
-    
-    if(!strcmp(comando, "try"))
-        return 0;
-    if(!strcmp(comando, "login"))
-        return 1;
-    if(!strcmp(comando, "list"))
-        return 2;
-    if(!strcmp(comando, "down"))
-        return 3;
-    if(!strcmp(comando, "ip"))
-        return 4;
-    if(!strcmp(comando, "setip"))
-        return 5;
-    if(!strcmp(comando, "help"))
-        return 97;
-    if(!strcmp(comando, "q")) //"quit"
-        return 98;
-    return 99;
-}
-*/
+
 int run_command(char ** comando, char * ip_return, int * quit_return){
     
     if(!strcmp(comando[0], "ip")){
@@ -462,46 +441,46 @@ protocolo set_proto(char * entrada){
 //printf("\nHere we go!\n");
     i = 0;
     if(entrada[i] == '{'){
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
             i++;
             while(entrada[i] != '}'){
                 j = 0;
                 while(entrada[i] == ' '){
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
                     i++;
                 }
                 if(entrada[i] == '"'){
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
                     i++;
                     while(entrada[i] != '"'){
                         field[j] = entrada[i];
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
                         i++;
                         j++;
                     }
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
                     i++;
                     field[j] = '\0';
                     j = 0;
                     if(entrada[i] != ':'){
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
                         //erro
                         printf(" --00-- ");
                         return proto;
                     }
                     else{
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
                         i++;
                     }
                     if(entrada[i] == '['){
                         while(entrada[i] != ']'){
                             data[j] = entrada[i];
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
                             i++;
                             j++;
                         }
                         data[j] = entrada[i];
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
                         i++;
                         j++;
                         data[j] = '\0';
@@ -509,15 +488,15 @@ protocolo set_proto(char * entrada){
                     }
                     else{
                         if(entrada[i] == '"'){
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
                             i++;
                             while(entrada[i] != '"'){
                                 data[j] = entrada[i];
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
                                 i++;
                                 j++;
                             }
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
                             i++;
                             data[j] = '\0';
                             j = 0;
@@ -525,10 +504,11 @@ protocolo set_proto(char * entrada){
                     else{
                         while(entrada[i] != ','){
                             data[j] = entrada[i];
+//printf("%c",entrada[i]);
                             i++;
                             j++;
                         }
-                        //Aqui nao incrementa o i, pois vai ser incrementado quando achar a virgula, mais abaixo.
+                        //Aqui NAO incrementa o i, pois vai ser incrementado quando achar a virgula, mais abaixo.
                         data[j] = '\0';
                         j = 0;
                     }
@@ -589,6 +569,7 @@ protocolo set_proto(char * entrada){
                                                             }
                                                             else{
                                                                 //erro
+//printf("%s",field);
                                                                 printf(" --1-- ");
                                                                 return proto;
                                                             }
@@ -603,12 +584,12 @@ protocolo set_proto(char * entrada){
                         }
                     }
                     if(entrada[i] == ','){
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
                         i++;
                     }
                 }
                 else{
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
                     //erro
                     printf(" --3-- ");
                     return proto;
@@ -616,7 +597,7 @@ protocolo set_proto(char * entrada){
             }
     }
     else{
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
         //erro
         printf(" --4-- ");
         return proto;
@@ -683,7 +664,7 @@ protocolo set_proto(char * entrada){
         }
     }*/
     
-//printf("%s",entrada[i]);
+//printf("%c",entrada[i]);
 //printf("\nHere we came!\n");
     proto.ok = 1;
     return proto;
@@ -713,7 +694,8 @@ void help(){
            " logout <IP>          Desconecta-se de <IP> e solicita a exclusao\n"
            "                      da lista de IPs deste.\n"
            "\n"
-           " quit                 Executa logout e sai do programa.\n"
+           " quit                 Desconecta-se de todos os peers com quem ainda\n"
+           "                      esta conectado e sai do programa.\n"
            "\n");
     printf("\n __________________________________________\n");
     
