@@ -67,6 +67,7 @@ char * authenticate_back(int code, char * ip_sender, char * ip_recipient){
                    "\"sender\":\"%s\","
                    "\"receptor\":\"%s\"}\n", code, ip_sender, ip_recipient);
     
+    //printf("%s", saida);
     return saida;
 }
 
