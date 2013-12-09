@@ -27,7 +27,7 @@ int servidor(){
     /* verifica se foi criado */
     if (porta == -1){
         perror("\n ::::: Erro: porta nao foi criada corretamente");
-        exit(1);
+        //exit(1);
     }
     
     /* porta criada, agora faz o bind com o numero da porta desejado */
@@ -43,7 +43,7 @@ int servidor(){
     /* agora faz uma chamada ao listen*/
     if (listen(porta,50)==-1){
         perror("\n ::::: Erro: servidor tem problemas com o listen\n");
-        exit(1);
+        //exit(1);
     }
     
     return porta;
@@ -53,7 +53,8 @@ int servidor(){
 /* Aguarda conexoes ***********************************************************/
 void * start_connection(void* server_port){
     
-    int porta, nova_porta, tamanho, numbytes, i, repete;
+    int nova_porta, tamanho, numbytes, i, repete;
+    intptr_t porta;
     static int num_threads = 0;
     char ip_meu[20];
     char ip_cliente[20];
@@ -64,7 +65,7 @@ void * start_connection(void* server_port){
     protocolo protoin;
     static archive_def files[100];
     
-    porta = (int) server_port;
+    porta = (intptr_t) server_port;
     tamanho = sizeof(struct sockaddr_in);
     strcpy(ip_meu, get_my_ip());
     
@@ -122,7 +123,7 @@ void * start_connection(void* server_port){
         if(protoin.ok){
             if(!strcmp(protoin.command, "ping")){
                 //printf("\n ::::: Servidor enviando pong...\n");
-                if (send(nova_porta, pong(ip_meu, ip_cliente), 200, 0) == -1){
+                if (send(nova_porta, pong(ip_meu, ip_cliente), 999, 0) == -1){
                     perror("\n ::::: Erro: servidor nao conseguiu enviar 'pong'.");
                 }
             }
@@ -130,13 +131,13 @@ void * start_connection(void* server_port){
                 if(!strcmp(protoin.command, "authenticate")){
                     if(!strcmp(protoin.passport, CHAVE)){
                         //printf("\n ::::: Servidor enviando authenticate-back...\n");
-                        if(send(nova_porta, authenticate_back(200, ip_meu, ip_cliente), 200, 0) == -1){
+                        if(send(nova_porta, authenticate_back(200, ip_meu, ip_cliente), 999, 0) == -1){
                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'authenticate-back'.");
                         }
                         insert_ip(1, ips, ip_cliente);
                     }
                     else{
-                        send(nova_porta, authenticate_back(203, ip_meu, ip_cliente), 200, 0);
+                        send(nova_porta, authenticate_back(203, ip_meu, ip_cliente), 999, 0);
                     }
                 }
                 else{
@@ -156,12 +157,12 @@ void * start_connection(void* server_port){
                             else{
                                 if(!strcmp(protoin.command, "archive-request")){
                                     if(tem_arch(files, 11, protoin.file.id)){
-                                        if(send(nova_porta, archive_request_back(302, files[protoin.file.id], ip_meu, ip_cliente), 200, 0) == -1){
+                                        if(send(nova_porta, archive_request_back(302, files[protoin.file.id], ip_meu, ip_cliente), 999, 0) == -1){
                                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-request-back'.");
                                         }
                                     }
                                     else{
-                                        send(nova_porta, archive_request_back(404, files[0], ip_meu, ip_cliente), 200, 0);
+                                        send(nova_porta, archive_request_back(404, files[0], ip_meu, ip_cliente), 999, 0);
                                     }
                                 }
                                 else{
@@ -170,21 +171,21 @@ void * start_connection(void* server_port){
                                     }
                                     else{
                                         //comando nao reconhecido
-                                        send(nova_porta, authenticate_back(400, ip_meu, ip_cliente), 200, 0);
+                                        send(nova_porta, authenticate_back(400, ip_meu, ip_cliente), 999, 0);
                                     }
                                 }
                             }
                         }
                     }
                     else{
-                        send(nova_porta, authenticate_back(401, ip_meu, ip_cliente), 200, 0);
+                        send(nova_porta, authenticate_back(401, ip_meu, ip_cliente), 999, 0);
                     }
                 }
             }
         }
         else{
             //proto nao ok
-            send(nova_porta, authenticate_back(400, ip_meu, ip_cliente), 200, 0);
+            send(nova_porta, authenticate_back(400, ip_meu, ip_cliente), 999, 0);
         }
     }
     /*if (fork()==0){ // se for o filho

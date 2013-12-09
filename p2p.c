@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
     pthread_t thread_cliente;
     int fim_servidor, fim_cliente;
     
-    int porta = servidor();
+    intptr_t porta = servidor();
     
     printf("\n\n\n\n\n\n\n\n\n\n");
     printf("\n== P2P =====================================\n");
