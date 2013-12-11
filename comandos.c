@@ -188,7 +188,7 @@ char ** get_command(){
 /* Recebe os parametros caracter a caracter ***********************************/
         
     int i, j;
-    char ** saida;
+    char temp, **saida;
     
     /* Prompt */
     printf("\n P2P:> ");
@@ -201,21 +201,34 @@ char ** get_command(){
         
         i = 0;
         j = 0;
-        saida[i][j] = getchar();
-        j++;
-        
-        while(saida[i][j-1] != '\n'){
-            saida[i][j] = getchar();
+        temp = getchar();
+        do{
+            while((temp == 27)||(temp == 91)||
+                  (temp == 65)||(temp == 66)||
+                  (temp == 67)||(temp == 68)){
+                temp = getchar();
+            }
+            saida[i][j] = temp;
             if(saida[i][j] == ' '){
+                do temp = getchar();
+                while(temp == ' ');
                 saida[i][j] = '\0'; // Descarta o ' '.
                 j = 0;
                 i++;
             }
             else{
-                j++;
+                if(saida[i][j] == '\n'){
+                    saida[i][j] = '\0';
+                    break;
+                }
+                else{
+                    temp = getchar();
+                    j++;
+                }
             }
         }
-        saida[i][j-1] = '\0'; // Descarta o '\n'.
+        while(temp != '\n');
+        
         return saida;
 }
 
@@ -233,6 +246,10 @@ int run_command(char ** comando, char * ip_return, int * quit_return){
     }
     if(!strcmp(comando[0], "help")){
         help();
+        return 1;
+    }
+    if(!strcmp(comando[0], "quit")){
+        *quit_return = 1;
         return 1;
     }
     if(!strcmp(comando[0], "q")){ //"quit"
