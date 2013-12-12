@@ -18,6 +18,15 @@ extern "C" {
 
 #endif	/* COMANDOS_H */
 
+#define black   printf("\033[30m");
+#define red     printf("\033[31m");
+#define green   printf("\033[32m");
+#define orange  printf("\033[33m");
+#define blue    printf("\033[34m");
+#define pink    printf("\033[35m");
+#define cyan    printf("\033[36m");
+#define white   printf("\033[37m");
+
 #define MAX 50
 
 typedef struct{

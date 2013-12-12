@@ -20,10 +20,18 @@ int main(int argc, char** argv) {
     
     intptr_t porta = servidor();
     
-    printf("\n\n\n\n\n\n\n\n\n\n");
-    printf("\n== P2P =====================================\n");
-    printf("\n __________________________________________\n");
+    printf("\033[2J");//limpa a tela
+    printf("\033[46m");
+    black
+    printf("\n   P2P                                                                \n");
+    printf("\033[40m");
+    cyan
     printf("\n Bem-vindo ao programa P2P!\n");
+    white
+    printf("\n Para exibir os comandos digite ");orange printf("help");white printf(".\n");
+    cyan
+    printf("\n______________________________________________________________________\n");
+    white
     
     pthread_create(&thread_servidor, NULL, start_connection, (void*) porta);
     //servidor();

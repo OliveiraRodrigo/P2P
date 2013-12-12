@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <time.h>
 #include "comandos.h"
 
 #define PORTA_SERVIDOR 9876
@@ -25,6 +26,8 @@ void * cliente(){
     char ip_destino[20];
     protocolo protoin;
     archive_def * files;
+    //double ti, tf, tempo; // ti = tempo inicial // tf = tempo final
+    //struct timeval tempo_inicio, tempo_fim;
     
     /* Aloca espaco para 4 parametros com 50 caracteres cada */
     comando = (char**) malloc(4*sizeof(char*));
@@ -39,6 +42,11 @@ void * cliente(){
     quit = 0;
     while(!quit){
         
+        /*ti = 0;
+        tf = 0;
+        tempo = 0;
+        gettimeofday(&tempo_inicio, NULL);*/
+
         comando = get_command();
         if(!run_command(comando, ip_meu, &quit)){
             
@@ -48,7 +56,9 @@ void * cliente(){
                 porta_destino = porta(comando[1]);
                 if(porta_destino != -1){
                     
-                    printf("\n P2P:> Enviando ping...");
+                    printf("\033[K");
+                    green printf("\n P2P:> ");
+                    cyan printf("Enviando ping...");
                     //printf("\n P2P:> %s", ping(ip_meu, ip_destino));
                     
                     if(send(porta_destino, ping(ip_meu, ip_destino), 999, 0) != -1){
@@ -62,19 +72,25 @@ void * cliente(){
                             //Testa se recebeu um pong ok.
                             if(protoin.ok && !strcmp(protoin.command, "pong")){
                             //if(!strcmp(buffer, pong(ip_destino, ip_meu))){
-                                pong = 1;
-                                printf("\n P2P:> %s respondeu corretamente.\n", ip_destino);
+                                green printf("\n P2P:> "); orange printf("%s", ip_destino); cyan printf(" respondeu corretamente.\n");
                             }
                             else{
-                                printf("\n P2P:> Erro: %s retornou %s, codigo %d.\n", ip_destino, protoin.command, protoin.status);
+                                green printf("\n P2P:> ");
+                                red printf("Erro: ");
+                                orange printf("%s", ip_destino);
+                                red printf(" retornou %s codigo ", protoin.command);
+                                orange printf("%d", protoin.status);
+                                red printf(".\n");
                             }
                         }
                         else{
-                            perror("\n P2P:> Erro: nao conseguiu receber 'pong'\n");
+                            green printf("\n P2P:> ");
+                            red printf("Erro: nao foi possivel receber 'pong'\n");
                         }
                     }
                     else{
-                        perror("\n P2P:> Erro: nao conseguiu enviar 'ping'\n");
+                        green printf("\n P2P:> ");
+                        red printf("Erro: nao foi possivel enviar 'ping'\n");
                     }
                     close(porta_destino);
                 }
@@ -86,7 +102,9 @@ void * cliente(){
                     porta_destino = porta(comando[1]);
                     if(porta_destino != -1){
                     
-                        printf("\n P2P:> Enviando authenticate...");
+                        printf("\033[K");
+                        green printf("\n P2P:> ");
+                        cyan printf("Enviando authenticate...");
                         //printf("\n P2P:> %s", authenticate(CHAVE, ip_meu, ip_destino));
                         
                         if(send(porta_destino, authenticate(CHAVE, ip_meu, ip_destino), 999,0) != -1){
@@ -101,28 +119,46 @@ void * cliente(){
                                 if(protoin.ok){
                                     if(!strcmp(protoin.command, "authenticate-back")){
                                         if(protoin.status == 200){
-                                            printf("\n P2P:> Autenticacao com %s aceita.\n", ip_destino);
+                                            green printf("\n P2P:> ");
+                                            cyan printf("Autenticacao com ");
+                                            orange printf("%s", ip_destino);
+                                            cyan printf(" aceita.\n");
                                             //Salva o IP para desconectar ao sair.
                                             insert_ip(0, ips, ip_destino);
                                         }
                                         else{
-                                            printf("\n P2P:> Erro: autenticacao com %s falhou. Codigo %d.\n", ip_destino, protoin.status);
+                                            green printf("\n P2P:> ");
+                                            red printf("Erro: autenticacao com ");
+                                            orange printf("%s", ip_destino);
+                                            red printf(" falhou. Codigo ");
+                                            orange printf("%d", protoin.status);
+                                            red printf(".\n");
                                         }
                                     }
                                     else{
-                                        printf("\n P2P:> Erro: %s retornou %s, codigo %d.\n", ip_destino, protoin.command, protoin.status);
+                                        green printf("\n P2P:> ");
+                                        red printf("Erro: ");
+                                        orange printf("%s", ip_destino);
+                                        red printf(" retornou %s codigo ", protoin.command);
+                                        orange printf("%d", protoin.status);
+                                        red printf(".\n");
                                     }
                                 }
                                 else{
-                                    printf("\n P2P:> Erro: %s retornou um protocolo incompativel.\n", ip_destino);
+                                    green printf("\n P2P:> ");
+                                    red printf("Erro: ");
+                                    orange printf("%s", ip_destino);
+                                    red printf(" retornou um protocolo incompativel.\n");
                                 }
                             }
                             else{
-                                perror("\n P2P:> Erro: nao conseguiu receber 'authenticate-back'\n");
+                                green printf("\n P2P:> ");
+                                red printf("Erro: nao foi possivel receber 'authenticate-back'\n");
                             }
                         }
                         else{
-                            perror("\n P2P:> Erro: nao conseguiu enviar 'authenticate'\n");
+                            green printf("\n P2P:> ");
+                            red printf("Erro: nao foi possivel enviar 'authenticate'\n");
                         }
                         close(porta_destino);
                     }
@@ -134,6 +170,7 @@ void * cliente(){
                         porta_destino = porta(comando[1]);
                         if(porta_destino != -1){
                             
+                            printf("\033[K");
                             printf("\n P2P:> Enviando agent-list...");
                             //printf("\n P2P:> %s", agent_list(ip_meu, ip_destino));
                             
@@ -180,6 +217,7 @@ void * cliente(){
                             porta_destino = porta(comando[1]);
                             if(porta_destino != -1){
                                 
+                                printf("\033[K");
                                 printf("\n P2P:> Enviando archive-list...");
                                 //printf("\n P2P:> %s", archive_list(ip_meu, ip_destino));
                                 
@@ -226,6 +264,7 @@ void * cliente(){
                                 porta_destino = porta(comando[2]);
                                 if(porta_destino != -1){
                                     
+                                    printf("\033[K");
                                     printf("\n P2P:> Enviando archive-request...");
                                     //printf("\n P2P:> %s", archive_request(comando[1], ip_meu, ip_destino));
                                     
@@ -276,6 +315,7 @@ void * cliente(){
                                     porta_destino = porta(comando[1]);
                                     if(porta_destino != -1){
                                         
+                                        printf("\033[K");
                                         printf("\n P2P:> Enviando end-connection...");
                                         //printf("\n P2P:> %s", end-connection(ip_meu, ip_destino));
                                         
@@ -291,6 +331,7 @@ void * cliente(){
                                     }
                                 }
                                 else{
+                                    printf("\033[K");
                                     printf("\n P2P:> Comando inexistente: '%s'\n", comando[0]);
                                 }
                             }
@@ -305,6 +346,11 @@ void * cliente(){
                 send(porta_destino, end_connection(ip_meu, ips[i]), 999,0);
             }
         }
+        /*gettimeofday(&tempo_fim,NULL);
+        tf = (double)tempo_fim.tv_usec + ((double)tempo_fim.tv_sec * (1000000.0));
+        ti = (double)tempo_inicio.tv_usec + ((double)tempo_inicio.tv_sec * (1000000.0));
+        tempo = (tf - ti) / 1000;
+        printf("Tempo: %.3f\n",tempo);*/
     }
 }
 
@@ -320,12 +366,17 @@ int porta(char * ip_destino){
                     addr_destino = inet_addr(ip_destino);
                     
                     if((he=gethostbyaddr((char *) &addr_destino, sizeof(addr_destino), AF_INET)) == NULL) {
-                        printf("\n P2P:> Erro: Nao foi possivel localizar '%s'.\n", ip_destino);
+                        printf("\033[K");
+                        green printf("\n P2P:> ");
+                        red printf("Erro: Nao foi possivel localizar ");
+                        orange printf("%s", ip_destino);
+                        red printf(".\n");
                         //addr_destino = temp_addr;
                         return -1;
                     }
                     
                     if((porta_destino = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+                        printf("\033[K");
                         perror("\n P2P:> Erro: Nao foi possivel criar a porta\n");
                         return -1;
                     }
@@ -340,6 +391,7 @@ int porta(char * ip_destino){
                     if(connect(porta_destino,
                       (struct sockaddr *)&endereco_destino,
                       sizeof(struct sockaddr)) == -1) {
+                        printf("\033[K");
                         perror("\n P2P:> Erro: conectando no servidor\n");
                         return -1;
                     }
