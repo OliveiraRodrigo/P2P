@@ -11,12 +11,6 @@
 #define PORTA_SERVIDOR 9876
 #define MAX 50
 
-#if defined(__linux__)
-#define LINUX 1
-#else
-#define LINUX 0
-#endif
-
 char * ping(char * ip_sender, char * ip_recipient){
     
     char * saida  = (char*) malloc(200 * sizeof(char));
@@ -190,10 +184,11 @@ char ** get_command(){
     int i, j;
     char temp, **saida;
     
-    /* Prompt */
-    green printf("\n P2P:> ");white
-    cyan printf("\n______________________________________________________________________\n\033[2A\033[7C");
-    white       
+    /* Prompt
+    bold green printf("\n P2P:> "); reset white
+    bg_black cyan printf("\n______________________________________________________________________\n");
+    printf("\033[2A\033[7C"); white // Reposiciona o cursor*/
+    prompt
     
     /* Aloca espaco para 4 parametros com 50 caracteres cada */
         saida = (char**) malloc(4*sizeof(char*));
@@ -204,7 +199,7 @@ char ** get_command(){
         i = 0;
         j = 0;
         temp = getchar();
-        do{
+        do{ //ignora as setas
             while((temp == 27)||(temp == 91)||
                   (temp == 65)||(temp == 66)||
                   (temp == 67)||(temp == 68)){
@@ -220,7 +215,7 @@ char ** get_command(){
             }
             else{
                 if(saida[i][j] == '\n'){
-                    saida[i][j] = '\0';
+                    saida[i][j] = '\0'; // Descarta o '\n'.
                     break;
                 }
                 else{
@@ -234,48 +229,79 @@ char ** get_command(){
         return saida;
 }
 
-int run_command(char ** comando, char * ip_return, int * quit_return){
+int run_command(char ** comando, char * ip_return, char * ipdef_return, int * quit_return){
     
     if(!strcmp(comando[0], "cls")){
-        printf("\033[2J");//limpa a tela
-        printf("\033[46m");
-        black
-        printf("\n   P2P                                                                \n");
-        printf("\033[40m");
+        if(LINUX) system("clear");
+        clear_screen
+        
+        bg_cyan bold white printf("\n   P2P                                                                ");
+        reset bg_black printf("\n");
         return 1;
     }
     if(!strcmp(comando[0], "ip")){
         strcpy(ip_return, get_my_ip());
-        printf("\033[K");
+        clear_line
         green printf(" P2P:> "); orange printf("%s\n", ip_return);
         return 1;
     }
     if(!strcmp(comando[0], "setip")){ //caso o get_my_ip nao funfe
         strcpy(ip_return, comando[1]);
-        printf("\033[K");
+        clear_line
         green printf(" P2P:> ");cyan printf("Ok: usando ");orange printf("%s", ip_return);cyan printf(" como meu IP.\n");
         return 1;
     }
+    if(!strcmp(comando[0], "def")){ //caso o get_my_ip nao funfe
+        strcpy(ipdef_return, comando[1]);
+        clear_line
+        green printf(" P2P:> ");cyan printf("Ok: usando ");orange printf("%s", ipdef_return);cyan printf(" como IP Padrao.\n");
+        return 1;
+    }
     if(!strcmp(comando[0], "help")){
-        printf("\033[2J");//limpa a tela
-        printf("\033[46m");
-        black
-        printf("\n   P2P                                                                \n");
-        printf("\033[40m");
+        if(LINUX) system("clear");
+        clear_screen
+        
+        bg_cyan bold white printf("\n   P2P                                                                ");
+        reset bg_black printf("\n");
         help();
         return 1;
     }
     if(!strcmp(comando[0], "quit")){
-        printf("\n");
+        clear_screen
+        printf("\n\n");
+        reset
         *quit_return = 1;
         return 1;
     }
     if(!strcmp(comando[0], "q")){ //"quit"
-        printf("\n");
+        clear_screen
+        printf("\n\n");
+        reset
         *quit_return = 1;
         return 1;
     }
     return 0;
+}
+
+char * set_ipdestino(char * comando, char * ip_default){
+    
+    char * ip_destino = (char*) malloc(20*sizeof(char));
+    
+    if(strlen(comando)){
+        return comando;
+    }
+    else{
+        if(strcmp(ip_default, "0")){
+            return ip_default;
+        }
+        else{
+            clear_line
+            green printf(" P2P:> ");
+            red printf("Erro: IP Padrao nao configurado.\n");
+            return "0";
+        }
+    }
+    return "0";
 }
 
 char * get_my_ip(){
@@ -701,32 +727,34 @@ protocolo set_proto(char * entrada){
 void help(){
     
     printf("\n");
-    printf("\033[41m");
-    black printf("\n   HELP                                                               \n");
-    printf("\033[40m");
-    printf("\n");
+    bg_red bold white printf("\n   HELP                                                               ");
+    reset bg_black printf("\n\n");
+    white printf(" def "); orange printf("<IP>");
+    white printf("            Define <IP> como IP Padrao, para que nao seja\n");
+    white printf("                     necessaria a sua digitacao nos proximos comandos.\n\n");
     white printf(" try "); orange printf("<IP>");
-    white printf("            Manda um ping pra <IP> e espera dele um pong.\n\n");
+    white printf("            Testa a disponibilidade de <IP>\n");
+    white printf("                     e a retorna para o usuario.\n\n");
     white printf(" login "); orange printf("<IP>");
     white printf("          Tenta autenticar-se com <IP>.\n\n");
     red printf("---------------- A partir daqui precisa estar logado! ----------------\n\n");
     white printf(" list-users "); orange printf("<IP>");
-    white printf("     Solicita a lista de usuarios de <IP>.\n");
-    white printf("                     Retorna a lista para o usuario.\n\n");
+    white printf("     Solicita a lista de usuarios de <IP>\n");
+    white printf("                     e a retorna para o usuario.\n\n");
     white printf(" list-files "); orange printf("<IP>");
-    white printf("     Solicita a lista de arquivos de <IP>.\n");
-    white printf("                     Retorna a lista para o usuario.\n\n");
+    white printf("     Solicita a lista de arquivos de <IP>\n");
+    white printf("                     e a retorna para o usuario.\n\n");
     white printf(" down "); orange printf("<id> <IP>");
-    white printf("      Solicita a <IP> o arquivo de id:<id>.\n");
+    white printf("      Solicita a <IP> o arquivo <id>.\n");
     white printf("                     Se confirmada a disponibilidade, recebe\n");
     white printf("                     o arquivo e o MD5 do mesmo.\n\n");
     white printf(" logout "); orange printf("<IP>");
     white printf("         Desconecta-se de <IP> e solicita a exclusao\n");
-    white printf("                     da lista de IPs deste.\n\n");
+    white printf("                     deste peer da sua lista de usuarios.\n\n");
     red printf("----------------------------------------------------------------------\n\n");
     white printf(" cls                 Limpa a tela.\n\n");
     white printf(" quit                Desconecta-se de todos os peers com quem ainda\n");
-    white printf("                     esta conectado e sai do programa.\n\n");
+    white printf("                     esta conectado e sai do programa.\n");
     red printf("\n______________________________________________________________________\n");
     
 }

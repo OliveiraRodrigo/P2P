@@ -24,6 +24,7 @@ void * cliente(){
     char ** comando;
     char ip_meu[20];
     char ip_destino[20];
+    char ip_default[20];
     protocolo protoin;
     archive_def * files;
     //double ti, tf, tempo; // ti = tempo inicial // tf = tempo final
@@ -37,6 +38,7 @@ void * cliente(){
     
     /* Detecta o IP local e o armazena em 'ip_meu' */
     strcpy(ip_meu, get_my_ip());
+    strcpy(ip_default, "0");
     
 /* Recebe comandos enquanto um deles nao for "quit" ***************************/
     quit = 0;
@@ -48,66 +50,22 @@ void * cliente(){
         gettimeofday(&tempo_inicio, NULL);*/
 
         comando = get_command();
-        if(!run_command(comando, ip_meu, &quit)){
+        if(!run_command(comando, ip_meu, ip_default, &quit)){
             
             if(!strcmp(comando[0], "try")){
                 
-                strcpy(ip_destino, comando[1]);
-                porta_destino = porta(comando[1]);
-                if(porta_destino != -1){
+                strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
+                if(strcmp(ip_destino, "0")){
                     
-                    printf("\033[K");
-                    green printf("\n P2P:> ");
-                    cyan printf("Enviando ping...");
-                    //printf("\n P2P:> %s", ping(ip_meu, ip_destino));
-                    
-                    if(send(porta_destino, ping(ip_meu, ip_destino), 999, 0) != -1){
-                        
-                        if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
-                            
-                            buffer[numbytes] = '\0';
-                            //printf("\n P2P:> Cliente recebeu: %s", buffer);
-                            protoin = set_proto(buffer);
-                            
-                            //Testa se recebeu um pong ok.
-                            if(protoin.ok && !strcmp(protoin.command, "pong")){
-                            //if(!strcmp(buffer, pong(ip_destino, ip_meu))){
-                                green printf("\n P2P:> "); orange printf("%s", ip_destino); cyan printf(" respondeu corretamente.\n");
-                            }
-                            else{
-                                green printf("\n P2P:> ");
-                                red printf("Erro: ");
-                                orange printf("%s", ip_destino);
-                                red printf(" retornou %s codigo ", protoin.command);
-                                orange printf("%d", protoin.status);
-                                red printf(".\n");
-                            }
-                        }
-                        else{
-                            green printf("\n P2P:> ");
-                            red printf("Erro: nao foi possivel receber 'pong'\n");
-                        }
-                    }
-                    else{
-                        green printf("\n P2P:> ");
-                        red printf("Erro: nao foi possivel enviar 'ping'\n");
-                    }
-                    close(porta_destino);
-                }
-            }
-            else{
-                if(!strcmp(comando[0], "login")){
-                    
-                    strcpy(ip_destino, comando[1]);
-                    porta_destino = porta(comando[1]);
+                    porta_destino = porta(ip_destino);
                     if(porta_destino != -1){
-                    
-                        printf("\033[K");
-                        green printf("\n P2P:> ");
-                        cyan printf("Enviando authenticate...");
-                        //printf("\n P2P:> %s", authenticate(CHAVE, ip_meu, ip_destino));
                         
-                        if(send(porta_destino, authenticate(CHAVE, ip_meu, ip_destino), 999,0) != -1){
+                        clear_line
+                        green printf(" P2P:> ");
+                        cyan printf("Enviando ping...\n");
+                        //printf("\n P2P:> %s", ping(ip_meu, ip_destino));
+                        
+                        if(send(porta_destino, ping(ip_meu, ip_destino), 999, 0) != -1){
                             
                             if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
                                 
@@ -115,66 +73,50 @@ void * cliente(){
                                 //printf("\n P2P:> Cliente recebeu: %s", buffer);
                                 protoin = set_proto(buffer);
                                 
-                                //Testa se recebeu um authenticate-back ok.
-                                if(protoin.ok){
-                                    if(!strcmp(protoin.command, "authenticate-back")){
-                                        if(protoin.status == 200){
-                                            green printf("\n P2P:> ");
-                                            cyan printf("Autenticacao com ");
-                                            orange printf("%s", ip_destino);
-                                            cyan printf(" aceita.\n");
-                                            //Salva o IP para desconectar ao sair.
-                                            insert_ip(0, ips, ip_destino);
-                                        }
-                                        else{
-                                            green printf("\n P2P:> ");
-                                            red printf("Erro: autenticacao com ");
-                                            orange printf("%s", ip_destino);
-                                            red printf(" falhou. Codigo ");
-                                            orange printf("%d", protoin.status);
-                                            red printf(".\n");
-                                        }
-                                    }
-                                    else{
-                                        green printf("\n P2P:> ");
-                                        red printf("Erro: ");
-                                        orange printf("%s", ip_destino);
-                                        red printf(" retornou %s codigo ", protoin.command);
-                                        orange printf("%d", protoin.status);
-                                        red printf(".\n");
-                                    }
+                                //Testa se recebeu um pong ok.
+                                if(protoin.ok && !strcmp(protoin.command, "pong")){
+                                //if(!strcmp(buffer, pong(ip_destino, ip_meu))){
+                                    green printf(" P2P:> ");
+                                    orange printf("%s", ip_destino);
+                                    cyan printf(" respondeu corretamente.\n");
                                 }
                                 else{
-                                    green printf("\n P2P:> ");
+                                    green printf(" P2P:> ");
                                     red printf("Erro: ");
                                     orange printf("%s", ip_destino);
-                                    red printf(" retornou um protocolo incompativel.\n");
+                                    red printf(" retornou %s codigo ", protoin.command);
+                                    orange printf("%d", protoin.status);
+                                    red printf(".\n");
                                 }
                             }
                             else{
-                                green printf("\n P2P:> ");
-                                red printf("Erro: nao foi possivel receber 'authenticate-back'\n");
+                                green printf(" P2P:> ");
+                                red printf("Erro: nao foi possivel receber 'pong'\n");
                             }
                         }
                         else{
-                            green printf("\n P2P:> ");
-                            red printf("Erro: nao foi possivel enviar 'authenticate'\n");
+                            green printf(" P2P:> ");
+                            red printf("Erro: nao foi possivel enviar 'ping'\n");
                         }
                         close(porta_destino);
                     }
                 }
-                else{
-                    if(!strcmp(comando[0], "list-users")){
+            }
+            else{
+                if(!strcmp(comando[0], "login")){
+                    
+                    strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
+                    if(strcmp(ip_destino, "0")){
                         
-                        strcpy(ip_destino, comando[1]);
-                        porta_destino = porta(comando[1]);
+                        porta_destino = porta(ip_destino);
                         if(porta_destino != -1){
+                        
+                            clear_line
+                            green printf(" P2P:> ");
+                            cyan printf("Enviando authenticate...\n");
+                            //printf("\n P2P:> %s", authenticate(CHAVE, ip_meu, ip_destino));
                             
-                            printf("\033[K");
-                            printf("\n P2P:> Enviando agent-list...");
-                            //printf("\n P2P:> %s", agent_list(ip_meu, ip_destino));
-                            
-                            if(send(porta_destino, agent_list(ip_meu, ip_destino), 999,0) != -1){
+                            if(send(porta_destino, authenticate(CHAVE, ip_meu, ip_destino), 999,0) != -1){
                                 
                                 if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
                                     
@@ -182,46 +124,70 @@ void * cliente(){
                                     //printf("\n P2P:> Cliente recebeu: %s", buffer);
                                     protoin = set_proto(buffer);
                                     
-                                    //Testa se recebeu um agent-list-back ok.
+                                    //Testa se recebeu um authenticate-back ok.
                                     if(protoin.ok){
-                                        if(!strcmp(protoin.command, "agent-list-back")){
+                                        if(!strcmp(protoin.command, "authenticate-back")){
                                             if(protoin.status == 200){
-                                                printf("\n P2P:> IPs: %s\n", protoin.back);
+                                                green printf(" P2P:> ");
+                                                cyan printf("Autenticacao com ");
+                                                orange printf("%s", ip_destino);
+                                                cyan printf(" aceita.\n");
+                                                //Salva o IP para desconectar ao sair.
+                                                insert_ip(0, ips, ip_destino);
                                             }
                                             else{
-                                                printf("\n P2P:> Erro: %s informou codigo %d.\n", ip_destino, protoin.status);
+                                                green printf(" P2P:> ");
+                                                red printf("Erro: autenticacao com ");
+                                                orange printf("%s", ip_destino);
+                                                red printf(" falhou. Codigo ");
+                                                orange printf("%d", protoin.status);
+                                                red printf(".\n");
                                             }
                                         }
                                         else{
-                                            printf("\n P2P:> Erro: %s retornou %s, codigo %d.\n", ip_destino, protoin.command, protoin.status);
+                                            green printf(" P2P:> ");
+                                            red printf("Erro: ");
+                                            orange printf("%s", ip_destino);
+                                            red printf(" retornou %s codigo ", protoin.command);
+                                            orange printf("%d", protoin.status);
+                                            red printf(".\n");
                                         }
                                     }
                                     else{
-                                        printf("\n P2P:> Erro: %s retornou um protocolo incompativel.\n", ip_destino);
+                                        green printf(" P2P:> ");
+                                        red printf("Erro: ");
+                                        orange printf("%s", ip_destino);
+                                        red printf(" retornou um protocolo incompativel.\n");
                                     }
                                 }
                                 else{
-                                    perror("\n P2P:> Erro: nao conseguiu receber 'agent-list-back'\n");
+                                    green printf(" P2P:> ");
+                                    red printf("Erro: nao foi possivel receber 'authenticate-back'\n");
                                 }
                             }
                             else{
-                                perror("\n P2P:> Erro: nao conseguiu enviar 'agent-list'\n");
+                                green printf(" P2P:> ");
+                                red printf("Erro: nao foi possivel enviar 'authenticate'\n");
                             }
                             close(porta_destino);
                         }
                     }
-                    else{
-                        if(!strcmp(comando[0], "list-files")){
+                }
+                else{
+                    if(!strcmp(comando[0], "list-users")){
+                        
+                        strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
+                        if(strcmp(ip_destino, "0")){
                             
-                            strcpy(ip_destino, comando[1]);
-                            porta_destino = porta(comando[1]);
+                            porta_destino = porta(ip_destino);
                             if(porta_destino != -1){
                                 
-                                printf("\033[K");
-                                printf("\n P2P:> Enviando archive-list...");
-                                //printf("\n P2P:> %s", archive_list(ip_meu, ip_destino));
+                                clear_line
+                                green printf(" P2P:> ");
+                                cyan printf("Enviando agent-list...\n");
+                                //printf("\n P2P:> %s", agent_list(ip_meu, ip_destino));
                                 
-                                if(send(porta_destino, archive_list(ip_meu, ip_destino), 999,0) != -1){
+                                if(send(porta_destino, agent_list(ip_meu, ip_destino), 999,0) != -1){
                                     
                                     if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
                                         
@@ -229,46 +195,67 @@ void * cliente(){
                                         //printf("\n P2P:> Cliente recebeu: %s", buffer);
                                         protoin = set_proto(buffer);
                                         
-                                        //Testa se recebeu um archive-list-back ok.
+                                        //Testa se recebeu um agent-list-back ok.
                                         if(protoin.ok){
-                                            if(!strcmp(protoin.command, "archive-list-back")){
+                                            if(!strcmp(protoin.command, "agent-list-back")){
                                                 if(protoin.status == 200){
-                                                    printf("\n P2P:> Arquivos de %s:\n\n\"%s\"\n", ip_destino, protoin.back);
+                                                    green printf(" P2P:> ");
+                                                    cyan printf("IPs: ");
+                                                    orange printf("%s\n", protoin.back);
                                                 }
                                                 else{
-                                                    printf("\n P2P:> Erro: %s informou codigo %d.\n", ip_destino, protoin.status);
+                                                    green printf(" P2P:> ");
+                                                    red printf("Erro: ");
+                                                    orange printf("%s", ip_destino);
+                                                    red printf(" informou o codigo ");
+                                                    orange printf("%d", protoin.status);
+                                                    red printf(".\n");
                                                 }
                                             }
                                             else{
-                                                printf("\n P2P:> Erro: %s retornou %s, codigo %d.\n", ip_destino, protoin.command, protoin.status);
+                                                green printf(" P2P:> ");
+                                                red printf("Erro: ");
+                                                orange printf("%s", ip_destino);
+                                                red printf(" retornou %s codigo ", protoin.command);
+                                                orange printf("%d", protoin.status);
+                                                red printf(".\n");
                                             }
                                         }
                                         else{
-                                            printf("\n P2P:> Erro: %s retornou um protocolo incompativel.\n", ip_destino);
+                                            green printf(" P2P:> ");
+                                            red printf("Erro: ");
+                                            orange printf("%s", ip_destino);
+                                            red printf(" retornou um protocolo incompativel.\n");
                                         }
                                     }
                                     else{
-                                        perror("\n P2P:> Erro: nao conseguiu receber 'archive-list-back'\n");
+                                        green printf(" P2P:> ");
+                                        red printf("Erro: nao foi possivel receber 'agent-list-back'\n");
                                     }
                                 }
                                 else{
-                                    perror("\n P2P:> Erro: nao conseguiu enviar 'archive-list'\n");
+                                    green printf(" P2P:> ");
+                                    red printf("Erro: nao foi possivel enviar 'agent-list'\n");
                                 }
                                 close(porta_destino);
                             }
                         }
-                        else{
-                            if(!strcmp(comando[0], "down")){
+                    }
+                    else{
+                        if(!strcmp(comando[0], "list-files")){
+                            
+                            strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
+                            if(strcmp(ip_destino, "0")){
                                 
-                                strcpy(ip_destino, comando[2]);
-                                porta_destino = porta(comando[2]);
+                                porta_destino = porta(ip_destino);
                                 if(porta_destino != -1){
                                     
-                                    printf("\033[K");
-                                    printf("\n P2P:> Enviando archive-request...");
-                                    //printf("\n P2P:> %s", archive_request(comando[1], ip_meu, ip_destino));
+                                    clear_line
+                                    green printf(" P2P:> ");
+                                    cyan printf("Enviando archive-list...\n");
+                                    //printf("\n P2P:> %s", archive_list(ip_meu, ip_destino));
                                     
-                                    if(send(porta_destino, archive_request(comando[1], ip_meu, ip_destino), 999,0) != -1){
+                                    if(send(porta_destino, archive_list(ip_meu, ip_destino), 999,0) != -1){
                                         
                                         if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
                                             
@@ -278,61 +265,160 @@ void * cliente(){
                                             
                                             //Testa se recebeu um archive-list-back ok.
                                             if(protoin.ok){
-                                                if(!strcmp(protoin.command, "archive-request-back")){
-                                                    if(protoin.status == 302){
-                                                        printf("\n P2P:> %s enviou os dados do arquivo %d:\n\n\t Link: %s\n\t MD5:  %s\n",
-                                                                ip_destino,
-                                                                protoin.file.id,
-                                                                protoin.file.http,
-                                                                protoin.file.md5);
+                                                if(!strcmp(protoin.command, "archive-list-back")){
+                                                    if(protoin.status == 200){
+                                                        green printf(" P2P:> ");
+                                                        cyan printf("Arquivos de ");
+                                                        orange printf("%s", ip_destino);
+                                                        cyan printf(":\n\n");
+                                                        orange printf("\"%s\"\n", protoin.back);
                                                     }
                                                     else{
-                                                        printf("\n P2P:> Erro: %s informou codigo %d.\n", ip_destino, protoin.status);
+                                                        green printf(" P2P:> ");
+                                                        red printf("Erro: ");
+                                                        orange printf("%s", ip_destino);
+                                                        red printf(" informou o codigo ");
+                                                        orange printf("%d", protoin.status);
+                                                        red printf(".\n");
                                                     }
                                                 }
                                                 else{
-                                                    printf("\n P2P:> Erro: %s retornou %s, codigo %d.\n", ip_destino, protoin.command, protoin.status);
+                                                    green printf(" P2P:> ");
+                                                    red printf("Erro: ");
+                                                    orange printf("%s", ip_destino);
+                                                    red printf(" retornou %s codigo ", protoin.command);
+                                                    orange printf("%d", protoin.status);
+                                                    red printf(".\n");
                                                 }
                                             }
                                             else{
-                                                printf("\n P2P:> Erro: %s retornou um protocolo incompativel.\n", ip_destino);
+                                                green printf(" P2P:> ");
+                                                red printf("Erro: ");
+                                                orange printf("%s", ip_destino);
+                                                red printf(" retornou um protocolo incompativel.\n");
                                             }
                                         }
                                         else{
-                                            perror("\n P2P:> Erro: nao conseguiu receber 'archive-request-back'\n");
+                                            green printf(" P2P:> ");
+                                            red printf("Erro: nao foi possivel receber 'archive-list-back'\n");
                                         }
                                     }
                                     else{
-                                        perror("\n P2P:> Erro: nao conseguiu enviar 'archive-request'\n");
+                                        green printf(" P2P:> ");
+                                        red printf("Erro: nao foi possivel enviar 'archive-list'\n");
                                     }
                                     close(porta_destino);
+                                }
+                            }
+                        }
+                        else{
+                            if(!strcmp(comando[0], "down")){
+                                
+                                strcpy(ip_destino, set_ipdestino(comando[2], ip_default));
+                                if(strcmp(ip_destino, "0")){
+                                    
+                                    porta_destino = porta(ip_destino);
+                                    if(porta_destino != -1){
+                                        
+                                        clear_line
+                                        green printf(" P2P:> ");
+                                        cyan printf("Enviando archive-request...\n");
+                                        //printf("\n P2P:> %s", archive_request(comando[1], ip_meu, ip_destino));
+                                        
+                                        if(send(porta_destino, archive_request(comando[1], ip_meu, ip_destino), 999,0) != -1){
+                                            
+                                            if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
+                                                
+                                                buffer[numbytes] = '\0';
+                                                //printf("\n P2P:> Cliente recebeu: %s", buffer);
+                                                protoin = set_proto(buffer);
+                                                
+                                                //Testa se recebeu um archive-list-back ok.
+                                                if(protoin.ok){
+                                                    if(!strcmp(protoin.command, "archive-request-back")){
+                                                        if(protoin.status == 302){
+                                                            green printf(" P2P:> ");
+                                                            orange printf("%s", ip_destino);
+                                                            cyan printf(" enviou os dados do arquivo ");
+                                                            orange printf("%d", protoin.file.id);
+                                                            cyan printf(":\n\n\t Link: ");
+                                                            orange printf("%s", protoin.file.http);
+                                                            cyan printf("\n\t MD5:  ");
+                                                            orange printf("%s\n", protoin.file.md5);
+                                                        }
+                                                        else{
+                                                            green printf(" P2P:> ");
+                                                            red printf("Erro: ");
+                                                            orange printf("%s", ip_destino);
+                                                            red printf(" informou o codigo ");
+                                                            orange printf("%d", protoin.status);
+                                                            red printf(".\n");
+                                                        }
+                                                    }
+                                                    else{
+                                                        green printf(" P2P:> ");
+                                                        red printf("Erro: ");
+                                                        orange printf("%s", ip_destino);
+                                                        red printf(" retornou %s codigo ", protoin.command);
+                                                        orange printf("%d", protoin.status);
+                                                        red printf(".\n");
+                                                    }
+                                                }
+                                                else{
+                                                    green printf(" P2P:> ");
+                                                    red printf("Erro: ");
+                                                    orange printf("%s", ip_destino);
+                                                    red printf(" retornou um protocolo incompativel.\n");
+                                                }
+                                            }
+                                            else{
+                                                green printf(" P2P:> ");
+                                                red printf("Erro: nao foi possivel receber 'archive-request-back'\n");
+                                            }
+                                        }
+                                        else{
+                                            green printf(" P2P:> ");
+                                            red printf("Erro: nao foi possivel enviar 'archive-request'\n");
+                                        }
+                                        close(porta_destino);
+                                    }
                                 }
                             }
                             else{
                                 if(!strcmp(comando[0], "logout")){
                                     
-                                    strcpy(ip_destino, comando[1]);
-                                    porta_destino = porta(comando[1]);
-                                    if(porta_destino != -1){
+                                    strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
+                                    if(strcmp(ip_destino, "0")){
                                         
-                                        printf("\033[K");
-                                        printf("\n P2P:> Enviando end-connection...");
-                                        //printf("\n P2P:> %s", end-connection(ip_meu, ip_destino));
-                                        
-                                        if(send(porta_destino, end_connection(ip_meu, ip_destino), 999,0) != -1){
-                                            printf("\n P2P:> Desconectado de %s.\n", ip_destino);
+                                        porta_destino = porta(ip_destino);
+                                        if(porta_destino != -1){
+                                            
+                                            clear_line
+                                            green printf(" P2P:> ");
+                                            cyan printf("Enviando end-connection...\n");
+                                            //printf("\n P2P:> %s", end-connection(ip_meu, ip_destino));
+                                            
+                                            if(send(porta_destino, end_connection(ip_meu, ip_destino), 999,0) != -1){
+                                                green printf(" P2P:> ");
+                                                cyan printf("Desconectado de ");
+                                                orange printf("%s", ip_destino);
+                                                cyan printf(".\n");
+                                            }
+                                            else{
+                                                green printf(" P2P:> ");
+                                                red printf("Erro: nao foi posivel enviar 'end-connection'\n");
+                                            }
+                                            //Remove o IP da lista, pois, ao sair, deste eu ja estou desconectado.
+                                            remove_ip(0, ips, ip_destino);
+                                            close(porta_destino);
                                         }
-                                        else{
-                                            perror("\n P2P:> Erro: nao conseguiu enviar 'end-connection'\n");
-                                        }
-                                        //Remove o IP da lista, pois, ao sair, deste eu ja estou desconectado.
-                                        remove_ip(0, ips, ip_destino);
-                                        close(porta_destino);
                                     }
                                 }
                                 else{
-                                    printf("\033[K");
-                                    printf("\n P2P:> Comando inexistente: '%s'\n", comando[0]);
+                                    clear_line
+                                    green printf(" P2P:> ");
+                                    red printf("Comando inexistente: ");
+                                    orange printf("%s\n", comando[0]);
                                 }
                             }
                         }
@@ -366,7 +452,7 @@ int porta(char * ip_destino){
                     addr_destino = inet_addr(ip_destino);
                     
                     if((he=gethostbyaddr((char *) &addr_destino, sizeof(addr_destino), AF_INET)) == NULL) {
-                        printf("\033[K");
+                        clear_line
                         green printf("\n P2P:> ");
                         red printf("Erro: Nao foi possivel localizar ");
                         orange printf("%s", ip_destino);
@@ -376,8 +462,8 @@ int porta(char * ip_destino){
                     }
                     
                     if((porta_destino = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-                        printf("\033[K");
-                        perror("\n P2P:> Erro: Nao foi possivel criar a porta\n");
+                        clear_line
+                        red printf("\n P2P:> Erro: Nao foi possivel criar a porta\n");
                         return -1;
                     }
                     
@@ -391,8 +477,8 @@ int porta(char * ip_destino){
                     if(connect(porta_destino,
                       (struct sockaddr *)&endereco_destino,
                       sizeof(struct sockaddr)) == -1) {
-                        printf("\033[K");
-                        perror("\n P2P:> Erro: conectando no servidor\n");
+                        clear_line
+                        red printf("\n P2P:> Erro: conectando no servidor\n");
                         return -1;
                     }
                     return porta_destino;

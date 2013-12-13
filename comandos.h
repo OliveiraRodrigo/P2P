@@ -18,6 +18,13 @@ extern "C" {
 
 #endif	/* COMANDOS_H */
 
+#if defined(__linux__)
+#define LINUX 1
+#else
+#define LINUX 0
+#endif
+
+/* Fonte */
 #define black   printf("\033[30m");
 #define red     printf("\033[31m");
 #define green   printf("\033[32m");
@@ -26,6 +33,23 @@ extern "C" {
 #define pink    printf("\033[35m");
 #define cyan    printf("\033[36m");
 #define white   printf("\033[37m");
+#define bold    printf("\033[1m");
+#define under   printf("\033[4m");
+
+/* Fundo */
+#define bg_black  printf("\033[40m");
+#define bg_red    printf("\033[41m");
+#define bg_green  printf("\033[42m");
+#define bg_orange printf("\033[43m");
+#define bg_blue   printf("\033[44m");
+#define bg_pink   printf("\033[45m");
+#define bg_cyan   printf("\033[46m");
+#define bg_white  printf("\033[47m");
+
+#define reset printf("\033[0m");
+#define clear_line printf("\033[K");
+#define clear_screen if(LINUX){system("clear");} printf("\033[2J");
+#define prompt bold green printf("\n P2P:> "); reset bg_black cyan printf("\n______________________________________________________________________\n"); printf("\033[2A\033[7C"); white
 
 #define MAX 50
 
@@ -86,7 +110,9 @@ char * end_connection(char * ip_meu, char * ip_destino);
 
 char ** get_command();
 
-int run_command(char ** comando, char * ip_return, int * quit);
+int run_command(char ** comando, char * ip_return, char * ipdef_return, int * quit);
+
+char * set_ipdestino(char * comando, char * ip_default);
 
 char * get_my_ip();
 
