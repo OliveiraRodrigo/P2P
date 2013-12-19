@@ -47,9 +47,10 @@ extern "C" {
 #define bg_white  printf("\033[47m");
 
 #define reset printf("\033[0m");
+#define defaults printf("\033[39;49m");
 #define clear_line printf("\033[K");
 #define clear_screen if(LINUX){system("clear");} printf("\033[2J");
-#define prompt bold green printf("\n P2P:> "); reset bg_black cyan printf("\n______________________________________________________________________\n"); printf("\033[2A\033[7C"); white
+#define prompt bold green printf("\n P2P:> "); reset /*bg_black*/defaults cyan printf("\n________________________________________________________________________\n"); printf("\033[2A\033[7C"); white
 
 #define MAX 50
 
@@ -72,11 +73,6 @@ typedef struct proto{
     char recipient[20]; // IP Destinatario
     int  ok;            // Construcao correta do protocolo
 } protocolo;
-
-typedef struct ips{
-    char ip[MAX][20];
-    int size;
-} ips_list;
 
 void * cliente();
 

@@ -15,7 +15,6 @@
 #define TAM 20 // Caracteres no IP
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
 
-
 int servidor(){
     
     int porta;
@@ -75,9 +74,9 @@ void * start_connection(void* server_port){
     insert_ip(1, ips, "199.5.55.5");
     for(i = 1; i <= 10; i++){
         files[i].id = i;
-        sprintf(files[i].name, "arq%d.txt", i/**3*/);
-        sprintf(files[i].size, "%d", i/**30+215*/);
-        sprintf(files[i].http, "http://%s/%s", ip_meu, files[i].name);
+        sprintf(files[i].name, "arq%d.txt", i);
+        sprintf(files[i].size, "%d", i);
+        sprintf(files[i].http, "arquivo.txt");
         strcpy(files[i].md5, "Breve.Aguarde!");
     }
     /*Enviar quando solicitado arquivo inexistente*/
@@ -157,6 +156,7 @@ void * start_connection(void* server_port){
                             else{
                                 if(!strcmp(protoin.command, "archive-request")){
                                     if(tem_arch(files, 11, protoin.file.id)){
+                                        system("python -m SimpleHTTPServer & "); //inicializa servidor web
                                         if(send(nova_porta, archive_request_back(302, files[protoin.file.id], ip_meu, ip_cliente), 999, 0) == -1){
                                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-request-back'.");
                                         }
@@ -189,13 +189,11 @@ void * start_connection(void* server_port){
         }
     }
     /*if (fork()==0){ // se for o filho
-        //printf("\nxxxxx fork == 0 xxxxx\n");
         close(porta); // o filho nao aceita conexoes a mais
         //close(nova_porta);
         //exit(0); // tao logo termine, o filho pode sair
-    }
-    else{
-        //printf("\nxxxxx fork != 0 xxxxx\n");
     }*/
+    num_threads--;
+    //fechar o servidor tambem
     close(nova_porta); // essa parte somente o pai executa
 }

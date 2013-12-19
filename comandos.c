@@ -224,7 +224,7 @@ char ** get_command(){
                 }
             }
         }
-        while(temp != '\n');
+        while(temp != '\n' && saida[i][j] != '\n');
         
         return saida;
 }
@@ -235,8 +235,8 @@ int run_command(char ** comando, char * ip_return, char * ipdef_return, int * qu
         if(LINUX) system("clear");
         clear_screen
         
-        bg_cyan bold white printf("\n   P2P                                                                ");
-        reset bg_black printf("\n");
+        bg_cyan bold white printf("\n   P2P                                                                  ");
+        reset /*bg_black*/defaults printf("\n");
         return 1;
     }
     if(!strcmp(comando[0], "ip")){
@@ -261,12 +261,13 @@ int run_command(char ** comando, char * ip_return, char * ipdef_return, int * qu
         if(LINUX) system("clear");
         clear_screen
         
-        bg_cyan bold white printf("\n   P2P                                                                ");
-        reset bg_black printf("\n");
+        bg_cyan bold white printf("\n   P2P                                                                  ");
+        reset /*bg_black*/defaults printf("\n");
         help();
         return 1;
     }
     if(!strcmp(comando[0], "quit")){
+	defaults        
         clear_screen
         printf("\n\n");
         reset
@@ -274,6 +275,7 @@ int run_command(char ** comando, char * ip_return, char * ipdef_return, int * qu
         return 1;
     }
     if(!strcmp(comando[0], "q")){ //"quit"
+        defaults
         clear_screen
         printf("\n\n");
         reset
@@ -727,34 +729,33 @@ protocolo set_proto(char * entrada){
 void help(){
     
     printf("\n");
-    bg_red bold white printf("\n   HELP                                                               ");
-    reset bg_black printf("\n\n");
+    bg_red bold white printf("\n   HELP                                                                 ");
+    reset /*bg_black*/defaults printf("\n\n");
     white printf(" def "); orange printf("<IP>");
-    white printf("            Define <IP> como IP Padrao, para que nao seja\n");
-    white printf("                     necessaria a sua digitacao nos proximos comandos.\n\n");
+    white printf("           Define <IP> como IP Padrao, para que nao seja neces-\n");
+    white printf("                    saria a sua digitacao nos proximos comandos.\n\n");
     white printf(" try "); orange printf("<IP>");
-    white printf("            Testa a disponibilidade de <IP>\n");
-    white printf("                     e a retorna para o usuario.\n\n");
+    white printf("           Testa a disponibilidade de <IP> e a retorna para o\n");
+    white printf("                    usuario.\n\n");
     white printf(" login "); orange printf("<IP>");
-    white printf("          Tenta autenticar-se com <IP>.\n\n");
-    red printf("---------------- A partir daqui precisa estar logado! ----------------\n\n");
+    white printf("         Tenta autenticar-se com <IP>.\n\n");
     white printf(" list-users "); orange printf("<IP>");
-    white printf("     Solicita a lista de usuarios de <IP>\n");
-    white printf("                     e a retorna para o usuario.\n\n");
+    white printf("    Solicita a lista de usuarios de <IP> e a retorna pa-\n");
+    white printf("                    ra o usuario.\n\n");
     white printf(" list-files "); orange printf("<IP>");
-    white printf("     Solicita a lista de arquivos de <IP>\n");
-    white printf("                     e a retorna para o usuario.\n\n");
+    white printf("    Solicita a lista de arquivos de <IP> e a retorna pa-\n");
+    white printf("                    ra o usuario.\n\n");
     white printf(" down "); orange printf("<id> <IP>");
-    white printf("      Solicita a <IP> o arquivo <id>.\n");
-    white printf("                     Se confirmada a disponibilidade, recebe\n");
-    white printf("                     o arquivo e o MD5 do mesmo.\n\n");
+    white printf("     Solicita a <IP> o arquivo <id>. Se confirmada a dis-\n");
+    white printf("                    ponibilidade, recebe o arquivo e o MD5 do mesmo.\n\n");
     white printf(" logout "); orange printf("<IP>");
-    white printf("         Desconecta-se de <IP> e solicita a exclusao\n");
-    white printf("                     deste peer da sua lista de usuarios.\n\n");
-    red printf("----------------------------------------------------------------------\n\n");
-    white printf(" cls                 Limpa a tela.\n\n");
-    white printf(" quit                Desconecta-se de todos os peers com quem ainda\n");
-    white printf("                     esta conectado e sai do programa.\n");
-    red printf("\n______________________________________________________________________\n");
+    white printf("        Desconecta-se de <IP> e solicita a exclusao deste\n");
+    white printf("                    peer da sua lista de usuarios.\n\n");
+    white printf(" quit ");
+    white printf("              Desconecta-se de todos os usuarios com os quais ain-\n");
+    white printf("                    da esta conectado e sai do programa.\n\n");
+    white printf(" cls ");
+    white printf("               Limpa a tela\n");
+    red printf("\n________________________________________________________________________\n");
     
 }
