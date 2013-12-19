@@ -8,7 +8,6 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include "comandos.h"
-
 #define PORTA_SERVIDOR 9876
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
 
@@ -501,6 +500,8 @@ int baixaArquivo(char shost[64], int porta, char url[128])
     FILE *fp; //arquivo para escrever dados baixados
     char nomeArquivo[128];
     
+    pSplit = (char*) malloc(100*sizeof(char));
+    
     sprintf(nomeArquivo, "%s.part", url);
     fp=fopen(nomeArquivo,"w+b"); //abra arquivo
     if(fp==NULL){
@@ -549,29 +550,38 @@ int baixaArquivo(char shost[64], int porta, char url[128])
         }
         
         if(flagAcabouCabecalho==0){ //se o cabeçalho ainda não acabou, busca pelo fim dele
-            pSplit = strstr(buffer, "\r\n\r\n"); //se achar o fim do cabeçalho, retorna ponteiro apontando para ele
-            pSplit+=4;
-            printf("\n1\n");
             printf("--aqui--");
+            pSplit = strstr(buffer, "\r\n\r\n"); //se achar o fim do cabeçalho, retorna ponteiro apontando para ele
+            printf("--aqui 0--");
+            pSplit+=4;
+            //printf("\n1\n");
+            printf("--aqui 0.5--");
         }
         else{
             pSplit=NULL;
             printf("\n2\n");
         }
         if(pSplit != NULL) {
+            printf("--aqui 1--");
             flagAcabouCabecalho=1;//se cabeçalho acabou, seta a flag
             printf("%s",pSplit); //imprime parte do buffer que está após o cabeçalho
             fprintf(fp,"%s",pSplit); //salva parte do buffer que está após o cabeçalho
+            printf("--aqui 2--");
             printf("\n3\n");
         }
         else{
-            if(flagAcabouCabecalho==1){ //se cabeçalho já acabou, imprime buffer inteiro inteiro
+            printf("--aqui 3--");
+            if(flagAcabouCabecalho==1){ //se cabeçalho já acabou, imprime buffer inteiro
+                printf("--aqui 4--");
                 printf("%s",buffer);
                 fprintf(fp,"%s",buffer);
                 printf("\n4\n");
             }
+            printf("--aqui 5--");
         }
+        printf("--aqui 6--");
     }
+    printf("--aqui 7--");
     
     sprintf(req, "mv %s %s", nomeArquivo, url);//monta string pro system a seguir
     system(req); //renomeia o arquivo para o nome original (sem ".part" que havia sido adicionado)

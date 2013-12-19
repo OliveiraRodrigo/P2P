@@ -225,6 +225,7 @@ char ** get_command(){
             }
         }
         while(temp != '\n' && saida[i][j] != '\n');
+        saida[i][j] = '\0';
         
         return saida;
 }

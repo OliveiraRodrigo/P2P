@@ -4,9 +4,11 @@
 #include <netdb.h>
 #include <pthread.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <dirent.h>
 #include "comandos.h"
 
 #define PORTA_SERVIDOR 9876
@@ -52,7 +54,7 @@ int servidor(){
 /* Aguarda conexoes ***********************************************************/
 void * start_connection(void* server_port){
     
-    int nova_porta, tamanho, numbytes, i, repete;
+    int nova_porta, tamanho, numbytes, i, repete, fileCounter;
     intptr_t porta;
     static int num_threads = 0;
     char ip_meu[20];
@@ -63,7 +65,12 @@ void * start_connection(void* server_port){
     pthread_t new_thread;
     protocolo protoin;
     static archive_def files[100];
-    
+    struct dirent *lsdir;
+    //struct stat buf;
+    DIR *dir;
+    FILE *fp;
+    int teste;
+        
     porta = (intptr_t) server_port;
     tamanho = sizeof(struct sockaddr_in);
     strcpy(ip_meu, get_my_ip());
@@ -72,13 +79,31 @@ void * start_connection(void* server_port){
     insert_ip(1, ips, "111.222.333.444");
     insert_ip(1, ips, "2.3.8.444");
     insert_ip(1, ips, "199.5.55.5");
-    for(i = 1; i <= 10; i++){
-        files[i].id = i;
-        sprintf(files[i].name, "arq%d.txt", i);
-        sprintf(files[i].size, "%d", i);
-        sprintf(files[i].http, "arquivo.txt");
-        strcpy(files[i].md5, "Breve.Aguarde!");
+    
+    /* Lista arquivos e pastas que estao dentro da pasta definida */
+/*    i = 1;
+    fileCounter = 0;
+    dir = opendir("shared");
+    while((lsdir = readdir(dir)) != NULL){
+        if(strcmp(lsdir->d_name, ".") && strcmp(lsdir->d_name, "..")){
+            //printf("%s\n", lsdir->d_name);
+            fileCounter++;
+            files[i].id = i;
+            sprintf(files[i].name, lsdir->d_name);
+            //stat(lsdir->d_name, &buf);
+            //fp = fopen(lsdir->d_name, "r");
+            //fseek(fp,0,SEEK_END);
+            //teste = (int) ftell(fp);
+            //printf("\nsize: %d\n", teste);
+            //printf("Tamanho total(bytes) : %li\n", buf.st_size);
+            sprintf(files[i].size, "%d", /*teste*//*0);
+            sprintf(files[i].http, lsdir->d_name);
+            strcpy(files[i].md5, "Breve.Aguarde!");
+            //fclose(fp);
+        }
     }
+    closedir(dir);
+    */
     /*Enviar quando solicitado arquivo inexistente*/
     files[0].id = 0;
     strcpy(files[0].name, "Arquivo nao existe");

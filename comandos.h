@@ -78,6 +78,8 @@ void * cliente();
 
 int porta(char * ip_destino);
 
+int baixaArquivo(char shost[64], int porta, char url[128]);
+
 int servidor();
 
 void * start_connection(void *porta);
