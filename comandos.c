@@ -111,14 +111,14 @@ char * archive_list_back(int code, archive_def * archs, int quant_archs, char * 
     
     strcpy(archs_list, " ");
     
-    i = 0;
+    i = 1;
     if(quant_archs > 0){
         sprintf(archs_list, "{\"id\":%d,", archs[i].id);
         sprintf(archs_list, "%s\"nome\":\"%s\",", archs_list, archs[i].name);
         sprintf(archs_list, "%s\"size\":\"%s\"}", archs_list, archs[i].size);
         i++;
     }
-    while(i < quant_archs){
+    while(i <= quant_archs){
         sprintf(archs_list, "%s,{\"id\":%d,", archs_list, archs[i].id);
         sprintf(archs_list, "%s\"nome\":\"%s\",", archs_list, archs[i].name);
         sprintf(archs_list, "%s\"size\":\"%s\"}", archs_list, archs[i].size);
@@ -343,9 +343,9 @@ int insert_ip(int quem, char ips_array[50][20], char * novo_ip){
     
     int i, size;
     
-    if(quem == 0) //cliente
+    if(quem == CLIENT)
         size = client_ips_size(0);
-    else //servidor
+    else // SERVER
         size = server_ips_size(0);
     
     i = 0;
@@ -362,9 +362,9 @@ int insert_ip(int quem, char ips_array[50][20], char * novo_ip){
     i = size;
     if(i < MAX-1){
         strcpy(ips_array[i], novo_ip);
-        if(quem == 0)
+        if(quem == CLIENT)
             client_ips_size(1);
-        else
+        else // SERVER
             server_ips_size(1);
         return 0;
     }
@@ -375,9 +375,9 @@ int remove_ip(int quem, char ips_array[50][20], char * target){
     
     int i, size;
     
-    if(quem == 0) //cliente
+    if(quem == CLIENT)
         size = client_ips_size(0);
-    else //servidor
+    else // SERVER
         size = server_ips_size(0);
     
     if(size == 0){
@@ -390,9 +390,9 @@ int remove_ip(int quem, char ips_array[50][20], char * target){
                 strcpy(ips_array[i], ips_array[i+1]);
                 i++;
             }
-            if(quem == 0)
+            if(quem == CLIENT)
                 client_ips_size(-1);
-            else
+            else // SERVER
                 server_ips_size(-1);
             return 0;
         }
@@ -479,7 +479,7 @@ int tem_arch(archive_def * archs, int quant_archs, int id){
     
     int i;
     
-    for(i = 0; i < quant_archs; i++){
+    for(i = 1; i <= quant_archs; i++){
         if(id == archs[i].id){
             return 1;
         }

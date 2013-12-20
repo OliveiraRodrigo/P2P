@@ -1,3 +1,4 @@
+
 /* 
  * File:   comandos.h
  * Author: Rodrigo
@@ -52,6 +53,8 @@ extern "C" {
 #define clear_screen if(LINUX){system("clear");} printf("\033[2J");
 #define prompt bold green printf("\n P2P:> "); reset /*bg_black*/defaults cyan printf("\n________________________________________________________________________\n"); printf("\033[2A\033[7C"); white
 
+#define CLIENT 0
+#define SERVER 1
 #define MAX 50
 
 typedef struct{
@@ -114,10 +117,9 @@ char * set_ipdestino(char * comando, char * ip_default);
 
 char * get_my_ip();
 
-/* quem: 0 = lista de IPs do cliente,
- *       1 = lista de IPs so servidor */
+/* quem: 0 = lista de IPs do cliente  (macro: CLIENT),
+ *       1 = lista de IPs so servidor (macro: SERVER) */
 int insert_ip(int quem, char ips_string[50][20], char * novo_ip);
-
 int remove_ip(int quem, char ips_string[50][20], char * target);
 
 char * get_ips_string(char ips_string[50][20]);
@@ -127,8 +129,6 @@ int tem_arch(archive_def * archs, int quant_archs, int id);
 protocolo set_proto(char * entrada);
 
 //int set_ips_array(char ips_string[50][20], char * proto_back);
-
-int server_ips_size(int modifier);
 
 int server_ips_size(int modifier);
 

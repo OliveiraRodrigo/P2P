@@ -132,7 +132,7 @@ void * cliente(){
                                                 orange printf("%s", ip_destino);
                                                 cyan printf(" aceita.\n");
                                                 //Salva o IP para desconectar ao sair.
-                                                insert_ip(0, ips, ip_destino);
+                                                insert_ip(CLIENT, ips, ip_destino); //Cliente nao precisa desta lista
                                             }
                                             else{
                                                 green printf(" P2P:> ");
@@ -409,7 +409,7 @@ void * cliente(){
                                                 red printf("Erro: nao foi posivel enviar 'end-connection'\n");
                                             }
                                             //Remove o IP da lista, pois, ao sair, deste eu ja estou desconectado.
-                                            remove_ip(0, ips, ip_destino);
+                                            remove_ip(CLIENT, ips, ip_destino); //Cliente nao precisa desta lista
                                             close(porta_destino);
                                         }
                                     }

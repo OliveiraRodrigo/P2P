@@ -66,7 +66,7 @@ void * start_connection(void* server_port){
     protocolo protoin;
     static archive_def files[100];
     struct dirent *lsdir;
-    //struct stat buf;
+    struct stat *buf;
     DIR *dir;
     FILE *fp;
     int teste;
@@ -74,36 +74,38 @@ void * start_connection(void* server_port){
     porta = (intptr_t) server_port;
     tamanho = sizeof(struct sockaddr_in);
     strcpy(ip_meu, get_my_ip());
+    buf = malloc(100*sizeof(struct stat));
     
     /*Teste*/
-    insert_ip(1, ips, "111.222.333.444");
-    insert_ip(1, ips, "2.3.8.444");
-    insert_ip(1, ips, "199.5.55.5");
+    insert_ip(SERVER, ips, "111.222.333.444");
+    insert_ip(SERVER, ips, "2.3.8.444");
+    insert_ip(SERVER, ips, "199.5.55.5");
     
     /* Lista arquivos e pastas que estao dentro da pasta definida */
-/*    i = 1;
+    i = 1;
     fileCounter = 0;
     dir = opendir("shared");
     while((lsdir = readdir(dir)) != NULL){
         if(strcmp(lsdir->d_name, ".") && strcmp(lsdir->d_name, "..")){
-            //printf("%s\n", lsdir->d_name);
+            //printf("\n%s", lsdir->d_name);
             fileCounter++;
             files[i].id = i;
-            sprintf(files[i].name, lsdir->d_name);
-            //stat(lsdir->d_name, &buf);
+            sprintf(files[i].name, "%s", lsdir->d_name);
+            stat(lsdir->d_name, buf);
             //fp = fopen(lsdir->d_name, "r");
             //fseek(fp,0,SEEK_END);
             //teste = (int) ftell(fp);
             //printf("\nsize: %d\n", teste);
-            //printf("Tamanho total(bytes) : %li\n", buf.st_size);
-            sprintf(files[i].size, "%d", /*teste*//*0);
-            sprintf(files[i].http, lsdir->d_name);
+            //printf("\n%li bytes\n", buf->st_size);
+            sprintf(files[i].size, "%d", /*teste*/0);
+            sprintf(files[i].http, "%s", lsdir->d_name);
             strcpy(files[i].md5, "Breve.Aguarde!");
             //fclose(fp);
+            i++;
         }
     }
     closedir(dir);
-    */
+    
     /*Enviar quando solicitado arquivo inexistente*/
     files[0].id = 0;
     strcpy(files[0].name, "Arquivo nao existe");
@@ -158,7 +160,7 @@ void * start_connection(void* server_port){
                         if(send(nova_porta, authenticate_back(200, ip_meu, ip_cliente), 999, 0) == -1){
                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'authenticate-back'.");
                         }
-                        insert_ip(1, ips, ip_cliente);
+                        insert_ip(SERVER, ips, ip_cliente);
                     }
                     else{
                         send(nova_porta, authenticate_back(203, ip_meu, ip_cliente), 999, 0);
@@ -174,13 +176,13 @@ void * start_connection(void* server_port){
                         }
                         else{
                             if(!strcmp(protoin.command, "archive-list")){
-                                if(send(nova_porta, archive_list_back(200, files, 10, ip_meu, ip_cliente), 999, 0) == -1){
+                                if(send(nova_porta, archive_list_back(200, files, fileCounter, ip_meu, ip_cliente), 999, 0) == -1){
                                     perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-list-back'.");
                                 }
                             }
                             else{
                                 if(!strcmp(protoin.command, "archive-request")){
-                                    if(tem_arch(files, 11, protoin.file.id)){
+                                    if(tem_arch(files, fileCounter, protoin.file.id)){
                                         system("python -m SimpleHTTPServer & "); //inicializa servidor web
                                         if(send(nova_porta, archive_request_back(302, files[protoin.file.id], ip_meu, ip_cliente), 999, 0) == -1){
                                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-request-back'.");
@@ -192,7 +194,7 @@ void * start_connection(void* server_port){
                                 }
                                 else{
                                     if(!strcmp(protoin.command, "end-connection")){
-                                        remove_ip(1, ips, ip_cliente);
+                                        remove_ip(SERVER, ips, ip_cliente);
                                     }
                                     else{
                                         //comando nao reconhecido
