@@ -4,7 +4,6 @@
 #include <netdb.h>
 #include <pthread.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -60,21 +59,21 @@ void * start_connection(void* server_port){
     char ip_meu[20];
     char ip_cliente[20];
     char buffer[1000];
+    char path[100];
     static char ips[50][20];
     struct sockaddr_in endereco_cliente;
     pthread_t new_thread;
     protocolo protoin;
     static archive_def files[100];
     struct dirent *lsdir;
-    struct stat *buf;
+    float fileSize;
     DIR *dir;
     FILE *fp;
-    int teste;
-        
+    
     porta = (intptr_t) server_port;
     tamanho = sizeof(struct sockaddr_in);
     strcpy(ip_meu, get_my_ip());
-    buf = malloc(100*sizeof(struct stat));
+    //buf = malloc(100*sizeof(struct stat));
     
     /*Teste*/
     insert_ip(SERVER, ips, "111.222.333.444");
@@ -91,16 +90,18 @@ void * start_connection(void* server_port){
             fileCounter++;
             files[i].id = i;
             sprintf(files[i].name, "%s", lsdir->d_name);
-            stat(lsdir->d_name, buf);
-            //fp = fopen(lsdir->d_name, "r");
-            //fseek(fp,0,SEEK_END);
-            //teste = (int) ftell(fp);
-            //printf("\nsize: %d\n", teste);
-            //printf("\n%li bytes\n", buf->st_size);
-            sprintf(files[i].size, "%d", /*teste*/0);
+            sprintf(path, "shared/%s", lsdir->d_name);
+            
+            /* tamanho do arquivo */
+            fp = fopen(path, "rb");
+            fseek(fp, 0, SEEK_END);
+            fileSize = ftell(fp);
+            fclose(fp);
+            //printf("\t%1.2f KB\n", fileSize/1024);
+            
+            sprintf(files[i].size, "%1.2f", fileSize/1024);
             sprintf(files[i].http, "%s", lsdir->d_name);
             strcpy(files[i].md5, "Breve.Aguarde!");
-            //fclose(fp);
             i++;
         }
     }
