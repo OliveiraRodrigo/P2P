@@ -178,56 +178,49 @@ char * end_connection(char * ip_sender, char * ip_recipient){
     return saida;
 }
 
-char ** get_command(){
-/* Recebe os parametros caracter a caracter ***********************************/
+void get_command(char * comando[4]){
         
     int i, j;
-    char temp, **saida;
+    char temp;
     
-    /* Prompt
-    bold green printf("\n P2P:> "); reset white
-    bg_black cyan printf("\n______________________________________________________________________\n");
-    printf("\033[2A\033[7C"); white // Reposiciona o cursor*/
     prompt
     
-    /* Aloca espaco para 4 parametros com 50 caracteres cada */
-        saida = (char**) malloc(4*sizeof(char*));
-        for(i = 0; i < 4; i++){
-            saida[i] = (char*) malloc(50*sizeof(char));
+    i = 0;
+    j = 0;
+    temp = getchar();
+    do{ //ignora as setas
+        while((temp == 27)||(temp == 91)||
+              (temp == 65)||(temp == 66)||
+              (temp == 67)||(temp == 68)){
+            temp = getchar();
         }
-        
-        i = 0;
-        j = 0;
-        temp = getchar();
-        do{ //ignora as setas
-            while((temp == 27)||(temp == 91)||
-                  (temp == 65)||(temp == 66)||
-                  (temp == 67)||(temp == 68)){
-                temp = getchar();
-            }
-            saida[i][j] = temp;
-            if(saida[i][j] == ' '){
-                do temp = getchar();
-                while(temp == ' ');
-                saida[i][j] = '\0'; // Descarta o ' '.
-                j = 0;
-                i++;
+        comando[i][j] = temp;
+        if(comando[i][j] == ' '){
+            do temp = getchar();
+            while(temp == ' ');
+            comando[i][j] = '\0'; // Descarta o ' '.
+            j = 0;
+            i++;
+        }
+        else{
+            if(comando[i][j] == '\n'){
+                comando[i][j] = '\0'; // Descarta o '\n'.
+                break;
             }
             else{
-                if(saida[i][j] == '\n'){
-                    saida[i][j] = '\0'; // Descarta o '\n'.
-                    break;
-                }
-                else{
-                    temp = getchar();
-                    j++;
-                }
+                temp = getchar();
+                j++;
             }
         }
-        while(temp != '\n' && saida[i][j] != '\n');
-        saida[i][j] = '\0';
-        
-        return saida;
+    }
+    while(temp != '\n' && comando[i][j] != '\n');
+    comando[i][j] = '\0';
+    i++;
+    
+    while(i < 4){
+        strcpy(comando[i], "0");
+        i++;
+    }
 }
 
 int run_command(char ** comando, char * ip_return, char * ipdef_return, int * quit_return){
@@ -290,7 +283,7 @@ char * set_ipdestino(char * comando, char * ip_default){
     
     char * ip_destino = (char*) malloc(20*sizeof(char));
     
-    if(strlen(comando)){
+    if(strcmp(comando, "0")){
         return comando;
     }
     else{
@@ -319,7 +312,7 @@ char * get_my_ip(){
         system("ifconfig eth0 | grep \"inet end\" | awk -F: '{print $2}' | awk '{print $1}' > linuxip.txt");
         fp = fopen("linuxip.txt", "r");
         while(fscanf(fp, "%s", ip) != EOF);
-        fclose(fp);
+        remove("linuxip.txt");
     }
     else{
         gethostname(host_meu, sizeof host_meu);

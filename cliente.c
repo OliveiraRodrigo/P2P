@@ -20,7 +20,7 @@ void * cliente(){
     long addr_destino, temp_addr;
     char buffer[1000];
     char ips[50][20];
-    char ** comando;
+    char * comando[4];
     char ip_meu[20];
     char ip_destino[20];
     char ip_default[20];
@@ -30,7 +30,7 @@ void * cliente(){
     //struct timeval tempo_inicio, tempo_fim;
     
     /* Aloca espaco para 4 parametros com 50 caracteres cada */
-    comando = (char**) malloc(4*sizeof(char*));
+    //comando = (char**) malloc(4*sizeof(char*));
     for(i = 0; i < 4; i++){
         comando[i] = (char*) calloc(50,sizeof(char));
     }
@@ -48,7 +48,7 @@ void * cliente(){
         tempo = 0;
         gettimeofday(&tempo_inicio, NULL);*/
 
-        comando = get_command();
+        get_command(comando);
         if(!run_command(comando, ip_meu, ip_default, &quit)){
             
             if(!strcmp(comando[0], "try")){
@@ -74,7 +74,6 @@ void * cliente(){
                                 
                                 //Testa se recebeu um pong ok.
                                 if(protoin.ok && !strcmp(protoin.command, "pong")){
-                                //if(!strcmp(buffer, pong(ip_destino, ip_meu))){
                                     green printf(" P2P:> ");
                                     orange printf("%s", ip_destino);
                                     cyan printf(" respondeu corretamente.\n");

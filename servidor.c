@@ -90,9 +90,9 @@ void * start_connection(void* server_port){
             fileCounter++;
             files[i].id = i;
             sprintf(files[i].name, "%s", lsdir->d_name);
-            sprintf(path, "shared/%s", lsdir->d_name);
             
             /* tamanho do arquivo */
+            sprintf(path, "shared/%s", lsdir->d_name);
             fp = fopen(path, "rb");
             fseek(fp, 0, SEEK_END);
             fileSize = ftell(fp);

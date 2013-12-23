@@ -109,7 +109,7 @@ char * archive_request_back(int code, archive_def arch, char * ip_meu, char * ip
 
 char * end_connection(char * ip_meu, char * ip_destino);
 
-char ** get_command();
+void get_command(char * comando[4]);
 
 int run_command(char ** comando, char * ip_return, char * ipdef_return, int * quit);
 
