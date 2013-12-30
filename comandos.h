@@ -59,7 +59,7 @@ extern "C" {
 
 typedef struct{
     int    id;          // 1, 2, 3...
-    char name[50];      // "nome do arquivo.txt"
+    char name[100];      // "nome do arquivo.txt"
     char size[10];      // "100", "15487"... (KB)
     char http[100];     // Endereco gerado para disponibilizacao do arquivo
     char md5[50];       // Assinatura do arquivo para validacao

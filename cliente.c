@@ -13,7 +13,7 @@
 
 void * cliente(){
     
-    int i, quant, caract, caract1, quit;
+    int i, quant, caract, quit;
     int porta_destino, numbytes;
     char buffer[10000];
     char ips[50][20];
@@ -21,6 +21,7 @@ void * cliente(){
     char ip_meu[20];
     char ip_destino[20];
     char ip_default[20];
+    char truncName[80];
     protocolo protoin;
     archive_def * files;
     //double ti, tf, tempo; // ti = tempo inicial // tf = tempo final
@@ -263,25 +264,30 @@ void * cliente(){
                                                 if(!strcmp(protoin.command, "archive-list-back")){
                                                     if(protoin.status == 200){
                                                         files = malloc(1000*sizeof(archive_def));
-                                                        //quant = getFileList(protoin.back, files);
+                                                        quant = getFileList(protoin.back, files);
                                                         green printf(" P2P:> ");
                                                         cyan printf("Arquivos de ");
                                                         orange printf("%s", ip_destino);
                                                         cyan printf(":\n\n");
-                                                        orange printf("\"%s\"\n", protoin.back);
-                                                        //pink printf("       ID   NAME                                        SIZE\n");
-                                                        //orange
-                                                        //i = 0;
-                                                        //while(i < quant){
-                                                        //    printf("       %-d%n", files[i].id, &caract);
-                                                        //    //printf("[%d]",caract);
-                                                        //    caract1 = caract;
-                                                        //    //printf("{%d}",caract1);
-                                                        //    printf("    %s%n", /*12-caract1,*/ files[i].name, &caract);
-                                                        //    //printf("<%d>",caract);
-                                                        //    printf("%*s\n", 52-caract, files[i].size);
-                                                        //    i++;
-                                                        //}
+                                                        //orange printf("\"%s\"\n", protoin.back);
+                                                        printf("%7s", " ");
+                                                        bold under green printf("%s%6s%70s\n","ID","NAME","SIZE");
+                                                        reset
+                                                        i = 0;
+                                                        while(i < quant){
+                                                            green caract = printf("%9d", files[i].id);
+                                                            strcpy(truncName, "\0");
+                                                            if(strlen(files[i].name) > 68){
+                                                                strncat(truncName, files[i].name, 65);
+                                                                strcat(truncName, "...");
+                                                            }
+                                                            else{
+                                                                strncat(truncName, files[i].name, 68);
+                                                            }
+                                                            orange caract += printf("%*s", 11+strlen(truncName)-caract, truncName);
+                                                            red printf("%*s\n", 85-caract, files[i].size);
+                                                            i++;
+                                                        }
                                                     }
                                                     else{
                                                         green printf(" P2P:> ");
@@ -604,3 +610,7 @@ int baixaArquivo(char shost[64], int porta, char url[128])
     
     return 0;
 }
+/*
+Sistema de Consulta Alunos - DRA_UFPel - CÃ³pia.pdf                  
+Sistema de Consulta Alunos - DRA_UFPel - CopiaSistema de Consulta Alunos - DRA_UFPel - Copia.pdf
+ */
