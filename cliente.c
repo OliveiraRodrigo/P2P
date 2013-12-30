@@ -15,7 +15,7 @@ void * cliente(){
     
     int i, quant, caract, caract1, quit;
     int porta_destino, numbytes;
-    char buffer[1000];
+    char buffer[10000];
     char ips[50][20];
     char * comando[4];
     char ip_meu[20];
@@ -252,7 +252,7 @@ void * cliente(){
                                     
                                     if(send(porta_destino, archive_list(ip_meu, ip_destino), 999,0) != -1){
                                         
-                                        if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
+                                        if((numbytes = recv(porta_destino, buffer, 9999, 0)) != -1) {
                                             
                                             buffer[numbytes] = '\0';
                                             //printf("\n P2P:> Cliente recebeu: %s", buffer);
@@ -262,8 +262,8 @@ void * cliente(){
                                             if(protoin.ok){
                                                 if(!strcmp(protoin.command, "archive-list-back")){
                                                     if(protoin.status == 200){
-                                                        files = malloc(100*sizeof(archive_def));
-                                                        quant = getFileList(protoin.back, files);
+                                                        files = malloc(1000*sizeof(archive_def));
+                                                        //quant = getFileList(protoin.back, files);
                                                         green printf(" P2P:> ");
                                                         cyan printf("Arquivos de ");
                                                         orange printf("%s", ip_destino);
@@ -343,7 +343,7 @@ void * cliente(){
                                                 //printf("\n P2P:> Cliente recebeu: %s", buffer);
                                                 protoin = set_proto(buffer);
                                                 
-                                                //Testa se recebeu um archive-list-back ok.
+                                                //Testa se recebeu um archive-request-back ok.
                                                 if(protoin.ok){
                                                     if(!strcmp(protoin.command, "archive-request-back")){
                                                         if(protoin.status == 302){
@@ -355,7 +355,7 @@ void * cliente(){
                                                             orange printf("%s", protoin.file.http);
                                                             cyan printf("\n\t MD5:  ");
                                                             orange printf("%s\n", protoin.file.md5);
-                                                            baixaArquivo(ip_destino, 8000, protoin.file.http);
+                                                            //baixaArquivo(ip_destino, 8000, protoin.file.http);
                                                         }
                                                         else{
                                                             green printf(" P2P:> ");

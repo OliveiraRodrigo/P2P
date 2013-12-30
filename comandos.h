@@ -70,7 +70,7 @@ typedef struct proto{
     char command[20];   // Identificacao do comando
     int  status;        // Codigo de erro ou validacao
     char passport[30];  // Chave de autenticacao
-    char back[200];     // Dado retornado
+    char back[2000];     // Dado retornado
     archive_def file;   // Informacoes sobre arquivo
     char sender[20];    // IP Remetente
     char recipient[20]; // IP Destinatario
@@ -86,6 +86,8 @@ int baixaArquivo(char shost[64], int porta, char url[128]);
 int servidor();
 
 void * start_connection(void *porta);
+
+int setFileList(char folder[100], archive_def * files);
 
 char * ping(char * meu_ip, char * seu_ip);
 

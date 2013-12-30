@@ -58,17 +58,17 @@ void * start_connection(void* server_port){
     static int num_threads = 0;
     char ip_meu[20];
     char ip_cliente[20];
-    char buffer[1000];
-    char path[100];
+    char buffer[10000];
+    //char path[100];
     static char ips[50][20];
     struct sockaddr_in endereco_cliente;
     pthread_t new_thread;
     protocolo protoin;
     /*static*/ archive_def files[100];
-    struct dirent *lsdir;
-    float fileSize;
-    DIR *dir;
-    FILE *fp;
+    //struct dirent *lsdir;
+    //float fileSize;
+    //DIR *dir;
+    //FILE *fp;
     
     porta = (intptr_t) server_port;
     tamanho = sizeof(struct sockaddr_in);
@@ -81,7 +81,7 @@ void * start_connection(void* server_port){
     insert_ip(SERVER, ips, "199.5.55.5");
     
     /* Lista arquivos e pastas que estao dentro da pasta definida */
-    i = 1;
+    /*i = 1;
     fileCounter = 0;
     dir = opendir("shared");
     while((lsdir = readdir(dir)) != NULL){
@@ -92,7 +92,7 @@ void * start_connection(void* server_port){
             sprintf(files[i].name, "%s", lsdir->d_name);
             
             /* tamanho do arquivo */
-            sprintf(path, "shared/%s", lsdir->d_name);
+            /*sprintf(path, "shared/%s", lsdir->d_name);
             fp = fopen(path, "rb");
             fseek(fp, 0, SEEK_END);
             fileSize = ftell(fp);
@@ -108,11 +108,11 @@ void * start_connection(void* server_port){
     closedir(dir);
     
     /*Enviar quando solicitado arquivo inexistente*/
-    files[0].id = 0;
+    /*files[0].id = 0;
     strcpy(files[0].name, "Arquivo nao existe");
     strcpy(files[0].size, "0");
     strcpy(files[0].http, ":(");
-    strcpy(files[0].md5, " ");
+    strcpy(files[0].md5, " ");*/
     
     repete = 1;
     while(repete){
@@ -177,14 +177,15 @@ void * start_connection(void* server_port){
                         }
                         else{
                             if(!strcmp(protoin.command, "archive-list")){
-                                if(send(nova_porta, archive_list_back(200, files, fileCounter, ip_meu, ip_cliente), 999, 0) == -1){
+                                fileCounter = setFileList("shared", files);
+                                if(send(nova_porta, archive_list_back(200, files, fileCounter, ip_meu, ip_cliente), 9999, 0) == -1){
                                     perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-list-back'.");
                                 }
                             }
                             else{
                                 if(!strcmp(protoin.command, "archive-request")){
                                     if(tem_arch(files, fileCounter, protoin.file.id)){
-                                        system("python -m SimpleHTTPServer & "); //inicializa servidor web
+                                        //system("python -m SimpleHTTPServer & "); //inicializa servidor web
                                         if(send(nova_porta, archive_request_back(302, files[protoin.file.id], ip_meu, ip_cliente), 999, 0) == -1){
                                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-request-back'.");
                                         }
@@ -224,4 +225,50 @@ void * start_connection(void* server_port){
     num_threads--;
     //fechar o servidor tambem
     close(nova_porta); // essa parte somente o pai executa
+}
+
+    
+int setFileList(char folder[100], archive_def * files){
+    
+    int i, fileCounter;
+    char path[100];
+    struct dirent *lsdir;
+    float fileSize;
+    DIR *dir;
+    FILE *fp;
+    
+    i = 1;
+    fileCounter = 0;
+    dir = opendir(folder);
+    while((lsdir = readdir(dir)) != NULL){
+        if(strcmp(lsdir->d_name, ".") && strcmp(lsdir->d_name, "..")){
+            //printf("<%s>\n", lsdir->d_name);
+            fileCounter++;
+            files[i].id = i;
+            sprintf(files[i].name, "%s", lsdir->d_name);
+            
+            /* tamanho do arquivo */
+            sprintf(path, "%s/%s", folder, lsdir->d_name);
+            fp = fopen(path, "rb");
+            fseek(fp, 0, SEEK_END);
+            fileSize = ftell(fp);
+            fclose(fp);
+            
+            sprintf(files[i].size, "%1.2f", fileSize/1024);
+            sprintf(files[i].http, "%s", lsdir->d_name);
+            strcpy(files[i].md5, "Breve.Aguarde!");
+            i++;
+        }
+    }
+    closedir(dir);
+    
+    /*Enviar quando solicitado arquivo inexistente*/
+    files[0].id = 0;
+    strcpy(files[0].name, "Arquivo nao existe");
+    strcpy(files[0].size, "0");
+    strcpy(files[0].http, ":(");
+    strcpy(files[0].md5, " ");
+    
+    return fileCounter;
+    
 }

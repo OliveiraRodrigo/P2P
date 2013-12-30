@@ -105,11 +105,11 @@ char * archive_list(char * ip_sender, char * ip_recipient){
 
 char * archive_list_back(int code, archive_def * archs, int quant_archs, char * ip_sender, char * ip_recipient){
     
-    char * saida       = (char*) malloc(2000  * sizeof(char));
+    char * saida       = (char*) malloc(2000 * sizeof(char));
     char * archs_list  = (char*) malloc(2000 * sizeof(char));
     int i;
     
-    strcpy(archs_list, " ");
+    //strcpy(archs_list, " ");
     
     i = 1;
     if(quant_archs > 0){
@@ -226,29 +226,37 @@ void get_command(char * comando[4]){
 int run_command(char ** comando, char * ip_return, char * ipdef_return, int * quit_return){
     
     if(!strcmp(comando[0], "cls")){
-        if(LINUX) system("clear");
+        if(LINUX)
+            system("clear");
         clear_screen
-        
         bg_cyan bold white printf("\n   P2P                                                                  ");
-        reset /*bg_black*/defaults printf("\n");
+        reset
+        defaults printf("\n");
         return 1;
     }
     if(!strcmp(comando[0], "ip")){
         strcpy(ip_return, get_my_ip());
         clear_line
-        green printf(" P2P:> "); orange printf("%s\n", ip_return);
+        green printf(" P2P:> ");
+        orange printf("%s\n", ip_return);
         return 1;
     }
     if(!strcmp(comando[0], "setip")){ //caso o get_my_ip nao funfe
         strcpy(ip_return, comando[1]);
         clear_line
-        green printf(" P2P:> ");cyan printf("Ok: usando ");orange printf("%s", ip_return);cyan printf(" como meu IP.\n");
+        green printf(" P2P:> ");
+        cyan printf("Ok: usando ");
+        orange printf("%s", ip_return);
+        cyan printf(" como meu IP.\n");
         return 1;
     }
     if(!strcmp(comando[0], "def")){ //caso o get_my_ip nao funfe
         strcpy(ipdef_return, comando[1]);
         clear_line
-        green printf(" P2P:> ");cyan printf("Ok: usando ");orange printf("%s", ipdef_return);cyan printf(" como IP Padrao.\n");
+        green printf(" P2P:> ");
+        cyan printf("Ok: usando ");
+        orange printf("%s", ipdef_return);
+        cyan printf(" como IP Padrao.\n");
         return 1;
     }
     if(!strcmp(comando[0], "help")){
@@ -256,7 +264,8 @@ int run_command(char ** comando, char * ip_return, char * ipdef_return, int * qu
         clear_screen
         
         bg_cyan bold white printf("\n   P2P                                                                  ");
-        reset /*bg_black*/defaults printf("\n");
+        reset
+        defaults printf("\n");
         help();
         return 1;
     }
@@ -533,7 +542,7 @@ int getFileList(char *in, archive_def *files){
             else{
                 //ERRO printf("\n-%s-\n", field);
             }
-            if(in[i] == '}'){//,
+            if(in[i] == '}'){
                 i++;
                 f++;
             }
@@ -550,7 +559,7 @@ protocolo set_proto(char * entrada){
     int i, j;
     protocolo proto;
     char * field = (char*) malloc(20*sizeof(char));
-    char * data = (char*) malloc(200*sizeof(char));
+    char * data = (char*) malloc(2000*sizeof(char));
     char * seq = (char*) malloc(20*sizeof(char)); //Pra saber se esta na sequencia correta
     char * ordem = (char*) malloc(20*sizeof(char)); //Sequencia correta dependendo do comando
 //printf("\nHere we go!\n");
@@ -777,6 +786,11 @@ protocolo set_proto(char * entrada){
                 }
             }
         }
+    }
+    if(strcmp(seq, ordem){
+        //erro
+        //printf(" --6-- ");
+        return proto;
     }*/
     
 //printf("%c",entrada[i]);
