@@ -495,7 +495,7 @@ int getFileList(char *in, archive_def *files){
     int f, i, j;
     
     field = (char*) malloc(20*sizeof(char));
-    data  = (char*) malloc(100*sizeof(char));
+    data  = (char*) malloc(110*sizeof(char));
     
     f = 0;
     i = 0;

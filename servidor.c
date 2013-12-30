@@ -232,7 +232,7 @@ void * start_connection(void* server_port){
 int setFileList(char folder[100], archive_def * files){
     
     int i, fileCounter;
-    char path[100];
+    char path[200];
     struct dirent *lsdir;
     float fileSize;
     DIR *dir;

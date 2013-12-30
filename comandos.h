@@ -85,7 +85,7 @@ int baixaArquivo(char shost[64], int porta, char url[128]);
 
 int servidor();
 
-void * start_connection(void *porta);
+void * start_connection(void * porta);
 
 int setFileList(char folder[100], archive_def * files);
 

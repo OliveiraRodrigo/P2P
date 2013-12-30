@@ -271,21 +271,21 @@ void * cliente(){
                                                         cyan printf(":\n\n");
                                                         //orange printf("\"%s\"\n", protoin.back);
                                                         printf("%7s", " ");
-                                                        bold under green printf("%s%6s%70s\n","ID","NAME","SIZE");
+                                                        bold under green printf("%s%6s%56s\n","ID","NAME","SIZE");
                                                         reset
                                                         i = 0;
                                                         while(i < quant){
-                                                            green caract = printf("%9d", files[i].id);
+                                                            green printf("%9d", files[i].id);
                                                             strcpy(truncName, "\0");
-                                                            if(strlen(files[i].name) > 68){
-                                                                strncat(truncName, files[i].name, 65);
+                                                            if(strlen(files[i].name) > 59-strlen(files[i].size)){
+                                                                strncat(truncName, files[i].name, 56-strlen(files[i].size));
                                                                 strcat(truncName, "...");
                                                             }
                                                             else{
-                                                                strncat(truncName, files[i].name, 68);
+                                                                strcpy(truncName, files[i].name);
                                                             }
-                                                            orange caract += printf("%*s", 11+strlen(truncName)-caract, truncName);
-                                                            red printf("%*s\n", 85-caract, files[i].size);
+                                                            orange caract = printf("  %s", truncName);
+                                                            red printf("%*s\n", 62-caract, files[i].size);
                                                             i++;
                                                         }
                                                     }
