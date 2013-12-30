@@ -22,6 +22,7 @@ void * cliente(){
     char ip_destino[20];
     char ip_default[20];
     char truncName[80];
+    float formSize;
     protocolo protoin;
     archive_def * files;
     //double ti, tf, tempo; // ti = tempo inicial // tf = tempo final
@@ -271,21 +272,28 @@ void * cliente(){
                                                         cyan printf(":\n\n");
                                                         //orange printf("\"%s\"\n", protoin.back);
                                                         printf("%7s", " ");
-                                                        bold under green printf("%s%6s%56s\n","ID","NAME","SIZE");
+                                                        bold under green printf("%s%6s%56s\n\n","ID","NAME","SIZE");
                                                         reset
                                                         i = 0;
                                                         while(i < quant){
                                                             green printf("%9d", files[i].id);
                                                             strcpy(truncName, "\0");
-                                                            if(strlen(files[i].name) > 59-strlen(files[i].size)){
-                                                                strncat(truncName, files[i].name, 56-strlen(files[i].size));
+                                                            if(strlen(files[i].name) > 56-strlen(files[i].size)){
+                                                                strncat(truncName, files[i].name, 53-strlen(files[i].size));
                                                                 strcat(truncName, "...");
                                                             }
                                                             else{
                                                                 strcpy(truncName, files[i].name);
                                                             }
                                                             orange caract = printf("  %s", truncName);
-                                                            red printf("%*s\n", 62-caract, files[i].size);
+                                                            formSize = atof(files[i].size);
+                                                            if(formSize >= 1024){
+                                                                formSize = atof(files[i].size)/1024;
+                                                                red printf("%*.2f MB\n", 59-caract, formSize);
+                                                            }
+                                                            else{
+                                                                red printf("%*.2f KB\n", 59-caract, formSize);
+                                                            }
                                                             i++;
                                                         }
                                                     }
