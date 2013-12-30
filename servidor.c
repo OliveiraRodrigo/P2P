@@ -64,7 +64,7 @@ void * start_connection(void* server_port){
     struct sockaddr_in endereco_cliente;
     pthread_t new_thread;
     protocolo protoin;
-    static archive_def files[100];
+    /*static*/ archive_def files[100];
     struct dirent *lsdir;
     float fileSize;
     DIR *dir;

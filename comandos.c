@@ -114,13 +114,13 @@ char * archive_list_back(int code, archive_def * archs, int quant_archs, char * 
     i = 1;
     if(quant_archs > 0){
         sprintf(archs_list, "{\"id\":%d,", archs[i].id);
-        sprintf(archs_list, "%s\"nome\":\"%s\",", archs_list, archs[i].name);
+        sprintf(archs_list, "%s\"name\":\"%s\",", archs_list, archs[i].name);
         sprintf(archs_list, "%s\"size\":\"%s\"}", archs_list, archs[i].size);
         i++;
     }
     while(i <= quant_archs){
         sprintf(archs_list, "%s,{\"id\":%d,", archs_list, archs[i].id);
-        sprintf(archs_list, "%s\"nome\":\"%s\",", archs_list, archs[i].name);
+        sprintf(archs_list, "%s\"name\":\"%s\",", archs_list, archs[i].name);
         sprintf(archs_list, "%s\"size\":\"%s\"}", archs_list, archs[i].size);
         i++;
     }
@@ -218,7 +218,7 @@ void get_command(char * comando[4]){
     i++;
     
     while(i < 4){
-        strcpy(comando[i], "0");
+        strcpy(comando[i], "\0");
         i++;
     }
 }
@@ -283,11 +283,11 @@ char * set_ipdestino(char * comando, char * ip_default){
     
     char * ip_destino = (char*) malloc(20*sizeof(char));
     
-    if(strcmp(comando, "0")){
+    if(strcmp(comando, "\0")){
         return comando;
     }
     else{
-        if(strcmp(ip_default, "0")){
+        if(strcmp(ip_default, "\0")){
             return ip_default;
         }
         else{
@@ -478,6 +478,71 @@ int tem_arch(archive_def * archs, int quant_archs, int id){
         }
     }
     return 0;
+}
+
+int getFileList(char *in, archive_def *files){
+    
+    char *field, *data;
+    int f, i, j;
+    
+    field = (char*) malloc(20*sizeof(char));
+    data  = (char*) malloc(100*sizeof(char));
+    
+    f = 0;
+    i = 0;
+    j = 0;
+    while(in[i] != ']'){
+        if(in[i] == '['){
+            i++;
+        }
+        if(in[i] == '{'){
+            i++;
+        }
+        if(in[i] == '"'){
+            i++;
+            while(in[i] != '"'){
+                field[j] = in[i];
+                i++;
+                j++;
+            }
+            field[j] = '\0';
+            j = 0;
+            i++;
+            if(in[i] == ':'){
+                i++;
+                if(in[i] == '"'){
+                    i++;
+                }
+                while(in[i] != ',' && in[i] != '"'){
+                    data[j] = in[i];
+                    i++;
+                    j++;
+                }
+                if(in[i] == '"'){
+                    i++;
+                }
+                data[j] = '\0';
+                j = 0;
+            }
+            if(!strcmp(field, "id"))
+                files[f].id = atoi(data);
+            else if(!strcmp(field, "name"))
+                strcpy(files[f].name, data);
+            else if(!strcmp(field, "size"))
+                strcpy(files[f].size, data);
+            else{
+                //ERRO printf("\n-%s-\n", field);
+            }
+            if(in[i] == '}'){//,
+                i++;
+                f++;
+            }
+            if(in[i] == ','){
+                i++;
+            }
+        }
+    }
+    return f;
 }
 
 protocolo set_proto(char * entrada){

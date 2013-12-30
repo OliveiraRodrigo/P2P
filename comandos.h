@@ -126,6 +126,8 @@ char * get_ips_string(char ips_string[50][20]);
 
 int tem_arch(archive_def * archs, int quant_archs, int id);
 
+int getFileList(char * protoin, archive_def * files);
+
 protocolo set_proto(char * entrada);
 
 //int set_ips_array(char ips_string[50][20], char * proto_back);

@@ -13,11 +13,8 @@
 
 void * cliente(){
     
-    int i, j, pong, logado, logout, seq, quit;
-    int porta_destino, numbytes, codigo;
-    struct sockaddr_in endereco_destino;
-    struct hostent *he;
-    long addr_destino, temp_addr;
+    int i, quant, caract, caract1, quit;
+    int porta_destino, numbytes;
     char buffer[1000];
     char ips[50][20];
     char * comando[4];
@@ -37,7 +34,7 @@ void * cliente(){
     
     /* Detecta o IP local e o armazena em 'ip_meu' */
     strcpy(ip_meu, get_my_ip());
-    strcpy(ip_default, "0");
+    strcpy(ip_default, "\0");
     
 /* Recebe comandos enquanto um deles nao for "quit" ***************************/
     quit = 0;
@@ -54,7 +51,7 @@ void * cliente(){
             if(!strcmp(comando[0], "try")){
                 
                 strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
-                if(strcmp(ip_destino, "0")){
+                if(strcmp(ip_destino, "\0")){
                     
                     porta_destino = porta(ip_destino);
                     if(porta_destino != -1){
@@ -104,7 +101,7 @@ void * cliente(){
                 if(!strcmp(comando[0], "login")){
                     
                     strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
-                    if(strcmp(ip_destino, "0")){
+                    if(strcmp(ip_destino, "\0")){
                         
                         porta_destino = porta(ip_destino);
                         if(porta_destino != -1){
@@ -175,7 +172,7 @@ void * cliente(){
                     if(!strcmp(comando[0], "list-users")){
                         
                         strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
-                        if(strcmp(ip_destino, "0")){
+                        if(strcmp(ip_destino, "\0")){
                             
                             porta_destino = porta(ip_destino);
                             if(porta_destino != -1){
@@ -243,7 +240,7 @@ void * cliente(){
                         if(!strcmp(comando[0], "list-files")){
                             
                             strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
-                            if(strcmp(ip_destino, "0")){
+                            if(strcmp(ip_destino, "\0")){
                                 
                                 porta_destino = porta(ip_destino);
                                 if(porta_destino != -1){
@@ -265,11 +262,26 @@ void * cliente(){
                                             if(protoin.ok){
                                                 if(!strcmp(protoin.command, "archive-list-back")){
                                                     if(protoin.status == 200){
+                                                        files = malloc(100*sizeof(archive_def));
+                                                        quant = getFileList(protoin.back, files);
                                                         green printf(" P2P:> ");
                                                         cyan printf("Arquivos de ");
                                                         orange printf("%s", ip_destino);
                                                         cyan printf(":\n\n");
                                                         orange printf("\"%s\"\n", protoin.back);
+                                                        //pink printf("       ID   NAME                                        SIZE\n");
+                                                        //orange
+                                                        //i = 0;
+                                                        //while(i < quant){
+                                                        //    printf("       %-d%n", files[i].id, &caract);
+                                                        //    //printf("[%d]",caract);
+                                                        //    caract1 = caract;
+                                                        //    //printf("{%d}",caract1);
+                                                        //    printf("    %s%n", /*12-caract1,*/ files[i].name, &caract);
+                                                        //    //printf("<%d>",caract);
+                                                        //    printf("%*s\n", 52-caract, files[i].size);
+                                                        //    i++;
+                                                        //}
                                                     }
                                                     else{
                                                         green printf(" P2P:> ");
@@ -313,7 +325,7 @@ void * cliente(){
                             if(!strcmp(comando[0], "down")){
                                 
                                 strcpy(ip_destino, set_ipdestino(comando[2], ip_default));
-                                if(strcmp(ip_destino, "0")){
+                                if(strcmp(ip_destino, "\0")){
                                     
                                     porta_destino = porta(ip_destino);
                                     if(porta_destino != -1){
@@ -387,7 +399,7 @@ void * cliente(){
                                 if(!strcmp(comando[0], "logout")){
                                     
                                     strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
-                                    if(strcmp(ip_destino, "0")){
+                                    if(strcmp(ip_destino, "\0")){
                                         
                                         porta_destino = porta(ip_destino);
                                         if(porta_destino != -1){
