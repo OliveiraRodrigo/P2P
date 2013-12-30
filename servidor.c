@@ -184,6 +184,7 @@ void * start_connection(void* server_port){
                             }
                             else{
                                 if(!strcmp(protoin.command, "archive-request")){
+                                    fileCounter = setFileList("shared", files);
                                     if(tem_arch(files, fileCounter, protoin.file.id)){
                                         //system("python -m SimpleHTTPServer & "); //inicializa servidor web
                                         if(send(nova_porta, archive_request_back(302, files[protoin.file.id], ip_meu, ip_cliente), 999, 0) == -1){
