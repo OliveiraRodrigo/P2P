@@ -10,15 +10,12 @@
 #include <dirent.h>
 #include "comandos.h"
 
-#define PORTA_SERVIDOR 9876
 #define MAX_THREADS 10 // Quantas conexoes simultaneas
-#define MAX 50 // Quantos IPs na lista
-#define TAM 20 // Caracteres no IP
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
 
-int servidor(){
+intptr_t servidor(intptr_t porta_servidor){
     
-    int porta;
+    intptr_t porta;
     struct sockaddr_in endereco_meu;
     
     /* cria socket. PF_INET define IPv4, SOCK_STREAM define TCP */
@@ -32,7 +29,7 @@ int servidor(){
     
     /* porta criada, agora faz o bind com o numero da porta desejado */
     endereco_meu.sin_family = AF_INET;
-    endereco_meu.sin_port = htons(PORTA_SERVIDOR);
+    endereco_meu.sin_port = htons(porta_servidor);
     endereco_meu.sin_addr.s_addr = INADDR_ANY;
     memset(&(endereco_meu.sin_zero), '\0', 8);
     
@@ -53,66 +50,26 @@ int servidor(){
 /* Aguarda conexoes ***********************************************************/
 void * start_connection(void* server_port){
     
-    int nova_porta, tamanho, numbytes, i, repete, fileCounter;
-    intptr_t porta;
+    int tamanho, numbytes, repete, fileCounter;
+    intptr_t porta, nova_porta;
     static int num_threads = 0;
     char ip_meu[20];
     char ip_cliente[20];
     char buffer[10000];
-    //char path[100];
-    static char ips[50][20];
+    static char ips[MAX][20];
     struct sockaddr_in endereco_cliente;
-    pthread_t new_thread;
+    pthread_t new_thread, http_thread;
     protocolo protoin;
-    /*static*/ archive_def files[100];
-    //struct dirent *lsdir;
-    //float fileSize;
-    //DIR *dir;
-    //FILE *fp;
+    archive_def files[100];
     
     porta = (intptr_t) server_port;
     tamanho = sizeof(struct sockaddr_in);
     strcpy(ip_meu, get_my_ip());
-    //buf = malloc(100*sizeof(struct stat));
     
-    /*Teste*/
+    /*Teste
     insert_ip(SERVER, ips, "111.222.333.444");
     insert_ip(SERVER, ips, "2.3.8.444");
-    insert_ip(SERVER, ips, "199.5.55.5");
-    
-    /* Lista arquivos e pastas que estao dentro da pasta definida */
-    /*i = 1;
-    fileCounter = 0;
-    dir = opendir("shared");
-    while((lsdir = readdir(dir)) != NULL){
-        if(strcmp(lsdir->d_name, ".") && strcmp(lsdir->d_name, "..")){
-            //printf("\n%s", lsdir->d_name);
-            fileCounter++;
-            files[i].id = i;
-            sprintf(files[i].name, "%s", lsdir->d_name);
-            
-            /* tamanho do arquivo */
-            /*sprintf(path, "shared/%s", lsdir->d_name);
-            fp = fopen(path, "rb");
-            fseek(fp, 0, SEEK_END);
-            fileSize = ftell(fp);
-            fclose(fp);
-            //printf("\t%1.2f KB\n", fileSize/1024);
-            
-            sprintf(files[i].size, "%1.2f", fileSize/1024);
-            sprintf(files[i].http, "%s", lsdir->d_name);
-            strcpy(files[i].md5, "Breve.Aguarde!");
-            i++;
-        }
-    }
-    closedir(dir);
-    
-    /*Enviar quando solicitado arquivo inexistente*/
-    /*files[0].id = 0;
-    strcpy(files[0].name, "Arquivo nao existe");
-    strcpy(files[0].size, "0");
-    strcpy(files[0].http, ":(");
-    strcpy(files[0].md5, " ");*/
+    insert_ip(SERVER, ips, "199.5.55.5");*/
     
     repete = 1;
     while(repete){
@@ -162,6 +119,7 @@ void * start_connection(void* server_port){
                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'authenticate-back'.");
                         }
                         insert_ip(SERVER, ips, ip_cliente);
+                        httpReq(servidor(9875), ips);
                     }
                     else{
                         send(nova_porta, authenticate_back(203, ip_meu, ip_cliente), 999, 0);
@@ -186,10 +144,10 @@ void * start_connection(void* server_port){
                                 if(!strcmp(protoin.command, "archive-request")){
                                     fileCounter = setFileList("shared", files);
                                     if(tem_arch(files, fileCounter, protoin.file.id)){
-                                        //system("python -m SimpleHTTPServer & "); //inicializa servidor web
                                         if(send(nova_porta, archive_request_back(302, files[protoin.file.id], ip_meu, ip_cliente), 999, 0) == -1){
                                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-request-back'.");
                                         }
+                                        //httpReq(servidor(9875), ips);
                                     }
                                     else{
                                         send(nova_porta, archive_request_back(404, files[0], ip_meu, ip_cliente), 999, 0);

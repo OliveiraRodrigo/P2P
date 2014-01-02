@@ -55,7 +55,9 @@ extern "C" {
 
 #define CLIENT 0
 #define SERVER 1
-#define MAX 50
+#define MAX 50 // Quantos IPs na lista
+#define BYTES 1024
+#define CONNMAX 10
 
 typedef struct{
     int    id;          // 1, 2, 3...
@@ -83,9 +85,9 @@ int porta(char * ip_destino);
 
 int baixaArquivo(char shost[64], int porta, char url[128]);
 
-int servidor();
+intptr_t servidor(intptr_t porta_servidor);
 
-void * start_connection(void * porta);
+void * start_connection(void * /*args*/porta);
 
 int setFileList(char folder[100], archive_def * files);
 
@@ -121,10 +123,10 @@ char * get_my_ip();
 
 /* quem: 0 = lista de IPs do cliente  (macro: CLIENT),
  *       1 = lista de IPs so servidor (macro: SERVER) */
-int insert_ip(int quem, char ips_string[50][20], char * novo_ip);
-int remove_ip(int quem, char ips_string[50][20], char * target);
+int insert_ip(int quem, char ips_string[MAX][20], char * novo_ip);
+int remove_ip(int quem, char ips_string[MAX][20], char * target);
 
-char * get_ips_string(char ips_string[50][20]);
+char * get_ips_string(char ips_string[MAX][20]);
 
 int tem_arch(archive_def * archs, int quant_archs, int id);
 
@@ -132,13 +134,14 @@ int getFileList(char * protoin, archive_def * files);
 
 protocolo set_proto(char * entrada);
 
-//int set_ips_array(char ips_string[50][20], char * proto_back);
+//int set_ips_array(char ips_string[MAX][20], char * proto_back);
 
 int server_ips_size(int modifier);
 
 int client_ips_size(int modifier);
 
-int server_find_ip(char ips_array[50][20], char * target);
+int server_find_ip(char ips_array[MAX][20], char * target);
 
 void help();
 
+void * httpReq(intptr_t porta, char ips_array[MAX][20]);

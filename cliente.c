@@ -130,7 +130,7 @@ void * cliente(){
                                                 orange printf("%s", ip_destino);
                                                 cyan printf(" aceita.\n");
                                                 //Salva o IP para desconectar ao sair.
-                                                insert_ip(CLIENT, ips, ip_destino); //Cliente nao precisa desta lista
+                                                insert_ip(CLIENT, ips, ip_destino);
                                             }
                                             else{
                                                 green printf(" P2P:> ");
@@ -272,7 +272,8 @@ void * cliente(){
                                                         cyan printf(":\n\n");
                                                         //orange printf("\"%s\"\n", protoin.back);
                                                         printf("%7s", " ");
-                                                        bold under green printf("%s%6s%56s\n\n","ID","NAME","SIZE");
+                                                        bold green printf("%s%6s%56s","ID","NAME","SIZE");
+                                                        printf("\n ----------------------------------------------------------------------\n");
                                                         reset
                                                         i = 0;
                                                         while(i < quant){
@@ -296,6 +297,7 @@ void * cliente(){
                                                             }
                                                             i++;
                                                         }
+                                                        bold green printf(" ----------------------------------------------------------------------\n");
                                                     }
                                                     else{
                                                         green printf(" P2P:> ");
@@ -434,7 +436,7 @@ void * cliente(){
                                                 red printf("Erro: nao foi posivel enviar 'end-connection'\n");
                                             }
                                             //Remove o IP da lista, pois, ao sair, deste eu ja estou desconectado.
-                                            remove_ip(CLIENT, ips, ip_destino); //Cliente nao precisa desta lista
+                                            remove_ip(CLIENT, ips, ip_destino);
                                             close(porta_destino);
                                         }
                                     }

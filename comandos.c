@@ -8,6 +8,11 @@
 #include <arpa/inet.h>
 #include "comandos.h"
 
+/*#include<unistd.h>
+#include<sys/stat.h>
+#include<signal.h>
+#include<fcntl.h>*/
+
 #define PORTA_SERVIDOR 9876
 #define MAX 50
 
@@ -303,10 +308,10 @@ char * set_ipdestino(char * comando, char * ip_default){
             clear_line
             green printf(" P2P:> ");
             red printf("Erro: IP Padrao nao configurado.\n");
-            return "0";
+            return "\0";
         }
     }
-    return "0";
+    return "\0";
 }
 
 char * get_my_ip(){
@@ -831,4 +836,61 @@ void help(){
     white printf("               Limpa a tela\n");
     red printf("\n________________________________________________________________________\n");
     
+}
+
+void * httpReq(intptr_t porta, char ips[50][20]/*void* args*/){
+    
+    int fd, bytes_read, size, porta_cliente;
+    char mesg[10000], *reqline[3], data_to_send[BYTES], path[9999];
+    struct sockaddr_in endereco_cliente;
+    
+    size = sizeof(struct sockaddr_in);
+    
+    while(1){
+    porta_cliente = accept(porta, (struct sockaddr*)&endereco_cliente, &size);
+    
+    if(server_find_ip(ips, inet_ntoa(endereco_cliente.sin_addr))){
+        //printf("\nOK\n");
+        
+        recv(porta_cliente, mesg, 9999, 0);
+        reqline[0] = strtok (mesg, " \t\n");
+        
+        if(strncmp(reqline[0], "GET\0", 4)==0){
+            reqline[1] = strtok (NULL, " \t");
+            reqline[2] = strtok (NULL, " \t\n");
+            if(strncmp(reqline[2], "HTTP/1.0", 8) != 0 && strncmp(reqline[2], "HTTP/1.1", 8) != 0){
+                write(porta_cliente, "HTTP/1.0 400 Bad Request\n", 25);
+            }
+            else{
+                if(strncmp(reqline[1], "/\0", 2)==0){
+                    reqline[1] = "/index.html"; //index.html aberto por padrao, caso nao seja especificado nenhum arquivo.
+                }
+                strcpy(path, "shared");
+                strcpy(&path[strlen("shared")], reqline[1]);
+                //printf("file: %s\n", path);
+                if((fd=open(path, 0/*O_RDONLY*/))!=-1){
+                    send(porta_cliente, "HTTP/1.0 200 OK\n\n", 17, 0);
+                    while((bytes_read=read(fd, data_to_send, BYTES)) > 0){
+                        write (porta_cliente, data_to_send, bytes_read);
+                    }
+                }
+                else{
+                    write(porta_cliente, "HTTP/1.0 404 Not Found\n", 23);
+                }
+            }
+        }
+        else{
+            write(porta_cliente, "HTTP/1.0 400 Bad Request\n", 25);
+            //return 0;
+        }
+    }
+    else{
+        //printf("\nNOT\n");
+        write(porta_cliente, "HTTP/1.0 401 Unauthorized\n", 26);
+    }
+
+    close(porta_cliente);
+    //close(porta);
+    }
+    //return 1;
 }
