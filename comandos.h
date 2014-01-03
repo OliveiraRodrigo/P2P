@@ -55,9 +55,18 @@ extern "C" {
 
 #define CLIENT 0
 #define SERVER 1
+#define GET 0
+#define INSERT 1
+#define REMOVE 2
+#define FIND 3
+#define GETSIZE 4
+
 #define MAX 50 // Quantos IPs na lista
 #define BYTES 1024
 #define CONNMAX 10
+
+#define PORTA_SERVIDOR 9876
+#define PORTA_HTTP 9875
 
 typedef struct{
     int    id;          // 1, 2, 3...
@@ -79,11 +88,13 @@ typedef struct proto{
     int  ok;            // Construcao correta do protocolo
 } protocolo;
 
+typedef char IPs[MAX][20];
+
 void * cliente();
 
-int porta(char * ip_destino);
+intptr_t porta(char * ip_destino);
 
-int baixaArquivo(char shost[64], int porta, char url[128]);
+int baixaArquivo(char ip_destino[20], int porta, char url[128]);
 
 intptr_t servidor(intptr_t porta_servidor);
 
@@ -128,6 +139,8 @@ int remove_ip(int quem, char ips_string[MAX][20], char * target);
 
 char * get_ips_string(char ips_string[MAX][20]);
 
+int ips_list(int function, int who, char * target, IPs returnIPs);
+
 int tem_arch(archive_def * archs, int quant_archs, int id);
 
 int getFileList(char * protoin, archive_def * files);
@@ -144,4 +157,4 @@ int server_find_ip(char ips_array[MAX][20], char * target);
 
 void help();
 
-void * httpReq(intptr_t porta, char ips_array[MAX][20]);
+void * httpReq(void * porta_http);

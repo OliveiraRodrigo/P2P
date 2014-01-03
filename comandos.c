@@ -8,13 +8,7 @@
 #include <arpa/inet.h>
 #include "comandos.h"
 
-/*#include<unistd.h>
-#include<sys/stat.h>
-#include<signal.h>
-#include<fcntl.h>*/
-
-#define PORTA_SERVIDOR 9876
-#define MAX 50
+#define MAX_THREADS 10 // Quantas conexoes simultaneas
 
 char * ping(char * ip_sender, char * ip_recipient){
     
@@ -345,7 +339,7 @@ char * get_my_ip(){
     }
     return ip;
 }
-
+/*
 int insert_ip(int quem, char ips_array[50][20], char * novo_ip){
     
     int i, size;
@@ -433,6 +427,124 @@ int client_ips_size(int modifier){
     i += modifier;
     return i;
 }
+*/
+int ips_list(int function, int who, char * target, IPs returnIPs){
+    
+    static IPs serverIPs;
+    static IPs clientIPs;
+    static int serverSize = 0;
+    static int clientSize = 0;
+    int i;
+    
+    switch(function){
+        
+        case GET:
+            if(who == CLIENT){
+                for(i = 0; i < clientSize; i++){
+                    strcpy(returnIPs[i], clientIPs[i]);
+                }
+            }
+            else{ //SERVER
+                for(i = 0; i < serverSize; i++){
+                    strcpy(returnIPs[i], serverIPs[i]);
+                }
+            }
+            return 1;
+            break;
+            
+        case INSERT:
+            i = 0;
+            if(who == CLIENT){
+                while(i < clientSize){
+                    //procura se ja nao tem
+                    if(!strcmp(clientIPs[i], target)){
+                        return -1;
+                    }
+                    i++;
+                }
+                if(i < MAX-1){
+                    strcpy(clientIPs[i], target);
+                    clientSize++;
+                    return 1;
+                }
+                return -1;
+            }
+            else{ //SERVER
+                while(i < serverSize){
+                    //procura se ja nao tem
+                    if(!strcmp(serverIPs[i], target)){
+                        return -1;
+                    }
+                    i++;
+                }
+                if(i < MAX-1){
+                    strcpy(serverIPs[i], target);
+                    serverSize++;
+                    return 1;
+                }
+                return -1;
+            }
+            break;
+        
+        case REMOVE:
+            if(who == CLIENT){
+                for(i = 0; i < clientSize; i++){
+                    if(!strcmp(clientIPs[i], target)){
+                        while(i+1 < clientSize){
+                            strcpy(clientIPs[i], clientIPs[i+1]);
+                            i++;
+                        }
+                        clientSize--;
+                        return 1;
+                    }
+                }
+                return -1;
+            }
+            else{ //SERVER
+                for(i = 0; i < serverSize; i++){
+                    if(!strcmp(serverIPs[i], target)){
+                        while(i+1 < serverSize){
+                            strcpy(serverIPs[i], serverIPs[i+1]);
+                            i++;
+                        }
+                        serverSize--;
+                        return 1;
+                    }
+                }
+                return -1;
+            }
+            break;
+        
+        case FIND:
+            if(who == CLIENT){
+                for(i = 0; i < clientSize; i++){
+                    if(!strcmp(clientIPs[i], target)){
+                        return 1;
+                    }
+                }
+                return 0;
+            }
+            else{ //SERVER
+                for(i = 0; i < serverSize; i++){
+                    if(!strcmp(serverIPs[i], target)){
+                        return 1;
+                    }
+                }
+                return 0;
+            }
+            break;
+        
+        case GETSIZE:
+            if(who == CLIENT){
+                return clientSize;
+            }
+            else{ //SERVER
+                return serverSize;
+            }
+            break;
+            
+    }
+}
 /* Desnecessaria
 int set_ips_array(char ips_array[50][20], char * proto_back){
     
@@ -463,12 +575,12 @@ int set_ips_array(char ips_array[50][20], char * proto_back){
     return 0;
 }
 */
-char * get_ips_string(char ips_array[50][20]){
+char * get_ips_string(IPs ips_array){
     
     int i, size;
     char * saida;
     
-    size = server_ips_size(0);
+    size = ips_list(GETSIZE, SERVER, NULL, NULL);
     saida = (char*) malloc(1000*size*sizeof(char));
 
     i = 0;
@@ -567,49 +679,39 @@ protocolo set_proto(char * entrada){
     char * data = (char*) malloc(2000*sizeof(char));
     char * seq = (char*) malloc(20*sizeof(char)); //Pra saber se esta na sequencia correta
     char * ordem = (char*) malloc(20*sizeof(char)); //Sequencia correta dependendo do comando
-//printf("\nHere we go!\n");
     i = 0;
     if(entrada[i] == '{'){
-//printf("%c",entrada[i]);
             i++;
             while(entrada[i] != '}'){
                 j = 0;
                 while(entrada[i] == ' '){
-//printf("%c",entrada[i]);
                     i++;
                 }
                 if(entrada[i] == '"'){
-//printf("%c",entrada[i]);
                     i++;
                     while(entrada[i] != '"'){
                         field[j] = entrada[i];
-//printf("%c",entrada[i]);
                         i++;
                         j++;
                     }
-//printf("%c",entrada[i]);
                     i++;
                     field[j] = '\0';
                     j = 0;
                     if(entrada[i] != ':'){
-//printf("%c",entrada[i]);
                         //erro
                         printf(" --00-- ");
                         return proto;
                     }
                     else{
-//printf("%c",entrada[i]);
                         i++;
                     }
                     if(entrada[i] == '['){
                         while(entrada[i] != ']'){
                             data[j] = entrada[i];
-//printf("%c",entrada[i]);
                             i++;
                             j++;
                         }
                         data[j] = entrada[i];
-//printf("%c",entrada[i]);
                         i++;
                         j++;
                         data[j] = '\0';
@@ -617,15 +719,12 @@ protocolo set_proto(char * entrada){
                     }
                     else{
                         if(entrada[i] == '"'){
-//printf("%c",entrada[i]);
                             i++;
                             while(entrada[i] != '"'){
                                 data[j] = entrada[i];
-//printf("%c",entrada[i]);
                                 i++;
                                 j++;
                             }
-//printf("%c",entrada[i]);
                             i++;
                             data[j] = '\0';
                             j = 0;
@@ -633,7 +732,6 @@ protocolo set_proto(char * entrada){
                     else{
                         while(entrada[i] != ','){
                             data[j] = entrada[i];
-//printf("%c",entrada[i]);
                             i++;
                             j++;
                         }
@@ -698,8 +796,8 @@ protocolo set_proto(char * entrada){
                                                             }
                                                             else{
                                                                 //erro
-//printf("%s",field);
-                                                                printf(" --1-- ");
+                                                                //printf("%s",field);
+                                                                //printf(" --1-- ");
                                                                 return proto;
                                                             }
                                                         }
@@ -713,22 +811,19 @@ protocolo set_proto(char * entrada){
                         }
                     }
                     if(entrada[i] == ','){
-//printf("%c",entrada[i]);
                         i++;
                     }
                 }
                 else{
-//printf("%c",entrada[i]);
                     //erro
-                    printf(" --3-- ");
+                    //printf(" --3-- ");
                     return proto;
                 }
             }
     }
     else{
-//printf("%c",entrada[i]);
         //erro
-        printf(" --4-- ");
+        //printf(" --4-- ");
         return proto;
     }
     
@@ -798,8 +893,6 @@ protocolo set_proto(char * entrada){
         return proto;
     }*/
     
-//printf("%c",entrada[i]);
-//printf("\nHere we came!\n");
     proto.ok = 1;
     return proto;
 }
@@ -808,7 +901,7 @@ void help(){
     
     printf("\n");
     bg_red bold white printf("\n   HELP                                                                 ");
-    reset /*bg_black*/defaults printf("\n\n");
+    reset defaults printf("\n\n");
     white printf(" def "); orange printf("<IP>");
     white printf("           Define <IP> como IP Padrao, para que nao seja neces-\n");
     white printf("                    saria a sua digitacao nos proximos comandos.\n\n");
@@ -838,59 +931,68 @@ void help(){
     
 }
 
-void * httpReq(intptr_t porta, char ips[50][20]/*void* args*/){
+void * httpReq(void* porta_http){
     
-    int fd, bytes_read, size, porta_cliente;
+    int fd, bytes_read, size, repete;
+    static int num_threads = 0;
+    intptr_t porta, porta_cliente;
     char mesg[10000], *reqline[3], data_to_send[BYTES], path[9999];
     struct sockaddr_in endereco_cliente;
+    pthread_t new_thread;
     
     size = sizeof(struct sockaddr_in);
+    porta = (intptr_t) porta_http;
     
-    while(1){
-    porta_cliente = accept(porta, (struct sockaddr*)&endereco_cliente, &size);
-    
-    if(server_find_ip(ips, inet_ntoa(endereco_cliente.sin_addr))){
-        //printf("\nOK\n");
+    repete = 1;
+    while(repete){
         
-        recv(porta_cliente, mesg, 9999, 0);
-        reqline[0] = strtok (mesg, " \t\n");
+        porta_cliente = accept(porta, (struct sockaddr*)&endereco_cliente, &size);
         
-        if(strncmp(reqline[0], "GET\0", 4)==0){
-            reqline[1] = strtok (NULL, " \t");
-            reqline[2] = strtok (NULL, " \t\n");
-            if(strncmp(reqline[2], "HTTP/1.0", 8) != 0 && strncmp(reqline[2], "HTTP/1.1", 8) != 0){
-                write(porta_cliente, "HTTP/1.0 400 Bad Request\n", 25);
-            }
-            else{
-                if(strncmp(reqline[1], "/\0", 2)==0){
-                    reqline[1] = "/index.html"; //index.html aberto por padrao, caso nao seja especificado nenhum arquivo.
-                }
-                strcpy(path, "shared");
-                strcpy(&path[strlen("shared")], reqline[1]);
-                //printf("file: %s\n", path);
-                if((fd=open(path, 0/*O_RDONLY*/))!=-1){
-                    send(porta_cliente, "HTTP/1.0 200 OK\n\n", 17, 0);
-                    while((bytes_read=read(fd, data_to_send, BYTES)) > 0){
-                        write (porta_cliente, data_to_send, bytes_read);
-                    }
+        /*if(num_threads < MAX_THREADS){
+            pthread_create(&new_thread, NULL, httpReq, (void*) porta);
+            num_threads++;
+            repete = 0;
+        }*/
+        
+        if(ips_list(FIND, SERVER, inet_ntoa(endereco_cliente.sin_addr), NULL)){
+            //printf("\nOK\n");
+            
+            recv(porta_cliente, mesg, 9999, 0);
+            reqline[0] = strtok (mesg, " \t\n");
+            
+            if(strncmp(reqline[0], "GET\0", 4)==0){
+                reqline[1] = strtok (NULL, " \t");
+                reqline[2] = strtok (NULL, " \t\n");
+                if(strncmp(reqline[2], "HTTP/1.0", 8) != 0 && strncmp(reqline[2], "HTTP/1.1", 8) != 0){
+                    write(porta_cliente, "HTTP/1.0 400 Bad Request\n", 25);
                 }
                 else{
-                    write(porta_cliente, "HTTP/1.0 404 Not Found\n", 23);
+                    if(strncmp(reqline[1], "/\0", 2)==0){
+                        reqline[1] = "/index.html"; //index.html aberto por padrao, caso nao seja especificado nenhum arquivo.
+                    }
+                    strcpy(path, "shared");
+                    strcpy(&path[strlen("shared")], reqline[1]);
+                    //printf("file: %s\n", path);
+                    if((fd=open(path, 0/*O_RDONLY*/))!=-1){
+                        send(porta_cliente, "HTTP/1.0 200 OK\n\n", 17, 0);
+                        while((bytes_read=read(fd, data_to_send, BYTES)) > 0){
+                            write (porta_cliente, data_to_send, bytes_read);
+                        }
+                    }
+                    else{
+                        write(porta_cliente, "HTTP/1.0 404 Not Found\n", 23);
+                    }
                 }
+            }
+            else{
+                write(porta_cliente, "HTTP/1.0 400 Bad Request\n", 25);
             }
         }
         else{
-            write(porta_cliente, "HTTP/1.0 400 Bad Request\n", 25);
-            //return 0;
+            //printf("\nNOT\n");
+            write(porta_cliente, "HTTP/1.0 401 Unauthorized\n", 26);
         }
+        close(porta_cliente);
     }
-    else{
-        //printf("\nNOT\n");
-        write(porta_cliente, "HTTP/1.0 401 Unauthorized\n", 26);
-    }
-
-    close(porta_cliente);
-    //close(porta);
-    }
-    //return 1;
+    num_threads--;
 }

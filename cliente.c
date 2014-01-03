@@ -8,15 +8,14 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include "comandos.h"
-#define PORTA_SERVIDOR 9876
+
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
 
 void * cliente(){
     
-    int i, quant, caract, quit;
-    int porta_destino, numbytes;
+    int i, quant, caract, quit, numbytes;
+    intptr_t porta_destino;
     char buffer[10000];
-    char ips[50][20];
     char * comando[4];
     char ip_meu[20];
     char ip_destino[20];
@@ -25,6 +24,7 @@ void * cliente(){
     float formSize;
     protocolo protoin;
     archive_def * files;
+    IPs ips;
     //double ti, tf, tempo; // ti = tempo inicial // tf = tempo final
     //struct timeval tempo_inicio, tempo_fim;
     
@@ -130,7 +130,8 @@ void * cliente(){
                                                 orange printf("%s", ip_destino);
                                                 cyan printf(" aceita.\n");
                                                 //Salva o IP para desconectar ao sair.
-                                                insert_ip(CLIENT, ips, ip_destino);
+                                                //insert_ip(CLIENT, ips, ip_destino);
+                                                ips_list(INSERT, CLIENT, ip_destino, NULL);
                                             }
                                             else{
                                                 green printf(" P2P:> ");
@@ -371,7 +372,7 @@ void * cliente(){
                                                             orange printf("%s", protoin.file.http);
                                                             cyan printf("\n\t MD5:  ");
                                                             orange printf("%s\n", protoin.file.md5);
-                                                            //baixaArquivo(ip_destino, 8000, protoin.file.http);
+                                                            baixaArquivo(ip_destino, porta_destino, protoin.file.http);
                                                         }
                                                         else{
                                                             green printf(" P2P:> ");
@@ -436,7 +437,8 @@ void * cliente(){
                                                 red printf("Erro: nao foi posivel enviar 'end-connection'\n");
                                             }
                                             //Remove o IP da lista, pois, ao sair, deste eu ja estou desconectado.
-                                            remove_ip(CLIENT, ips, ip_destino);
+                                            //remove_ip(CLIENT, ips, ip_destino);
+                                            ips_list(REMOVE, CLIENT, ip_destino, NULL);
                                             close(porta_destino);
                                         }
                                     }
@@ -455,7 +457,11 @@ void * cliente(){
         }
         if(quit){
             //Envia end-connection para todos os IPs com quem estou conectado.
-            for(i = 0; i < client_ips_size(0); i++){
+            /*for(i = 0; i < client_ips_size(0); i++){
+                send(porta_destino, end_connection(ip_meu, ips[i]), 999,0);
+            }*/
+            ips_list(GET, CLIENT, NULL, ips);
+            for(i = 0; i < ips_list(GETSIZE, CLIENT, NULL, NULL); i++){
                 send(porta_destino, end_connection(ip_meu, ips[i]), 999,0);
             }
         }
@@ -467,15 +473,14 @@ void * cliente(){
     }
 }
 
-int porta(char * ip_destino){
+intptr_t porta(char * ip_destino){
 	
-    int porta_destino, numbytes, codigo;
+    int numbytes, codigo;
+    intptr_t porta_destino;
     struct sockaddr_in endereco_destino;
     struct hostent *he;
     long addr_destino, temp_addr;
-    //char * ip_destino = (char*) malloc(20*sizeof(char));
 	
-                    //temp_addr = addr_destino;
                     addr_destino = inet_addr(ip_destino);
                     
                     if((he=gethostbyaddr((char *) &addr_destino, sizeof(addr_destino), AF_INET)) == NULL) {
@@ -484,7 +489,6 @@ int porta(char * ip_destino){
                         red printf("Erro: Nao foi possivel localizar ");
                         orange printf("%s", ip_destino);
                         red printf(".\n");
-                        //addr_destino = temp_addr;
                         return -1;
                     }
                     
@@ -511,15 +515,15 @@ int porta(char * ip_destino){
                     return porta_destino;
 }
 
-int baixaArquivo(char shost[64], int porta, char url[128])
-{
-    char req[512]; //requisição
+int baixaArquivo(char ip_destino[20], int porta, char url[128]){
+    
+    char req[512], shost[64];
     int sock; //socket
     struct sockaddr_in addr;
-    struct hostent  * host = NULL;
-    
+    struct in_addr IPV4 = { 0 };
+    //long IPV4;
+    struct hostent * host = NULL;
     char buffer[512]; // Buffer para armazenar dados
-
     int bytes = 1; // Bytes recebidos
     int flagAcabouCabecalho=0;
     int cont=0;
@@ -542,10 +546,12 @@ int baixaArquivo(char shost[64], int porta, char url[128])
         printf("ERRO ao criar socket[1]");
         return 1;
     }
-    addr.sin_family=AF_INET;
+    addr.sin_family = AF_INET;
     addr.sin_port = htons(porta);//seta porta
-    host = gethostbyname(shost);//sera host
-
+    IPV4.s_addr = inet_addr(ip_destino);
+    //inet_aton(ip_destino, &IPV4);
+    host = gethostbyaddr((char *)&IPV4, sizeof(IPV4), AF_INET);
+    
     if(host == NULL){ //se host não responde, cai fora
         printf("ERRO ao criar socket [2]");
         return 1;
@@ -555,8 +561,8 @@ int baixaArquivo(char shost[64], int porta, char url[128])
     memcpy(&addr.sin_addr,host->h_addr_list[0],host->h_length);
 
     //conecta
-    if(connect(sock,(struct sockaddr*)&addr,sizeof(addr))<0){
-        printf("ERRO ao conectar ao servidor para download");
+    if(connect(sock,(struct sockaddr*)&addr,sizeof(addr)) < 0){
+        printf(" P2P:> ERRO ao conectar ao servidor para download\n");
         return 1;
     }
 

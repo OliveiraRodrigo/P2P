@@ -10,7 +10,7 @@
 #include <dirent.h>
 #include "comandos.h"
 
-#define MAX_THREADS 10 // Quantas conexoes simultaneas
+#define MAX_THREADS 3 // Quantas conexoes simultaneas
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
 
 intptr_t servidor(intptr_t porta_servidor){
@@ -50,13 +50,13 @@ intptr_t servidor(intptr_t porta_servidor){
 /* Aguarda conexoes ***********************************************************/
 void * start_connection(void* server_port){
     
-    int tamanho, numbytes, repete, fileCounter;
+    int tamanho, numbytes, repete, fileCounter, i;
     intptr_t porta, nova_porta;
     static int num_threads = 0;
     char ip_meu[20];
     char ip_cliente[20];
     char buffer[10000];
-    static char ips[MAX][20];
+    static IPs ips;
     struct sockaddr_in endereco_cliente;
     pthread_t new_thread, http_thread;
     protocolo protoin;
@@ -67,9 +67,9 @@ void * start_connection(void* server_port){
     strcpy(ip_meu, get_my_ip());
     
     /*Teste
-    insert_ip(SERVER, ips, "111.222.333.444");
-    insert_ip(SERVER, ips, "2.3.8.444");
-    insert_ip(SERVER, ips, "199.5.55.5");*/
+    ips_list(INSERT, SERVER, "111.222.333.444", NULL);
+    ips_list(INSERT, SERVER, "2.3.8.444", NULL);
+    ips_list(INSERT, SERVER, "199.5.55.5", NULL);*/
     
     repete = 1;
     while(repete){
@@ -118,8 +118,7 @@ void * start_connection(void* server_port){
                         if(send(nova_porta, authenticate_back(200, ip_meu, ip_cliente), 999, 0) == -1){
                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'authenticate-back'.");
                         }
-                        insert_ip(SERVER, ips, ip_cliente);
-                        httpReq(servidor(9875), ips);
+                        ips_list(INSERT, SERVER, ip_cliente, NULL);
                     }
                     else{
                         send(nova_porta, authenticate_back(203, ip_meu, ip_cliente), 999, 0);
@@ -127,8 +126,9 @@ void * start_connection(void* server_port){
                 }
                 else{
                     /* A partir daqui so aceita se o cliente estiver logado */
-                    if(server_find_ip(ips, ip_cliente)){
+                    if(ips_list(FIND, SERVER, ip_cliente, NULL)){
                         if(!strcmp(protoin.command, "agent-list")){
+                            ips_list(GET, SERVER, NULL, ips);
                             if(send(nova_porta, agent_list_back(200, get_ips_string(ips), ip_meu, ip_cliente), 999, 0) == -1){
                                 perror("\n ::::: Erro: servidor nao conseguiu enviar 'agent-list-back'.");
                             }
@@ -147,7 +147,6 @@ void * start_connection(void* server_port){
                                         if(send(nova_porta, archive_request_back(302, files[protoin.file.id], ip_meu, ip_cliente), 999, 0) == -1){
                                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'archive-request-back'.");
                                         }
-                                        //httpReq(servidor(9875), ips);
                                     }
                                     else{
                                         send(nova_porta, archive_request_back(404, files[0], ip_meu, ip_cliente), 999, 0);
@@ -155,7 +154,7 @@ void * start_connection(void* server_port){
                                 }
                                 else{
                                     if(!strcmp(protoin.command, "end-connection")){
-                                        remove_ip(SERVER, ips, ip_cliente);
+                                        ips_list(REMOVE, SERVER, ip_cliente, NULL);
                                     }
                                     else{
                                         //comando nao reconhecido
