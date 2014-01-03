@@ -958,6 +958,7 @@ void * httpReq(void* porta_http){
             //printf("\nOK\n");
             
             recv(porta_cliente, mesg, 9999, 0);
+            //printf("[%s]", mesg);
             reqline[0] = strtok (mesg, " \t\n");
             
             if(strncmp(reqline[0], "GET\0", 4)==0){
@@ -992,7 +993,7 @@ void * httpReq(void* porta_http){
             //printf("\nNOT\n");
             write(porta_cliente, "HTTP/1.0 401 Unauthorized\n", 26);
         }
-        close(porta_cliente);
+        //close(porta_cliente);
     }
     num_threads--;
 }

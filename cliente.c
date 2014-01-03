@@ -10,6 +10,7 @@
 #include "comandos.h"
 
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
+#define USERAGENT "HTMLGET 1.0"
 
 void * cliente(){
     
@@ -55,7 +56,7 @@ void * cliente(){
                 strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
                 if(strcmp(ip_destino, "\0")){
                     
-                    porta_destino = porta(ip_destino);
+                    porta_destino = porta(ip_destino, PORTA_SERVIDOR);
                     if(porta_destino != -1){
                         
                         clear_line
@@ -105,7 +106,7 @@ void * cliente(){
                     strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
                     if(strcmp(ip_destino, "\0")){
                         
-                        porta_destino = porta(ip_destino);
+                        porta_destino = porta(ip_destino, PORTA_SERVIDOR);
                         if(porta_destino != -1){
                         
                             clear_line
@@ -177,7 +178,7 @@ void * cliente(){
                         strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
                         if(strcmp(ip_destino, "\0")){
                             
-                            porta_destino = porta(ip_destino);
+                            porta_destino = porta(ip_destino, PORTA_SERVIDOR);
                             if(porta_destino != -1){
                                 
                                 clear_line
@@ -245,7 +246,7 @@ void * cliente(){
                             strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
                             if(strcmp(ip_destino, "\0")){
                                 
-                                porta_destino = porta(ip_destino);
+                                porta_destino = porta(ip_destino, PORTA_SERVIDOR);
                                 if(porta_destino != -1){
                                     
                                     clear_line
@@ -344,7 +345,7 @@ void * cliente(){
                                 strcpy(ip_destino, set_ipdestino(comando[2], ip_default));
                                 if(strcmp(ip_destino, "\0")){
                                     
-                                    porta_destino = porta(ip_destino);
+                                    porta_destino = porta(ip_destino, PORTA_SERVIDOR);
                                     if(porta_destino != -1){
                                         
                                         clear_line
@@ -372,7 +373,8 @@ void * cliente(){
                                                             orange printf("%s", protoin.file.http);
                                                             cyan printf("\n\t MD5:  ");
                                                             orange printf("%s\n", protoin.file.md5);
-                                                            baixaArquivo(ip_destino, porta_destino, protoin.file.http);
+                                                            //baixaArquivo(ip_destino/*, PORTA_HTTP*/, protoin.file.http);
+                                                            //httpClient(ip_destino/*, PORTA_HTTP*/, protoin.file.http);
                                                         }
                                                         else{
                                                             green printf(" P2P:> ");
@@ -418,7 +420,7 @@ void * cliente(){
                                     strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
                                     if(strcmp(ip_destino, "\0")){
                                         
-                                        porta_destino = porta(ip_destino);
+                                        porta_destino = porta(ip_destino, PORTA_SERVIDOR);
                                         if(porta_destino != -1){
                                             
                                             clear_line
@@ -473,7 +475,7 @@ void * cliente(){
     }
 }
 
-intptr_t porta(char * ip_destino){
+intptr_t porta(char * ip_destino, intptr_t porta_remota){
 	
     int numbytes, codigo;
     intptr_t porta_destino;
@@ -500,7 +502,7 @@ intptr_t porta(char * ip_destino){
                     
                     // prepara estrutura com endereco do servidor
                     endereco_destino.sin_family = AF_INET; 
-                    endereco_destino.sin_port = htons(PORTA_SERVIDOR);
+                    endereco_destino.sin_port = htons(porta_remota);
                     endereco_destino.sin_addr = *((struct in_addr *)he->h_addr);
                     memset(&(endereco_destino.sin_zero), '\0', 8);
                     //ip_destino = inet_ntoa(endereco_destino.sin_addr);
@@ -515,23 +517,23 @@ intptr_t porta(char * ip_destino){
                     return porta_destino;
 }
 
-int baixaArquivo(char ip_destino[20], int porta, char url[128]){
+int baixaArquivo(char ip_destino[20]/*, int porta*/, char url[128]){
     
     char req[512], shost[64];
-    int sock; //socket
+    intptr_t sock; //socket
     struct sockaddr_in addr;
     struct in_addr IPV4 = { 0 };
     //long IPV4;
     struct hostent * host = NULL;
-    char buffer[512]; // Buffer para armazenar dados
+    char buffer[10000]; // Buffer para armazenar dados
     int bytes = 1; // Bytes recebidos
-    int flagAcabouCabecalho=0;
-    int cont=0;
-    char *pSplit=NULL;
+    int flagAcabouCabecalho = 0;
+    int cont = 0;
+    char *pSplit = NULL;
     FILE *fp; //arquivo para escrever dados baixados
     char nomeArquivo[128];
     
-    pSplit = (char*) malloc(100*sizeof(char));
+    pSplit = (char*) malloc(10000*sizeof(char));
     
     sprintf(nomeArquivo, "%s.part", url);
     fp=fopen(nomeArquivo,"w+b"); //abra arquivo
@@ -540,7 +542,7 @@ int baixaArquivo(char ip_destino[20], int porta, char url[128]){
        return 1;
     }
 
-    
+    /*
     // Cria socket para conectar ao servidor http
     if((sock = socket(AF_INET,SOCK_STREAM,0))<0){
         printf("ERRO ao criar socket[1]");
@@ -565,24 +567,26 @@ int baixaArquivo(char ip_destino[20], int porta, char url[128]){
         printf(" P2P:> ERRO ao conectar ao servidor para download\n");
         return 1;
     }
-
+    */
+    sock = porta(ip_destino, PORTA_HTTP);
+    
     // Requisição
     sprintf(req,"GET /%s HTTP/1.1\r\n\r\n",url);//monta requisição com a url
     
     send(sock,req,strlen(req),0); // Envia requisição
 
 
-    while(bytes > 0) // Enquanto estiver recebendo
-    {        
-        memset(buffer,0,512); // Limpa o buffer
-        bytes = recv(sock,buffer,512,0); // Recebe dados
-       
-        if(bytes>0){
+    while(bytes > 0){ // Enquanto estiver recebendo
+        
+        memset(buffer,0,10000); // Limpa o buffer
+        bytes = recv(sock,buffer,9999,0); // Recebe dados
+        
+        if(bytes > 0){
             cont++;
-            printf("\nRecebendo parte %d do arquivo...\n",cont);
+            printf("\nRecebendo parte %d do arquivo...\n", cont);
         }
         
-        if(flagAcabouCabecalho==0){ //se o cabeçalho ainda não acabou, busca pelo fim dele
+        if(!flagAcabouCabecalho){ //se o cabeçalho ainda não acabou, busca pelo fim dele
             printf("--aqui--");
             pSplit = strstr(buffer, "\r\n\r\n"); //se achar o fim do cabeçalho, retorna ponteiro apontando para ele
             printf("--aqui 0--");
@@ -591,8 +595,8 @@ int baixaArquivo(char ip_destino[20], int porta, char url[128]){
             printf("--aqui 0.5--");
         }
         else{
-            pSplit=NULL;
             printf("\n2\n");
+            pSplit = NULL;
         }
         if(pSplit != NULL) {
             printf("--aqui 1--");
@@ -626,7 +630,143 @@ int baixaArquivo(char ip_destino[20], int porta, char url[128]){
     
     return 0;
 }
-/*
-Sistema de Consulta Alunos - DRA_UFPel - CÃ³pia.pdf                  
-Sistema de Consulta Alunos - DRA_UFPel - CopiaSistema de Consulta Alunos - DRA_UFPel - Copia.pdf
- */
+
+int httpClient(char ip[20]/*, int porta*/, char url[128]){
+    
+  struct sockaddr_in *remote;
+  struct in_addr IPV4 = { 0 };
+  struct hostent * host = NULL;
+  int sock;
+  int tmpres;
+  char *get;
+  char buf[BUFSIZ+1];
+  //char *host;
+  FILE *fp; //arquivo para escrever dados baixados
+  char nomeArquivo[128];
+  char req[512];
+ 
+  /*//sock = create_tcp_socket();
+  if((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0){
+    perror("Can't create TCP socket");
+    exit(1);
+  }
+  fprintf(stderr, "IP is %s\n", ip);
+  remote = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in *));
+  remote->sin_family = AF_INET;
+  tmpres = inet_pton(AF_INET, ip, (void *)(&(remote->sin_addr.s_addr)));
+  
+  IPV4.s_addr = inet_addr(ip);
+  host = gethostbyaddr((char *)&IPV4, sizeof(IPV4), AF_INET);
+  
+  if( tmpres < 0)  
+  {
+    perror("Can't set remote->sin_addr.s_addr");
+    exit(1);
+  }else if(tmpres == 0)
+  {
+    fprintf(stderr, "%s is not a valid IP address\n", ip);
+    exit(1);
+  }
+  remote->sin_port = htons(porta);
+ 
+  if(connect(sock, (struct sockaddr *)remote, sizeof(struct sockaddr)) < 0){
+    perror("Could not connect");
+    exit(1);
+  }*/
+  
+    sprintf(nomeArquivo, "%s.part", url);
+    fp=fopen(nomeArquivo,"w+b"); //abra arquivo
+    if(fp==NULL){
+       printf("erro ao criar arquivo");
+       return 1;
+    }
+    
+  sock = porta(ip, PORTA_HTTP);
+  
+  //get = build_get_query(host->h_name, url);
+  sprintf(get,"GET /%s HTTP/1.1\r\n\r\n",url);//monta requisição com a url
+  fprintf(stderr, "Query is:\n<<START>>\n%s<<END>>\n", get);
+ 
+  //Send the query to the server
+  int sent = 0;
+  while(sent < strlen(get))
+  {
+    tmpres = send(sock, get+sent, strlen(get)-sent, 0);
+    if(tmpres == -1){
+      perror("Can't send query");
+      exit(1);
+    }
+    sent += tmpres;
+  }
+  //now it is time to receive the page
+  memset(buf, 0, sizeof(buf));
+  int htmlstart = 0;
+  char * htmlcontent;
+  htmlcontent = (char*) malloc(1024*sizeof(char));
+  int i = 0;
+  while((tmpres = recv(sock, buf, BUFSIZ, 0)) > 0){
+printf("[0]");
+      if(!htmlstart){
+printf("[1]");
+     /* Under certain conditions this will not work.
+      * If the \r\n\r\n part is splitted into two messages
+      * it will fail to detect the beginning of HTML content
+      */
+      htmlcontent = strstr(buf, "\r\n\r\n");
+      if(htmlcontent != NULL){
+printf("[2]");
+        htmlstart = 1;
+        //fprintf(fp,"%s", htmlcontent);
+        htmlcontent += 4;
+      }
+    }
+    else{
+printf("[3]");
+      htmlcontent = buf;
+    }
+    if(htmlstart){
+printf("[4]");
+      printf("\nsim\n");
+      fprintf(fp,"%s", buf);
+        //fprintf(stdout, htmlcontent);
+    }
+    else{
+printf("[5]",i++);
+        printf("\nnao\n");
+    }
+ 
+    //memset(buf, 0, tmpres);
+printf("[6]",i++);
+  }
+  if(tmpres < 0)
+  {
+    perror("Error receiving data");
+  }
+  /*free(get);
+  free(remote);
+  free(ip);*/
+  
+    sprintf(req, "mv %s %s", nomeArquivo, url);//monta string pro system a seguir
+    system(req); //renomeia o arquivo para o nome original (sem ".part" que havia sido adicionado)
+    
+    printf("\nDownload concluído!\n");
+  
+  close(sock);
+  close(fp);
+  return 0;
+}
+ 
+char *build_get_query(const char *host, char *page)
+{
+  char *query;
+  char *getpage = page;
+  char *tpl = "GET /%s HTTP/1.0\r\nHost: %s\r\nUser-Agent: %s\r\n\r\n";
+  if(getpage[0] == '/'){
+    getpage = getpage + 1;
+    fprintf(stderr,"Removing leading \"/\", converting %s to %s\n", page, getpage);
+  }
+  // -5 is to consider the %s %s %s in tpl and the ending \0
+  query = (char *)malloc(strlen(host)+strlen(getpage)+strlen(USERAGENT)+strlen(tpl)-5);
+  sprintf(query, tpl, getpage, host, USERAGENT);
+  return query;
+}

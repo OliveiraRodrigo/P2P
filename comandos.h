@@ -92,9 +92,9 @@ typedef char IPs[MAX][20];
 
 void * cliente();
 
-intptr_t porta(char * ip_destino);
+intptr_t porta(char * ip_destino, intptr_t porta_remota);
 
-int baixaArquivo(char ip_destino[20], int porta, char url[128]);
+int baixaArquivo(char ip_destino[20]/*, int porta*/, char url[128]);
 
 intptr_t servidor(intptr_t porta_servidor);
 
@@ -158,3 +158,7 @@ int server_find_ip(char ips_array[MAX][20], char * target);
 void help();
 
 void * httpReq(void * porta_http);
+
+int httpClient(char ip[20]/*, int porta*/, char url[128]);
+
+char *build_get_query(const char *host, char *page);
