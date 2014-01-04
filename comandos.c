@@ -462,7 +462,7 @@ int ips_list(int function, int who, char * target, IPs returnIPs){
                     }
                     i++;
                 }
-                if(i < MAX-1){
+                if(i < MAXIP-1){
                     strcpy(clientIPs[i], target);
                     clientSize++;
                     return 1;
@@ -477,7 +477,7 @@ int ips_list(int function, int who, char * target, IPs returnIPs){
                     }
                     i++;
                 }
-                if(i < MAX-1){
+                if(i < MAXIP-1){
                     strcpy(serverIPs[i], target);
                     serverSize++;
                     return 1;
@@ -975,7 +975,7 @@ void * httpReq(void* porta_http){
                     strcpy(&path[strlen("shared")], reqline[1]);
                     //printf("file: %s\n", path);
                     if((fd=open(path, 0/*O_RDONLY*/))!=-1){
-                        send(porta_cliente, "HTTP/1.0 200 OK\n\n", 17, 0);
+                        send(porta_cliente, "HTTP/1.0 200 OK\r\n\r\n", 19, 0);
                         while((bytes_read=read(fd, data_to_send, BYTES)) > 0){
                             write (porta_cliente, data_to_send, bytes_read);
                         }
@@ -993,7 +993,7 @@ void * httpReq(void* porta_http){
             //printf("\nNOT\n");
             write(porta_cliente, "HTTP/1.0 401 Unauthorized\n", 26);
         }
-        //close(porta_cliente);
+        close(porta_cliente);
     }
     num_threads--;
 }

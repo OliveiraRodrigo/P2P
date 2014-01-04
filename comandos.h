@@ -61,7 +61,7 @@ extern "C" {
 #define FIND 3
 #define GETSIZE 4
 
-#define MAX 50 // Quantos IPs na lista
+#define MAXIP 50 // Quantos IPs na lista
 #define BYTES 1024
 #define CONNMAX 10
 
@@ -88,7 +88,7 @@ typedef struct proto{
     int  ok;            // Construcao correta do protocolo
 } protocolo;
 
-typedef char IPs[MAX][20];
+typedef char IPs[MAXIP][20];
 
 void * cliente();
 
@@ -134,10 +134,10 @@ char * get_my_ip();
 
 /* quem: 0 = lista de IPs do cliente  (macro: CLIENT),
  *       1 = lista de IPs so servidor (macro: SERVER) */
-int insert_ip(int quem, char ips_string[MAX][20], char * novo_ip);
-int remove_ip(int quem, char ips_string[MAX][20], char * target);
+int insert_ip(int quem, char ips_string[MAXIP][20], char * novo_ip);
+int remove_ip(int quem, char ips_string[MAXIP][20], char * target);
 
-char * get_ips_string(char ips_string[MAX][20]);
+char * get_ips_string(char ips_string[MAXIP][20]);
 
 int ips_list(int function, int who, char * target, IPs returnIPs);
 
@@ -153,7 +153,7 @@ int server_ips_size(int modifier);
 
 int client_ips_size(int modifier);
 
-int server_find_ip(char ips_array[MAX][20], char * target);
+int server_find_ip(char ips_array[MAXIP][20], char * target);
 
 void help();
 
@@ -162,3 +162,5 @@ void * httpReq(void * porta_http);
 int httpClient(char ip[20]/*, int porta*/, char url[128]);
 
 char *build_get_query(const char *host, char *page);
+
+int down(char ip[20], char url[128]);

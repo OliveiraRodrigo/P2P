@@ -4,6 +4,7 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <resolv.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <time.h>
@@ -375,6 +376,7 @@ void * cliente(){
                                                             orange printf("%s\n", protoin.file.md5);
                                                             //baixaArquivo(ip_destino/*, PORTA_HTTP*/, protoin.file.http);
                                                             //httpClient(ip_destino/*, PORTA_HTTP*/, protoin.file.http);
+                                                            down(ip_destino, protoin.file.http);
                                                         }
                                                         else{
                                                             green printf(" P2P:> ");
@@ -536,7 +538,7 @@ int baixaArquivo(char ip_destino[20]/*, int porta*/, char url[128]){
     pSplit = (char*) malloc(10000*sizeof(char));
     
     sprintf(nomeArquivo, "%s.part", url);
-    fp=fopen(nomeArquivo,"w+b"); //abra arquivo
+    fp=fopen(nomeArquivo,"wb"); //abra arquivo
     if(fp==NULL){
        printf("erro ao criar arquivo");
        return 1;
@@ -601,7 +603,7 @@ int baixaArquivo(char ip_destino[20]/*, int porta*/, char url[128]){
         if(pSplit != NULL) {
             printf("--aqui 1--");
             flagAcabouCabecalho=1;//se cabeçalho acabou, seta a flag
-            printf("%s",pSplit); //imprime parte do buffer que está após o cabeçalho
+            //printf("%s",pSplit); //imprime parte do buffer que está após o cabeçalho
             fprintf(fp,"%s",pSplit); //salva parte do buffer que está após o cabeçalho
             printf("--aqui 2--");
             printf("\n3\n");
@@ -610,7 +612,7 @@ int baixaArquivo(char ip_destino[20]/*, int porta*/, char url[128]){
             printf("--aqui 3--");
             if(flagAcabouCabecalho==1){ //se cabeçalho já acabou, imprime buffer inteiro
                 printf("--aqui 4--");
-                printf("%s",buffer);
+                //printf("%s",buffer);
                 fprintf(fp,"%s",buffer);
                 printf("\n4\n");
             }
@@ -636,7 +638,7 @@ int httpClient(char ip[20]/*, int porta*/, char url[128]){
   struct sockaddr_in *remote;
   struct in_addr IPV4 = { 0 };
   struct hostent * host = NULL;
-  int sock;
+  intptr_t sock;
   int tmpres;
   char *get;
   char buf[BUFSIZ+1];
@@ -674,16 +676,24 @@ int httpClient(char ip[20]/*, int porta*/, char url[128]){
     exit(1);
   }*/
   
-    sprintf(nomeArquivo, "%s.part", url);
-    fp=fopen(nomeArquivo,"w+b"); //abra arquivo
+  get = (char*) malloc(10000*sizeof(char));
+  
+  sprintf(nomeArquivo, "%s.part", url);
+    fp=fopen(nomeArquivo,"wb"); //abra arquivo
     if(fp==NULL){
        printf("erro ao criar arquivo");
        return 1;
     }
     
+  /*IPV4.s_addr = inet_addr(ip);
+  host = gethostbyaddr((char *)&IPV4, sizeof(IPV4), AF_INET);*/
+  
   sock = porta(ip, PORTA_HTTP);
+  //sock = porta2(/*ip*/"200.132.39.116", /*PORTA_HTTP*/80);
   
   //get = build_get_query(host->h_name, url);
+  //http://www.cs.utah.edu/~swalton/Documents/Articles/Writing-a-C-Based-Client-Server.pdf
+  //http://www.ufsm.br/ccr/revista/boleto.pdf
   sprintf(get,"GET /%s HTTP/1.1\r\n\r\n",url);//monta requisição com a url
   fprintf(stderr, "Query is:\n<<START>>\n%s<<END>>\n", get);
  
@@ -704,40 +714,44 @@ int httpClient(char ip[20]/*, int porta*/, char url[128]){
   char * htmlcontent;
   htmlcontent = (char*) malloc(1024*sizeof(char));
   int i = 0;
+  printf("-->");
   while((tmpres = recv(sock, buf, BUFSIZ, 0)) > 0){
 printf("[0]");
+printf("%s", buf);
       if(!htmlstart){
-printf("[1]");
+//printf("[1]");
      /* Under certain conditions this will not work.
       * If the \r\n\r\n part is splitted into two messages
       * it will fail to detect the beginning of HTML content
       */
       htmlcontent = strstr(buf, "\r\n\r\n");
       if(htmlcontent != NULL){
-printf("[2]");
+//printf("[2]");
         htmlstart = 1;
-        //fprintf(fp,"%s", htmlcontent);
         htmlcontent += 4;
       }
     }
     else{
-printf("[3]");
+//printf("[3]");
       htmlcontent = buf;
     }
     if(htmlstart){
-printf("[4]");
-      printf("\nsim\n");
-      fprintf(fp,"%s", buf);
+//printf("[4]");
+      //printf("\nsim\n");
+      fprintf(fp,"%s", htmlcontent);
+        //printf("\n%d ",strlen(htmlcontent));
+        //printf("[%d]\n",sizeof(htmlcontent));
         //fprintf(stdout, htmlcontent);
     }
     else{
-printf("[5]",i++);
-        printf("\nnao\n");
+//printf("[5]",i++);
+        //printf("\nnao\n");
     }
  
     //memset(buf, 0, tmpres);
-printf("[6]",i++);
+//printf("[6]",i++);
   }
+printf("<--");
   if(tmpres < 0)
   {
     perror("Error receiving data");
@@ -752,7 +766,7 @@ printf("[6]",i++);
     printf("\nDownload concluído!\n");
   
   close(sock);
-  close(fp);
+  fclose(fp);
   return 0;
 }
  
@@ -769,4 +783,89 @@ char *build_get_query(const char *host, char *page)
   query = (char *)malloc(strlen(host)+strlen(getpage)+strlen(USERAGENT)+strlen(tpl)-5);
   sprintf(query, tpl, getpage, host, USERAGENT);
   return query;
+}
+
+int down(char ip[20], char url[128]){
+    
+struct hostent* host;
+struct in_addr IPV4 = { 0 };
+/*host = gethostbyname("lwn.net");
+printf("IP address = %s\n", 
+  inet_ntoa(*(long*)host->h_addr_list[0]));struct servent *srv;
+srv = getservbyname("http", "tcp");
+printf("%s: port=%d\n", srv->s_name, ntohs(srv->s_port));
+*/
+intptr_t sd;
+//sd = socket(PF_INET, SOCK_STREAM, 0); /* create socket */
+sd = porta(ip, PORTA_HTTP);
+  
+IPV4.s_addr = inet_addr(ip);
+host = gethostbyaddr((char *)&IPV4, sizeof(IPV4), AF_INET);
+//printf("\n{%s}\n", host->h_name);
+
+//struct sockaddr_in addr;
+//memset(&addr, 0, sizeof(addr));    /* create & zero struct */
+//addr.sin_family = AF_INET;    /* select internet protocol */
+//addr.sin_port = srv->s_port;         /* set the port # */
+//addr.sin_addr.s_addr = *(long*)host->h_addr_list[0]; /* set the addr */
+//connect(sd, &addr, sizeof(addr));         /* connect! */
+
+char s[BUFSIZ+1], req[200];
+FILE *fp, *fd;
+
+int htmlstart = 0;
+char * htmlcontent;
+htmlcontent = (char*) malloc(10000*sizeof(char));
+memset(s, 0, sizeof(s));
+  
+fp = fdopen(sd, "r+");         /* convert into stream */
+fd = fopen(url,"wb"); //abra arquivo
+
+//sprintf(req, "GET /%s HTTP/1.0\r\n\r\n", "/ccr/revista/boleto.pdf"/*url*/);
+sprintf(req, "GET /%s HTTP/1.0\r\nHost: %s\r\nUser-Agent: %s\r\n\r\n",
+             /*"/ccr/revista/boleto.pdf"*/url,
+             host->h_name, USERAGENT);
+
+fprintf(fp, req);      /* send request */
+fflush(fp);               /* ensure it got out */
+
+int i = 0;
+while ( fgets(s, sizeof(s), fp) != 0 ){  /* while not EOF ...*/
+//printf("[0]");
+//printf("%s", s);
+    /*if(!htmlstart){
+//printf("[1]");
+      htmlcontent = strstr(s, "\r\n\r\n");//ta chegando so "\r\n"
+//      while(i < sizeof(s)-4){
+//printf("[%d]", s[i]);
+//          if(s[i]==13 && s[i+1]==10){
+//printf("%s", htmlcontent);
+      if(htmlcontent != NULL){
+//printf("[2]");
+        htmlstart = 1;
+        htmlcontent += i+4;
+        //break;
+        }
+            /*}
+            else{
+                i++;
+            }*//*
+      //}
+    }
+    else{
+//printf("[3]");
+      htmlcontent = s;
+    }
+    if(htmlstart){
+//printf("[4]");
+      fputs(htmlcontent, stdout);           //... print the data
+      //fprintf(fp,"%s", htmlcontent);
+    }
+//printf("[5]");*/
+    //fputs(s, stdout);           //... print the data
+    fputs(s, fd);
+}
+fclose(fp);
+fclose(fd);
+//printf("[6]");
 }
