@@ -787,85 +787,119 @@ char *build_get_query(const char *host, char *page)
 
 int down(char ip[20], char url[128]){
     
-struct hostent* host;
-struct in_addr IPV4 = { 0 };
-/*host = gethostbyname("lwn.net");
-printf("IP address = %s\n", 
-  inet_ntoa(*(long*)host->h_addr_list[0]));struct servent *srv;
-srv = getservbyname("http", "tcp");
-printf("%s: port=%d\n", srv->s_name, ntohs(srv->s_port));
-*/
-intptr_t sd;
-//sd = socket(PF_INET, SOCK_STREAM, 0); /* create socket */
-sd = porta(ip, PORTA_HTTP);
-  
-IPV4.s_addr = inet_addr(ip);
-host = gethostbyaddr((char *)&IPV4, sizeof(IPV4), AF_INET);
-//printf("\n{%s}\n", host->h_name);
-
-//struct sockaddr_in addr;
-//memset(&addr, 0, sizeof(addr));    /* create & zero struct */
-//addr.sin_family = AF_INET;    /* select internet protocol */
-//addr.sin_port = srv->s_port;         /* set the port # */
-//addr.sin_addr.s_addr = *(long*)host->h_addr_list[0]; /* set the addr */
-//connect(sd, &addr, sizeof(addr));         /* connect! */
-
-char s[BUFSIZ+1], req[200];
-FILE *fp, *fd;
-
-int htmlstart = 0;
-char * htmlcontent;
-htmlcontent = (char*) malloc(10000*sizeof(char));
-memset(s, 0, sizeof(s));
-  
-fp = fdopen(sd, "r+");         /* convert into stream */
-fd = fopen(url,"wb"); //abra arquivo
-
-//sprintf(req, "GET /%s HTTP/1.0\r\n\r\n", "/ccr/revista/boleto.pdf"/*url*/);
-sprintf(req, "GET /%s HTTP/1.0\r\nHost: %s\r\nUser-Agent: %s\r\n\r\n",
-             /*"/ccr/revista/boleto.pdf"*/url,
-             host->h_name, USERAGENT);
-
-fprintf(fp, req);      /* send request */
-fflush(fp);               /* ensure it got out */
-
-int i = 0;
-while ( fgets(s, sizeof(s), fp) != 0 ){  /* while not EOF ...*/
-//printf("[0]");
-//printf("%s", s);
-    /*if(!htmlstart){
+    struct hostent* host;
+    struct in_addr IPV4 = { 0 };
+    /*host = gethostbyname("lwn.net");
+    printf("IP address = %s\n", 
+    inet_ntoa(*(long*)host->h_addr_list[0]));struct servent *srv;
+    srv = getservbyname("http", "tcp");
+    printf("%s: port=%d\n", srv->s_name, ntohs(srv->s_port));*/
+    
+    intptr_t sd;
+    //sd = socket(PF_INET, SOCK_STREAM, 0); /* create socket */
+    sd = porta(ip, PORTA_HTTP);
+    
+    IPV4.s_addr = inet_addr(ip);
+    host = gethostbyaddr((char *)&IPV4, sizeof(IPV4), AF_INET);
+    //printf("\n{%s}\n", host->h_name);
+    
+    //struct sockaddr_in addr;
+    //memset(&addr, 0, sizeof(addr));    /* create & zero struct */
+    //addr.sin_family = AF_INET;    /* select internet protocol */
+    //addr.sin_port = srv->s_port;         /* set the port # */
+    //addr.sin_addr.s_addr = *(long*)host->h_addr_list[0]; /* set the addr */
+    //connect(sd, &addr, sizeof(addr));         /* connect! */
+    
+    char req[200], s[BUFSIZ+1], header[BUFSIZ+1], content[BUFSIZ+1], code[4];
+    FILE *stream, *file;
+    
+    //int htmlstart = 0;
+    int c, h, i, isHeader;
+    //char * htmlcontent;
+    //htmlcontent = (char*) malloc(10000*sizeof(char));
+    memset(req, 0, sizeof(req));
+    memset(s, 0, sizeof(s));
+    memset(header, 0, sizeof(header));
+    memset(content, 0, sizeof(content));
+    memset(code, 0, sizeof(code));
+    
+    stream = fdopen(sd, "r+");         /* convert into stream */
+    file = fopen(url,"wb"); //abra arquivo
+    
+    //sprintf(req, "GET /%s HTTP/1.0\r\n\r\n", "/ccr/revista/boleto.pdf"/*url*/);
+    sprintf(req, "GET /%s HTTP/1.0\r\nHost: %s\r\nUser-Agent: %s\r\n\r\n",
+                 /*"/ccr/revista/boleto.pdf"*/url,
+                 host->h_name, USERAGENT);
+    
+    fprintf(stream, req);      // send request
+    fflush(stream);            // ensure it got out
+    
+    //i = 0;
+    h = 0;
+    isHeader = 1;
+    while ( fgets(s, sizeof(s), stream) != 0 ){  /* while not EOF ...*/
+        //printf("[0]");
+        //printf("%s", s);
+        /*if(!htmlstart){
 //printf("[1]");
-      htmlcontent = strstr(s, "\r\n\r\n");//ta chegando so "\r\n"
-//      while(i < sizeof(s)-4){
+            htmlcontent = strstr(s, "\r\n\r\n");//ta chegando so "\r\n"
+//          while(i < sizeof(s)-4){
 //printf("[%d]", s[i]);
-//          if(s[i]==13 && s[i+1]==10){
+//              if(s[i]==13 && s[i+1]==10){
 //printf("%s", htmlcontent);
-      if(htmlcontent != NULL){
+                    if(htmlcontent != NULL){
 //printf("[2]");
-        htmlstart = 1;
-        htmlcontent += i+4;
-        //break;
+                        htmlstart = 1;
+                        htmlcontent += i+4;
+                        //break;
+                    }
+                /*}
+                else{
+                    i++;
+                }*//*
+          //}
         }
-            /*}
-            else{
-                i++;
-            }*//*
-      //}
-    }
-    else{
+        else{
 //printf("[3]");
-      htmlcontent = s;
-    }
-    if(htmlstart){
+            htmlcontent = s;
+        }
+        if(htmlstart){
 //printf("[4]");
-      fputs(htmlcontent, stdout);           //... print the data
-      //fprintf(fp,"%s", htmlcontent);
-    }
+            fputs(htmlcontent, stdout);           //... print the data
+            //fprintf(fp,"%s", htmlcontent);
+        }
 //printf("[5]");*/
-    //fputs(s, stdout);           //... print the data
-    fputs(s, fd);
-}
-fclose(fp);
-fclose(fd);
+        //fputs(s, stdout);           //... print the data
+        
+        //fputs(s, file);
+        i = 0;
+        while(i < strlen(s)){
+            if(isHeader){
+                header[h] = s[i];
+                h++;
+                header[h] = '\0';
+                if(strstr(header, "\r\n\r\n") != NULL){
+                    isHeader = 0;
+                    c = 0;
+                    for(h = 9; h < 12; h++){
+                        code[c] = header[h];
+                        c++;
+                    }
+                    code[c] = '\0';
+                    if(strcmp(code, "200")){
+                        return atoi(code);
+                    }
+                }
+            }
+            else{
+                sprintf(content, "%c", s[i]);
+                fputs(content, file);
+            }
+            i++;
+        }
+    }
+    fclose(stream);
+    fclose(file);
+    return 200;
 //printf("[6]");
 }
