@@ -15,7 +15,7 @@
 
 void * cliente(){
     
-    int i, quant, caract, quit, numbytes;
+    int i, quant, caract, quit, numbytes, code;
     intptr_t porta_destino;
     char buffer[10000];
     char * comando[4];
@@ -366,7 +366,7 @@ void * cliente(){
                                                 if(protoin.ok){
                                                     if(!strcmp(protoin.command, "archive-request-back")){
                                                         if(protoin.status == 302){
-                                                            green printf(" P2P:> ");
+                                                            /*green printf(" P2P:> ");
                                                             orange printf("%s", ip_destino);
                                                             cyan printf(" enviou os dados do arquivo ");
                                                             orange printf("%d", protoin.file.id);
@@ -374,9 +374,20 @@ void * cliente(){
                                                             orange printf("%s", protoin.file.http);
                                                             cyan printf("\n\t MD5:  ");
                                                             orange printf("%s\n", protoin.file.md5);
-                                                            //baixaArquivo(ip_destino/*, PORTA_HTTP*/, protoin.file.http);
-                                                            //httpClient(ip_destino/*, PORTA_HTTP*/, protoin.file.http);
-                                                            down(ip_destino, protoin.file.http);
+                                                            //baixaArquivo(ip_destino, protoin.file.http);
+                                                            //httpClient(ip_destino/, protoin.file.http);*/
+                                                            code = down(ip_destino, protoin.file.http);
+                                                            if(code == 200){
+                                                                green printf(" P2P:> ");
+                                                                cyan printf("Arquivo ");
+                                                                orange printf("%s", protoin.file.http);
+                                                                cyan printf(" recebido com sucesso.\n");
+                                                                //Testar antes o MD5 para confirmar.
+                                                            }
+                                                            else{
+                                                                green printf(" P2P:> ");
+                                                                red printf("Erro: codigo %d\n", code);
+                                                            }
                                                         }
                                                         else{
                                                             green printf(" P2P:> ");
@@ -789,42 +800,26 @@ int down(char ip[20], char url[128]){
     
     struct hostent* host;
     struct in_addr IPV4 = { 0 };
-    /*host = gethostbyname("lwn.net");
-    printf("IP address = %s\n", 
-    inet_ntoa(*(long*)host->h_addr_list[0]));struct servent *srv;
-    srv = getservbyname("http", "tcp");
-    printf("%s: port=%d\n", srv->s_name, ntohs(srv->s_port));*/
-    
+    char path[200], req[200], s[BUFSIZ+1], header[BUFSIZ+1], content[2], code[4];
+    FILE *stream, *file;
+    int c, h, i, isHeader;
     intptr_t sd;
-    //sd = socket(PF_INET, SOCK_STREAM, 0); /* create socket */
     sd = porta(ip, PORTA_HTTP);
     
     IPV4.s_addr = inet_addr(ip);
     host = gethostbyaddr((char *)&IPV4, sizeof(IPV4), AF_INET);
     //printf("\n{%s}\n", host->h_name);
     
-    //struct sockaddr_in addr;
-    //memset(&addr, 0, sizeof(addr));    /* create & zero struct */
-    //addr.sin_family = AF_INET;    /* select internet protocol */
-    //addr.sin_port = srv->s_port;         /* set the port # */
-    //addr.sin_addr.s_addr = *(long*)host->h_addr_list[0]; /* set the addr */
-    //connect(sd, &addr, sizeof(addr));         /* connect! */
-    
-    char req[200], s[BUFSIZ+1], header[BUFSIZ+1], content[BUFSIZ+1], code[4];
-    FILE *stream, *file;
-    
-    //int htmlstart = 0;
-    int c, h, i, isHeader;
-    //char * htmlcontent;
-    //htmlcontent = (char*) malloc(10000*sizeof(char));
     memset(req, 0, sizeof(req));
     memset(s, 0, sizeof(s));
     memset(header, 0, sizeof(header));
     memset(content, 0, sizeof(content));
     memset(code, 0, sizeof(code));
     
-    stream = fdopen(sd, "r+");         /* convert into stream */
-    file = fopen(url,"wb"); //abra arquivo
+    stream = fdopen(sd, "r+b");         /* convert into stream */
+    
+    sprintf(path, "downloads/%s", url);
+    file = fopen(path, "wb"); //abra arquivo
     
     //sprintf(req, "GET /%s HTTP/1.0\r\n\r\n", "/ccr/revista/boleto.pdf"/*url*/);
     sprintf(req, "GET /%s HTTP/1.0\r\nHost: %s\r\nUser-Agent: %s\r\n\r\n",
@@ -838,40 +833,6 @@ int down(char ip[20], char url[128]){
     h = 0;
     isHeader = 1;
     while ( fgets(s, sizeof(s), stream) != 0 ){  /* while not EOF ...*/
-        //printf("[0]");
-        //printf("%s", s);
-        /*if(!htmlstart){
-//printf("[1]");
-            htmlcontent = strstr(s, "\r\n\r\n");//ta chegando so "\r\n"
-//          while(i < sizeof(s)-4){
-//printf("[%d]", s[i]);
-//              if(s[i]==13 && s[i+1]==10){
-//printf("%s", htmlcontent);
-                    if(htmlcontent != NULL){
-//printf("[2]");
-                        htmlstart = 1;
-                        htmlcontent += i+4;
-                        //break;
-                    }
-                /*}
-                else{
-                    i++;
-                }*//*
-          //}
-        }
-        else{
-//printf("[3]");
-            htmlcontent = s;
-        }
-        if(htmlstart){
-//printf("[4]");
-            fputs(htmlcontent, stdout);           //... print the data
-            //fprintf(fp,"%s", htmlcontent);
-        }
-//printf("[5]");*/
-        //fputs(s, stdout);           //... print the data
-        
-        //fputs(s, file);
         i = 0;
         while(i < strlen(s)){
             if(isHeader){
