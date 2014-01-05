@@ -9,19 +9,20 @@
 
 socompila: compila help
 
-compila: cliente.c servidor.c p2p.c comandos.c comandos.h
+compila: cliente.c servidor.c p2p.c comandos.c comandos.h md5.c md5.h
 
 	@echo  ..............................................................
 	@echo   Making...
 
 # Gera os objetos
-	gcc -c  comandos.c cliente.c servidor.c p2p.c
+	gcc -c  comandos.c md5.c cliente.c servidor.c p2p.c
 
-# Gera a biblioteca estatica 'comandos.a'
+# Gera as bibliotecas estaticas 'comandos.a' e 'md5.a'
 	ar rcs comandos.a comandos.o
+	ar rcs md5.a md5.o
 
-# Liga os objetos e gera o executavel utilizando a biblioteca
-	gcc -o executeme cliente.o servidor.o p2p.o comandos.a -lpthread
+# Liga os objetos e gera o executavel utilizando as bibliotecas
+	gcc -o executeme cliente.o servidor.o p2p.o comandos.a md5.a -lpthread
 
 help:
 	@echo  ..............................................................
@@ -35,4 +36,4 @@ teste: compila
 	@./executeme
 
 clean:
-	rm *.a *.o
+	rm *.a *.o executeme*

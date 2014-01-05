@@ -23,6 +23,7 @@ void * cliente(){
     char ip_destino[20];
     char ip_default[20];
     char truncName[80], path[200];
+    char md5Result[100];
     float formSize;
     protocolo protoin;
     archive_def * files;
@@ -377,7 +378,7 @@ void * cliente(){
                                                             code = down(ip_destino, protoin.file.http);
                                                             if(code == 200){
                                                                 sprintf(path, "downloads/%s", protoin.file.http);
-                                                                if(!strcmp(MD5(path), protoin.file.md5)){
+                                                                if(!strcmp((char*)MD5(path), protoin.file.md5)){
                                                                     green printf(" P2P:> ");
                                                                     cyan printf("Arquivo ");
                                                                     orange printf("%s", protoin.file.http);
