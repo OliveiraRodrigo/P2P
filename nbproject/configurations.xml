@@ -11,6 +11,8 @@
       <itemPath>cliente.c</itemPath>
       <itemPath>comandos.c</itemPath>
       <itemPath>comandos.h</itemPath>
+      <itemPath>md5.c</itemPath>
+      <itemPath>md5.h</itemPath>
       <itemPath>p2p.c</itemPath>
       <itemPath>servidor.c</itemPath>
     </logicalFolder>
@@ -46,6 +48,10 @@
       </item>
       <item path="comandos.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="md5.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="md5.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="p2p.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="servidor.c" ex="false" tool="0" flavor2="0">
@@ -76,6 +82,10 @@
       <item path="comandos.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="comandos.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="md5.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="md5.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="p2p.c" ex="false" tool="0" flavor2="0">
       </item>

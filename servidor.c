@@ -214,7 +214,7 @@ int setFileList(char folder[100], archive_def * files){
             
             sprintf(files[i].size, "%1.2f", fileSize/1024);
             sprintf(files[i].http, "%s", lsdir->d_name);
-            strcpy(files[i].md5, "Breve.Aguarde!");
+            strcpy(files[i].md5, MD5(path));
             i++;
         }
     }

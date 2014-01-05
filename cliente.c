@@ -22,7 +22,7 @@ void * cliente(){
     char ip_meu[20];
     char ip_destino[20];
     char ip_default[20];
-    char truncName[80];
+    char truncName[80], path[200];
     float formSize;
     protocolo protoin;
     archive_def * files;
@@ -373,16 +373,22 @@ void * cliente(){
                                                             cyan printf(":\n\n\t Link: ");
                                                             orange printf("%s", protoin.file.http);
                                                             cyan printf("\n\t MD5:  ");
-                                                            orange printf("%s\n", protoin.file.md5);
-                                                            //baixaArquivo(ip_destino, protoin.file.http);
-                                                            //httpClient(ip_destino/, protoin.file.http);*/
+                                                            orange printf("%s\n", protoin.file.md5);*/
                                                             code = down(ip_destino, protoin.file.http);
                                                             if(code == 200){
-                                                                green printf(" P2P:> ");
-                                                                cyan printf("Arquivo ");
-                                                                orange printf("%s", protoin.file.http);
-                                                                cyan printf(" recebido com sucesso.\n");
-                                                                //Testar antes o MD5 para confirmar.
+                                                                sprintf(path, "downloads/%s", protoin.file.http);
+                                                                if(!strcmp(MD5(path), protoin.file.md5)){
+                                                                    green printf(" P2P:> ");
+                                                                    cyan printf("Arquivo ");
+                                                                    orange printf("%s", protoin.file.http);
+                                                                    cyan printf(" recebido com sucesso.\n");
+                                                                }
+                                                                else{
+                                                                    green printf(" P2P:> ");
+                                                                    red printf("Erro: arquivo ");
+                                                                    orange printf("%s", protoin.file.http);
+                                                                    red printf(" corrompido (MD5 nao confere).\n");
+                                                                }
                                                             }
                                                             else{
                                                                 green printf(" P2P:> ");
