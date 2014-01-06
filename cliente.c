@@ -366,7 +366,9 @@ void * cliente(){
                                                             orange printf("%s", protoin.file.http);
                                                             cyan printf("\n\t MD5:  ");
                                                             orange printf("%s\n", protoin.file.md5);*/
-                                                            mkdir("downloads", S_IRWXU);
+                                                            mode_t process_mask = umask(0);
+                                                            mkdir("downloads", S_IRWXU | S_IRWXG | S_IRWXO);
+                                                            umask(process_mask);
                                                             code = down(ip_destino, protoin.file.http);
                                                             if(code == 200){
                                                                 sprintf(path, "downloads/%s", protoin.file.http);

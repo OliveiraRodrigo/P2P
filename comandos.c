@@ -2,6 +2,7 @@
 #include "md5.h"
 #include <pthread.h>
 #include <dirent.h>
+#include <sys/stat.h>
 
 #define MAX_THREADS 10 // Quantas conexoes simultaneas
 #define USERAGENT "HTMLGET 1.0"
@@ -104,7 +105,7 @@ char * archive_list_back(int code, archive_def * archs, int quant_archs, char * 
     char * archs_list  = (char*) malloc(2000 * sizeof(char));
     int i;
     
-    //strcpy(archs_list, " ");
+    strcpy(archs_list, "\0");
     
     i = 1;
     if(quant_archs > 0){
@@ -632,6 +633,9 @@ int setFileList(char folder[100], archive_def * files){
     
     i = 1;
     fileCounter = 0;
+    mode_t process_mask = umask(0);
+    mkdir(folder, S_IRWXU | S_IRWXG | S_IRWXO);
+    umask(process_mask);
     dir = opendir(folder);
     while((lsdir = readdir(dir)) != NULL){
         if(strcmp(lsdir->d_name, ".") && strcmp(lsdir->d_name, "..")){
