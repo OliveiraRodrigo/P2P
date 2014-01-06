@@ -1,17 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <resolv.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <time.h>
 #include "comandos.h"
+#include "md5.h"
+#include <sys/stat.h>
+#include <time.h>
 
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
-#define USERAGENT "HTMLGET 1.0"
 
 void * cliente(){
     
@@ -23,7 +15,6 @@ void * cliente(){
     char ip_destino[20];
     char ip_default[20];
     char truncName[80], path[200];
-    char md5Result[100];
     float formSize;
     protocolo protoin;
     archive_def * files;
@@ -375,10 +366,11 @@ void * cliente(){
                                                             orange printf("%s", protoin.file.http);
                                                             cyan printf("\n\t MD5:  ");
                                                             orange printf("%s\n", protoin.file.md5);*/
+                                                            mkdir("downloads", S_IRWXU);
                                                             code = down(ip_destino, protoin.file.http);
                                                             if(code == 200){
                                                                 sprintf(path, "downloads/%s", protoin.file.http);
-                                                                if(!strcmp((char*)MD5(path), protoin.file.md5)){
+                                                                if(!strcmp(MD5(path), protoin.file.md5)){
                                                                     green printf(" P2P:> ");
                                                                     cyan printf("Arquivo ");
                                                                     orange printf("%s", protoin.file.http);
@@ -479,9 +471,6 @@ void * cliente(){
         }
         if(quit){
             //Envia end-connection para todos os IPs com quem estou conectado.
-            /*for(i = 0; i < client_ips_size(0); i++){
-                send(porta_destino, end_connection(ip_meu, ips[i]), 999,0);
-            }*/
             ips_list(GET, CLIENT, NULL, ips);
             for(i = 0; i < ips_list(GETSIZE, CLIENT, NULL, NULL); i++){
                 send(porta_destino, end_connection(ip_meu, ips[i]), 999,0);
@@ -493,108 +482,4 @@ void * cliente(){
         tempo = (tf - ti) / 1000;
         printf("Tempo: %.3f\n",tempo);*/
     }
-}
-
-intptr_t porta(char * ip_destino, intptr_t porta_remota){
-	
-    int numbytes, codigo;
-    intptr_t porta_destino;
-    struct sockaddr_in endereco_destino;
-    struct hostent *he;
-    long addr_destino, temp_addr;
-	
-                    addr_destino = inet_addr(ip_destino);
-                    
-                    if((he=gethostbyaddr((char *) &addr_destino, sizeof(addr_destino), AF_INET)) == NULL) {
-                        clear_line
-                        green printf("\n P2P:> ");
-                        red printf("Erro: Nao foi possivel localizar ");
-                        orange printf("%s", ip_destino);
-                        red printf(".\n");
-                        return -1;
-                    }
-                    
-                    if((porta_destino = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-                        clear_line
-                        red printf("\n P2P:> Erro: Nao foi possivel criar a porta\n");
-                        return -1;
-                    }
-                    
-                    // prepara estrutura com endereco do servidor
-                    endereco_destino.sin_family = AF_INET; 
-                    endereco_destino.sin_port = htons(porta_remota);
-                    endereco_destino.sin_addr = *((struct in_addr *)he->h_addr);
-                    memset(&(endereco_destino.sin_zero), '\0', 8);
-                    //ip_destino = inet_ntoa(endereco_destino.sin_addr);
-                    
-                    if(connect(porta_destino,
-                      (struct sockaddr *)&endereco_destino,
-                      sizeof(struct sockaddr)) == -1) {
-                        clear_line
-                        red printf("\n P2P:> Erro: conectando no servidor\n");
-                        return -1;
-                    }
-                    return porta_destino;
-}
-
-int down(char ip[20], char url[128]){
-    
-    struct hostent* host;
-    struct in_addr IPV4 = { 0 };
-    char path[200], req[200], s, header[BUFSIZ+1], code[4];
-    int c, h, isHeader;
-    intptr_t sd;
-    FILE *stream, *file;
-    
-    sd = porta(ip, PORTA_HTTP);
-    IPV4.s_addr = inet_addr(ip);
-    host = gethostbyaddr((char *)&IPV4, sizeof(IPV4), AF_INET);
-    //printf("\n{%s}\n", host->h_name);
-    
-    memset(req, 0, sizeof(req));
-    memset(header, 0, sizeof(header));
-    memset(code, 0, sizeof(code));
-    
-    stream = fdopen(sd, "r+b"); // Converte em stream
-    
-    sprintf(path, "downloads/%s", url);
-    file = fopen(path, "wb");
-    
-    sprintf(req, "GET /%s HTTP/1.0\r\nHost: %s\r\nUser-Agent: %s\r\n\r\n",
-                 url,
-                 host->h_name, USERAGENT);
-    
-    fprintf(stream, req); // Envia a requisicao
-    fflush(stream); // Garante que foi tudo
-    
-    h = 0;
-    isHeader = 1;
-    while(!feof(stream)){
-        s = fgetc(stream);
-        if(isHeader){
-            header[h] = s;
-            h++;
-            header[h] = '\0';
-            if(strstr(header, "\r\n\r\n") != NULL){
-                isHeader = 0;
-                c = 0;
-                for(h = 9; h < 12; h++){
-                    code[c] = header[h];
-                    c++;
-                }
-                code[c] = '\0';
-                if(strcmp(code, "200")){
-                    return atoi(code);
-                }
-            }
-        }
-        else{
-            if(!feof(stream)){
-                fputc(s, file);
-            }
-        }
-    }
-    fclose(stream);
-    fclose(file);
-    return 200;
 }

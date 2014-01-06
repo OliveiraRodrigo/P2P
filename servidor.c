@@ -1,14 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <netdb.h>
-#include <pthread.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <dirent.h>
 #include "comandos.h"
+#include "md5.h"
+#include <pthread.h>
 
 #define MAX_THREADS 3 // Quantas conexoes simultaneas
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
@@ -58,7 +50,7 @@ void * start_connection(void* server_port){
     char buffer[10000];
     static IPs ips;
     struct sockaddr_in endereco_cliente;
-    pthread_t new_thread, http_thread;
+    pthread_t new_thread;
     protocolo protoin;
     archive_def files[100];
     
@@ -181,52 +173,5 @@ void * start_connection(void* server_port){
         //exit(0); // tao logo termine, o filho pode sair
     }*/
     num_threads--;
-    //fechar o servidor tambem
     close(nova_porta); // essa parte somente o pai executa
-}
-
-    
-int setFileList(char folder[100], archive_def * files){
-    
-    int i, fileCounter;
-    char path[200];
-    struct dirent *lsdir;
-    float fileSize;
-    DIR *dir;
-    FILE *fp;
-    
-    i = 1;
-    fileCounter = 0;
-    dir = opendir(folder);
-    while((lsdir = readdir(dir)) != NULL){
-        if(strcmp(lsdir->d_name, ".") && strcmp(lsdir->d_name, "..")){
-            //printf("<%s>\n", lsdir->d_name);
-            fileCounter++;
-            files[i].id = i;
-            sprintf(files[i].name, "%s", lsdir->d_name);
-            
-            /* tamanho do arquivo */
-            sprintf(path, "%s/%s", folder, lsdir->d_name);
-            fp = fopen(path, "rb");
-            fseek(fp, 0, SEEK_END);
-            fileSize = ftell(fp);
-            fclose(fp);
-            
-            sprintf(files[i].size, "%1.2f", fileSize/1024);
-            sprintf(files[i].http, "%s", lsdir->d_name);
-            strcpy(files[i].md5, (char*)MD5(path));
-            i++;
-        }
-    }
-    closedir(dir);
-    
-    /*Enviar quando solicitado arquivo inexistente*/
-    files[0].id = 0;
-    strcpy(files[0].name, "Arquivo nao existe");
-    strcpy(files[0].size, "0");
-    strcpy(files[0].http, ":(");
-    strcpy(files[0].md5, " ");
-    
-    return fileCounter;
-    
 }

@@ -1,14 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include "comandos.h"
+#include "md5.h"
+#include <pthread.h>
+#include <dirent.h>
 
 #define MAX_THREADS 10 // Quantas conexoes simultaneas
+#define USERAGENT "HTMLGET 1.0"
 
 char * ping(char * ip_sender, char * ip_recipient){
     
@@ -177,6 +173,48 @@ char * end_connection(char * ip_sender, char * ip_recipient){
     return saida;
 }
 
+intptr_t porta(char * ip_destino, intptr_t porta_remota){
+	
+    int numbytes, codigo;
+    intptr_t porta_destino;
+    struct sockaddr_in endereco_destino;
+    struct hostent *he;
+    long addr_destino, temp_addr;
+	
+                    addr_destino = inet_addr(ip_destino);
+                    
+                    if((he=gethostbyaddr((char *) &addr_destino, sizeof(addr_destino), AF_INET)) == NULL) {
+                        clear_line
+                        green printf("\n P2P:> ");
+                        red printf("Erro: Nao foi possivel localizar ");
+                        orange printf("%s", ip_destino);
+                        red printf(".\n");
+                        return -1;
+                    }
+                    
+                    if((porta_destino = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+                        clear_line
+                        red printf("\n P2P:> Erro: Nao foi possivel criar a porta\n");
+                        return -1;
+                    }
+                    
+                    // prepara estrutura com endereco do servidor
+                    endereco_destino.sin_family = AF_INET; 
+                    endereco_destino.sin_port = htons(porta_remota);
+                    endereco_destino.sin_addr = *((struct in_addr *)he->h_addr);
+                    memset(&(endereco_destino.sin_zero), '\0', 8);
+                    //ip_destino = inet_ntoa(endereco_destino.sin_addr);
+                    
+                    if(connect(porta_destino,
+                      (struct sockaddr *)&endereco_destino,
+                      sizeof(struct sockaddr)) == -1) {
+                        clear_line
+                        red printf("\n P2P:> Erro: conectando no servidor\n");
+                        return -1;
+                    }
+                    return porta_destino;
+}
+
 void get_command(char * comando[4]){
         
     int i, j;
@@ -249,7 +287,7 @@ int run_command(char ** comando, char * ip_return, char * ipdef_return, int * qu
         cyan printf(" como meu IP.\n");
         return 1;
     }
-    if(!strcmp(comando[0], "def")){ //caso o get_my_ip nao funfe
+    if(!strcmp(comando[0], "def")){
         strcpy(ipdef_return, comando[1]);
         clear_line
         green printf(" P2P:> ");
@@ -339,95 +377,7 @@ char * get_my_ip(){
     }
     return ip;
 }
-/*
-int insert_ip(int quem, char ips_array[50][20], char * novo_ip){
-    
-    int i, size;
-    
-    if(quem == CLIENT)
-        size = client_ips_size(0);
-    else // SERVER
-        size = server_ips_size(0);
-    
-    i = 0;
-    while(i < size){
-        //procura se ja nao tem
-        if(!strcmp(ips_array[i], novo_ip)){
-            return 1;
-        }
-        else{
-            i++;
-        }
-    }
-    
-    i = size;
-    if(i < MAX-1){
-        strcpy(ips_array[i], novo_ip);
-        if(quem == CLIENT)
-            client_ips_size(1);
-        else // SERVER
-            server_ips_size(1);
-        return 0;
-    }
-    return 1;
-}
 
-int remove_ip(int quem, char ips_array[50][20], char * target){
-    
-    int i, size;
-    
-    if(quem == CLIENT)
-        size = client_ips_size(0);
-    else // SERVER
-        size = server_ips_size(0);
-    
-    if(size == 0){
-        return 1;
-    }
-    
-    for(i = 0; i < size; i++){
-        if(!strcmp(ips_array[i], target)){
-            while(i+1 < size){
-                strcpy(ips_array[i], ips_array[i+1]);
-                i++;
-            }
-            if(quem == CLIENT)
-                client_ips_size(-1);
-            else // SERVER
-                server_ips_size(-1);
-            return 0;
-        }
-    }
-    return 1;
-}
-
-int server_find_ip(char ips_array[50][20], char * target){
-    
-    int i = 0;
-    
-    while(i < server_ips_size(0)){
-        if(!strcmp(ips_array[i], target)){
-            return 1;
-        }
-        else{
-            i++;
-        }
-    }
-    return 0;
-}
-
-int server_ips_size(int modifier){
-    static int i = 0;
-    i += modifier;
-    return i;
-}
-
-int client_ips_size(int modifier){
-    static int i = 0;
-    i += modifier;
-    return i;
-}
-*/
 int ips_list(int function, int who, char * target, IPs returnIPs){
     
     static IPs serverIPs;
@@ -671,6 +621,51 @@ int getFileList(char *in, archive_def *files){
     return f;
 }
 
+int setFileList(char folder[100], archive_def * files){
+    
+    int i, fileCounter;
+    char path[200];
+    struct dirent *lsdir;
+    float fileSize;
+    DIR *dir;
+    FILE *fp;
+    
+    i = 1;
+    fileCounter = 0;
+    dir = opendir(folder);
+    while((lsdir = readdir(dir)) != NULL){
+        if(strcmp(lsdir->d_name, ".") && strcmp(lsdir->d_name, "..")){
+            //printf("<%s>\n", lsdir->d_name);
+            fileCounter++;
+            files[i].id = i;
+            sprintf(files[i].name, "%s", lsdir->d_name);
+            
+            /* tamanho do arquivo */
+            sprintf(path, "%s/%s", folder, lsdir->d_name);
+            fp = fopen(path, "rb");
+            fseek(fp, 0, SEEK_END);
+            fileSize = ftell(fp);
+            fclose(fp);
+            
+            sprintf(files[i].size, "%1.2f", fileSize/1024);
+            sprintf(files[i].http, "%s", lsdir->d_name);
+            strcpy(files[i].md5, MD5(path));
+            i++;
+        }
+    }
+    closedir(dir);
+    
+    /*Enviar quando solicitado arquivo inexistente*/
+    files[0].id = 0;
+    strcpy(files[0].name, "Arquivo nao existe");
+    strcpy(files[0].size, "0");
+    strcpy(files[0].http, ":(");
+    strcpy(files[0].md5, " ");
+    
+    return fileCounter;
+    
+}
+
 protocolo set_proto(char * entrada){
     
     int i, j;
@@ -897,38 +892,67 @@ protocolo set_proto(char * entrada){
     return proto;
 }
 
-void help(){
+int down(char ip[20], char url[128]){
     
-    printf("\n");
-    bg_red bold white printf("\n   HELP                                                                 ");
-    reset defaults printf("\n\n");
-    white printf(" def "); orange printf("<IP>");
-    white printf("           Define <IP> como IP Padrao, para que nao seja neces-\n");
-    white printf("                    saria a sua digitacao nos proximos comandos.\n\n");
-    white printf(" try "); orange printf("<IP>");
-    white printf("           Testa a disponibilidade de <IP> e a retorna para o\n");
-    white printf("                    usuario.\n\n");
-    white printf(" login "); orange printf("<IP>");
-    white printf("         Tenta autenticar-se com <IP>.\n\n");
-    white printf(" list-users "); orange printf("<IP>");
-    white printf("    Solicita a lista de usuarios de <IP> e a retorna pa-\n");
-    white printf("                    ra o usuario.\n\n");
-    white printf(" list-files "); orange printf("<IP>");
-    white printf("    Solicita a lista de arquivos de <IP> e a retorna pa-\n");
-    white printf("                    ra o usuario.\n\n");
-    white printf(" down "); orange printf("<id> <IP>");
-    white printf("     Solicita a <IP> o arquivo <id>. Se confirmada a dis-\n");
-    white printf("                    ponibilidade, recebe o arquivo e o MD5 do mesmo.\n\n");
-    white printf(" logout "); orange printf("<IP>");
-    white printf("        Desconecta-se de <IP> e solicita a exclusao deste\n");
-    white printf("                    peer da sua lista de usuarios.\n\n");
-    white printf(" quit ");
-    white printf("              Desconecta-se de todos os usuarios com os quais ain-\n");
-    white printf("                    da esta conectado e sai do programa.\n\n");
-    white printf(" cls ");
-    white printf("               Limpa a tela\n");
-    red printf("\n________________________________________________________________________\n");
+    struct hostent* host;
+    struct in_addr IPV4 = { 0 };
+    char path[200], req[200], s, header[BUFSIZ+1], code[4];
+    int c, h, isHeader;
+    intptr_t sd;
+    FILE *stream, *file;
     
+    sd = porta(ip, PORTA_HTTP);
+    IPV4.s_addr = inet_addr(ip);
+    host = gethostbyaddr((char *)&IPV4, sizeof(IPV4), AF_INET);
+    //printf("\n{%s}\n", host->h_name);
+    
+    memset(req, 0, sizeof(req));
+    memset(header, 0, sizeof(header));
+    memset(code, 0, sizeof(code));
+    
+    stream = fdopen(sd, "r+b"); // Converte em stream
+    
+    sprintf(path, "downloads/%s", url);
+    file = fopen(path, "wb");
+    
+    sprintf(req, "GET /%s HTTP/1.0\r\nHost: %s\r\nUser-Agent: %s\r\n\r\n",
+                 url,
+                 host->h_name, USERAGENT);
+    
+    fprintf(stream, req); // Envia a requisicao
+    fflush(stream); // Garante que foi tudo
+    
+    h = 0;
+    isHeader = 1;
+    while(!feof(stream)){
+        s = fgetc(stream);
+        if(isHeader){
+            header[h] = s;
+            h++;
+            header[h] = '\0';
+            if(strstr(header, "\r\n\r\n") != NULL
+            || strstr(header, "\n\n"    ) != NULL){
+                isHeader = 0;
+                c = 0;
+                for(h = 9; h < 12; h++){
+                    code[c] = header[h];
+                    c++;
+                }
+                code[c] = '\0';
+                if(strcmp(code, "200")){
+                    return atoi(code);
+                }
+            }
+        }
+        else{
+            if(!feof(stream)){
+                fputc(s, file);
+            }
+        }
+    }
+    fclose(stream);
+    fclose(file);
+    return 200;
 }
 
 void * httpReq(void* porta_http){
@@ -952,7 +976,7 @@ void * httpReq(void* porta_http){
             pthread_create(&new_thread, NULL, httpReq, (void*) porta);
             num_threads++;
             repete = 0;
-        }*/
+        }*/ //"Segmentation fault" com muitas conexoes simultaneas.
         
         if(ips_list(FIND, SERVER, inet_ntoa(endereco_cliente.sin_addr), NULL)){
             //printf("\nOK\n");
@@ -997,3 +1021,38 @@ void * httpReq(void* porta_http){
     }
     num_threads--;
 }
+
+void help(){
+    
+    printf("\n");
+    bg_red bold white printf("\n   HELP                                                                 ");
+    reset defaults printf("\n\n");
+    white printf(" def "); orange printf("<IP>");
+    white printf("           Define <IP> como IP Padrao, para que nao seja neces-\n");
+    white printf("                    saria a sua digitacao nos proximos comandos.\n\n");
+    white printf(" try "); orange printf("<IP>");
+    white printf("           Testa a disponibilidade de <IP> e a retorna para o\n");
+    white printf("                    usuario.\n\n");
+    white printf(" login "); orange printf("<IP>");
+    white printf("         Tenta autenticar-se com <IP>.\n\n");
+    white printf(" list-users "); orange printf("<IP>");
+    white printf("    Solicita a lista de usuarios de <IP> e a retorna pa-\n");
+    white printf("                    ra o usuario.\n\n");
+    white printf(" list-files "); orange printf("<IP>");
+    white printf("    Solicita a lista de arquivos de <IP> e a retorna pa-\n");
+    white printf("                    ra o usuario.\n\n");
+    white printf(" down "); orange printf("<id> <IP>");
+    white printf("     Solicita a <IP> o arquivo <id>. Se confirmada a dis-\n");
+    white printf("                    ponibilidade, recebe o arquivo e o MD5 do mesmo.\n\n");
+    white printf(" logout "); orange printf("<IP>");
+    white printf("        Desconecta-se de <IP> e solicita a exclusao deste\n");
+    white printf("                    peer da sua lista de usuarios.\n\n");
+    white printf(" quit ");
+    white printf("              Desconecta-se de todos os usuarios com os quais ain-\n");
+    white printf("                    da esta conectado e sai do programa.\n\n");
+    white printf(" cls ");
+    white printf("               Limpa a tela\n");
+    red printf("\n________________________________________________________________________\n");
+    
+}
+

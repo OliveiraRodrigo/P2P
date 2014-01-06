@@ -1,11 +1,3 @@
-
-/* 
- * File:   comandos.h
- * Author: Rodrigo
- *
- * Created on 28 de Novembro de 2013, 23:31
- */
-
 #ifndef COMANDOS_H
 #define	COMANDOS_H
 
@@ -25,6 +17,16 @@ extern "C" {
 #define LINUX 0
 #endif
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <resolv.h>
+
 /* Fonte */
 #define black   printf("\033[30m");
 #define red     printf("\033[31m");
@@ -36,6 +38,7 @@ extern "C" {
 #define white   printf("\033[37m");
 #define bold    printf("\033[1m");
 #define under   printf("\033[4m");
+#define reset   printf("\033[0m");
 
 /* Fundo */
 #define bg_black  printf("\033[40m");
@@ -47,11 +50,15 @@ extern "C" {
 #define bg_cyan   printf("\033[46m");
 #define bg_white  printf("\033[47m");
 
-#define reset printf("\033[0m");
 #define defaults printf("\033[39;49m");
 #define clear_line printf("\033[K");
-#define clear_screen if(LINUX){system("clear");} printf("\033[2J");
-#define prompt bold green printf("\n P2P:> "); reset /*bg_black*/defaults cyan printf("\n________________________________________________________________________\n"); printf("\033[2A\033[7C"); white
+
+#define clear_screen if(LINUX) system("clear");\
+                     printf("\033[2J");
+
+#define prompt bold green printf("\n P2P:> "); reset defaults\
+               cyan printf("\n________________________________________________________________________\n");\
+               printf("\033[2A\033[7C"); white
 
 #define CLIENT 0
 #define SERVER 1
@@ -71,7 +78,7 @@ extern "C" {
 typedef struct{
     int    id;          // 1, 2, 3...
     char name[100];      // "nome do arquivo.txt"
-    char size[10];      // "100", "15487"... (KB)
+    char size[10];      // "100.00", "15487.32"... (KB)
     char http[100];     // Endereco gerado para disponibilizacao do arquivo
     char md5[50];       // Assinatura do arquivo para validacao
 } archive_def;
@@ -92,15 +99,9 @@ typedef char IPs[MAXIP][20];
 
 void * cliente();
 
-intptr_t porta(char * ip_destino, intptr_t porta_remota);
-
-int baixaArquivo(char ip_destino[20]/*, int porta*/, char url[128]);
-
 intptr_t servidor(intptr_t porta_servidor);
 
-void * start_connection(void * /*args*/porta);
-
-int setFileList(char folder[100], archive_def * files);
+void * start_connection(void * porta);
 
 char * ping(char * meu_ip, char * seu_ip);
 
@@ -124,6 +125,8 @@ char * archive_request_back(int code, archive_def arch, char * ip_meu, char * ip
 
 char * end_connection(char * ip_meu, char * ip_destino);
 
+intptr_t porta(char * ip_destino, intptr_t porta_remota);
+
 void get_command(char * comando[4]);
 
 int run_command(char ** comando, char * ip_return, char * ipdef_return, int * quit);
@@ -132,12 +135,9 @@ char * set_ipdestino(char * comando, char * ip_default);
 
 char * get_my_ip();
 
-/* quem: 0 = lista de IPs do cliente  (macro: CLIENT),
- *       1 = lista de IPs so servidor (macro: SERVER) */
-int insert_ip(int quem, char ips_string[MAXIP][20], char * novo_ip);
-int remove_ip(int quem, char ips_string[MAXIP][20], char * target);
-
 char * get_ips_string(char ips_string[MAXIP][20]);
+
+//int set_ips_array(char ips_string[MAXIP][20], char * proto_back);
 
 int ips_list(int function, int who, char * target, IPs returnIPs);
 
@@ -145,22 +145,12 @@ int tem_arch(archive_def * archs, int quant_archs, int id);
 
 int getFileList(char * protoin, archive_def * files);
 
+int setFileList(char folder[100], archive_def * files);
+
 protocolo set_proto(char * entrada);
 
-//int set_ips_array(char ips_string[MAX][20], char * proto_back);
-
-int server_ips_size(int modifier);
-
-int client_ips_size(int modifier);
-
-int server_find_ip(char ips_array[MAXIP][20], char * target);
-
-void help();
+int down(char ip[20], char url[128]);
 
 void * httpReq(void * porta_http);
 
-int httpClient(char ip[20]/*, int porta*/, char url[128]);
-
-char *build_get_query(const char *host, char *page);
-
-int down(char ip[20], char url[128]);
+void help();
