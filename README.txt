@@ -1,4 +1,4 @@
-﻿Universidade Federal de Pelotas
+Universidade Federal de Pelotas
 Ciência da Computação
 Redes de Computadores 1
 Trabalho 1: Compartilhamento P2P
@@ -51,9 +51,6 @@ corretamente para o nosso caso, pois não queríamos apenas receber mensagens de
 exemplos que vimos, mas arquivos binários, também. Para isso era necessário eliminar corretamente o
 cabeçalho do protocolo HTTP, o que nenhum exemplo visto fazia direito.
 
-Obs.: a implementação de MD5 utilizada pode gerar warnings, dependendo do compilador, embora o último em
-que o programa foi testado não os tenha gerado.
-
 
 -- Execução ---------------------------------------------------------------------------------------------
 
@@ -61,7 +58,7 @@ Para utilizar o programa basta seguir estes passos:
 
 1: Utilizando um terminal de comandos, navegue até a pasta onde se encontra o programa e digite make.
 
-2: Digite ./executeme
+2: Digite ./p2p
 
 3: Dentro do programa, digite help, para obter a lista de comandos
 
