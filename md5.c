@@ -388,7 +388,7 @@ char * MD5 (char file[100]){
     MDFile (file);
     fp = fopen("md5", "r");
     while(fscanf(fp, "%s", out) != EOF);
-    remove("md5");
+    //remove("md5");
     
     return out;
 }

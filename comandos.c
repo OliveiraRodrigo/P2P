@@ -359,7 +359,7 @@ char * get_my_ip(){
         system("ifconfig eth0 | grep \"inet end\" | awk -F: '{print $2}' | awk '{print $1}' > linuxip.txt");
         fp = fopen("linuxip.txt", "r");
         while(fscanf(fp, "%s", ip) != EOF);
-        remove("linuxip.txt");
+        //remove("linuxip.txt");
     }
     else{
         gethostname(host_meu, sizeof host_meu);
