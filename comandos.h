@@ -77,18 +77,18 @@ extern "C" {
 
 typedef struct{
     int    id;          // 1, 2, 3...
-    char name[100];      // "nome do arquivo.txt"
-    char size[10];      // "100.00", "15487.32"... (KB)
+    char name[100];     // "nome do arquivo.txt"
+    char size[20];      // "100.00", "15487.32"... (KB)
     char http[100];     // Endereco gerado para disponibilizacao do arquivo
     char md5[50];       // Assinatura do arquivo para validacao
 } archive_def;
 
 typedef struct proto{
     char protocol[5];   // Nome do protocolo
-    char command[20];   // Identificacao do comando
+    char command[30];   // Identificacao do comando
     int  status;        // Codigo de erro ou validacao
     char passport[30];  // Chave de autenticacao
-    char back[2000];     // Dado retornado
+    char back[2000];    // Dado retornado
     archive_def file;   // Informacoes sobre arquivo
     char sender[20];    // IP Remetente
     char recipient[20]; // IP Destinatario

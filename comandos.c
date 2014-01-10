@@ -357,8 +357,9 @@ char * get_my_ip(){
     if(LINUX){
         FILE * fp;
         system("ifconfig eth0 | grep \"inet end\" | awk -F: '{print $2}' | awk '{print $1}' > linuxip.txt");
-        fp = fopen("linuxip.txt", "r");
+        fp = fopen("linuxip", "r");
         while(fscanf(fp, "%s", ip) != EOF);
+        fclose(fp);
         //remove("linuxip.txt");
     }
     else{
@@ -923,7 +924,7 @@ int down(char ip[20], char url[128]){
                  url,
                  host->h_name, USERAGENT);
     
-    fprintf(stream, req); // Envia a requisicao
+    fprintf(stream, "%s", req); // Envia a requisicao
     fflush(stream); // Garante que foi tudo
     
     h = 0;
