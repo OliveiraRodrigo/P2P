@@ -90,9 +90,9 @@ typedef struct{
 } archive_def;
 
 typedef struct{
-    char nick[100];       // Nickname
-    char publicKey[1000]; // Chave publica
-    char addr[100];       // Endereco para baixar o certificado
+    char nick[100];  // Nickname
+    char key[1000];  // Chave publica
+    char addr[100];  // Endereco para baixar o certificado
 } certif_def;
 
 typedef struct proto{

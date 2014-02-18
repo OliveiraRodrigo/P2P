@@ -119,7 +119,7 @@ void * start_connection(void* server_port){
                     porta_servInter = porta(IP_SERVINTER, PORTA_SERVINTER);
                     /********************************************************/
                     
-                    if(send(porta_servInter, certify(protoin.certif.nick, protoin.certif.publicKey, ip_meu, IP_SERVINTER), 9999, 0) == -1) {
+                    if(send(porta_servInter, certify(protoin.certif.nick, protoin.certif.key, ip_meu, IP_SERVINTER), 9999, 0) == -1) {
                         perror("\n ::::: Erro: servidor nao conseguiu enviar 'certify'.");
                         clienteAutenticado = false;
                     }
