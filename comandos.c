@@ -4,12 +4,12 @@
 #include <dirent.h>
 #include <sys/stat.h>
 /*
-#include "openssl/bio.h"
-#include "openssl/ssl.h"
-#include "openssl/err.h"
-#include "openssl/pem.h"
-#include "openssl/x509.h"
-#include "openssl/x509_vfy.h"
+#include "../openssl/include/openssl/bio.h"
+#include "../openssl/include/openssl/ssl.h"
+#include "../openssl/include/openssl/err.h"
+#include "../openssl/include/openssl/pem.h"
+#include "../openssl/include/openssl/x509.h"
+#include "../openssl/include/openssl/x509_vfy.h"
 */
 #define MAX_THREADS 10 // Quantas conexoes simultaneas
 #define USERAGENT "HTMLGET 1.0"
@@ -516,7 +516,7 @@ char * get_my_ip(char * interface){
     
     if(LINUX){
         FILE * fp;
-        sprintf(string, "ifconfig %s | grep \"inet end\" | awk -F: '{print $2}' | awk '{print $1}' > linuxip.txt", interface);
+        sprintf(string, "ifconfig %s | grep \"inet end\" | awk -F: '{print $2}' | awk '{print $1}' > linuxip", interface);
         system(string);
         fp = fopen("linuxip", "r");
         fscanf(fp, "%s", ip);

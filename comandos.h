@@ -143,6 +143,8 @@ char * end_connection(char * ip_meu, char * ip_destino);
 
 intptr_t porta(char * ip_destino, intptr_t porta_remota);
 
+int ssl_connect(intptr_t tcp_port, char * dest_url);
+
 void get_command(char * comando[4]);
 
 bool run_command(char ** comando, char * ip_return, char * ipdef_return, char * myNick, bool * quit);
