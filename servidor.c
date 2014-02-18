@@ -58,7 +58,7 @@ void * start_connection(void* server_port){
     
     porta_serv = (intptr_t) server_port;
     tamanho = sizeof(struct sockaddr_in);
-    strcpy(ip_meu, get_my_ip());
+    strcpy(ip_meu, get_my_ip("eth0"));
     
     /*Teste
     ips_list(INSERT, SERVER, "111.222.333.444", NULL);
@@ -89,7 +89,7 @@ void * start_connection(void* server_port){
         strcpy(ip_cliente, inet_ntoa(endereco_cliente.sin_addr));
         
 /* Recebe dados *******************************************************/
-        if((numbytes = recv(nova_porta, buffer, 999, 0)) == -1) {
+        if((numbytes = recv(nova_porta, buffer, 9999, 0)) == -1) {
             perror("\n ::::: Erro: Servidor nao conseguiu receber.\n");
             break;
         }
@@ -119,7 +119,7 @@ void * start_connection(void* server_port){
                     porta_servInter = porta(IP_SERVINTER, PORTA_SERVINTER);
                     /********************************************************/
                     
-                    if(send(porta_servInter, certify(protoin.certif.nick, protoin.certif.publicKey, ip_meu, IP_SERVINTER), 999, 0) == -1) {
+                    if(send(porta_servInter, certify(protoin.certif.nick, protoin.certif.publicKey, ip_meu, IP_SERVINTER), 9999, 0) == -1) {
                         perror("\n ::::: Erro: servidor nao conseguiu enviar 'certify'.");
                         clienteAutenticado = false;
                     }
@@ -156,7 +156,7 @@ void * start_connection(void* server_port){
                         if(send(nova_porta, certify_back(200, protoin.certif.nick, "certAddr", IP_SERVINTER, ip_cliente), 999, 0) == -1){
                             perror("\n ::::: Erro: servidor nao conseguiu enviar 'certify-back'.");
                         }
-                        ips_list(INSERT, SERVER, ip_cliente, NULL);
+                        //ips_list(INSERT, SERVER, ip_cliente, NULL);
                     }
                     else{
                         /* A partir daqui so aceita se o cliente estiver logado */

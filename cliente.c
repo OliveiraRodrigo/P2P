@@ -33,7 +33,7 @@ void * cliente(){
     }
     
     /* Detecta o IP local e o armazena em 'ip_meu' */
-    strcpy(ip_meu, get_my_ip());
+    strcpy(ip_meu, get_my_ip("eth0"));
     strcpy(ip_default, "\0");
     strcpy(myNick, "rodrigodroliveira");
     
@@ -101,46 +101,56 @@ void * cliente(){
             else{
                 if(!strcmp(comando[0], "login")){
                     
-                    /* Pega a string da minha chave publica */
-                    strcpy(myPublicKey, getKey(myNick));
-                    //printf("\n[%s]\n", myPublicKey);
-                    
                     strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
                     if(strcmp(ip_destino, "\0")){
                         
-                        porta_destino = porta(ip_destino, PORTA_SERVIDOR);
-                        if(porta_destino != -1){
+                        /* Pega a string da minha chave publica */
+                        strcpy(myPublicKey, getKey(myNick));
+                        //printf("\n[%s]\n", myPublicKey);
                         
-                            clear_line
-                            green printf(" P2P:> ");
-                            cyan printf("Enviando authenticate...\n");
-                            //printf("\n P2P:> %s", authenticate(myNick, /*myPublicKey*/"x", ip_meu, ip_destino));
+                        if(strcmp(myPublicKey, "\0")){
+                            porta_destino = porta(ip_destino, PORTA_SERVIDOR);
+                            if(porta_destino != -1){
                             
-                            if(send(porta_destino, authenticate(myNick, /*myPublicKey*/"x", ip_meu, ip_destino), 999,0) != -1){
+                                clear_line
+                                green printf(" P2P:> ");
+                                cyan printf("Enviando authenticate...\n");
+                                //printf("\n P2P:> %s", authenticate(myNick, myPublicKey, ip_meu, ip_destino));
                                 
-                                if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
+                                if(send(porta_destino, authenticate(myNick, myPublicKey, ip_meu, ip_destino), 9999,0) != -1){
                                     
-                                    buffer[numbytes] = '\0';
-                                    //printf("\n P2P:> Cliente recebeu: %s", buffer);
-                                    protoin = set_proto(buffer);
-                                    
-                                    //Testa se recebeu um authenticate-back ok.
-                                    if(protoin.ok){
-                                        if(!strcmp(protoin.command, "authenticate-back")){
-                                            if(protoin.status == 200){
-                                                green printf(" P2P:> ");
-                                                cyan printf("Autenticacao com ");
-                                                orange printf("%s", ip_destino);
-                                                cyan printf(" aceita.\n");
-                                                //Salva o IP para desconectar ao sair.
-                                                //insert_ip(CLIENT, ips, ip_destino);
-                                                ips_list(INSERT, CLIENT, ip_destino, NULL);
+                                    if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
+                                        
+                                        buffer[numbytes] = '\0';
+                                        //printf("\n P2P:> Cliente recebeu: %s", buffer);
+                                        protoin = set_proto(buffer);
+                                        
+                                        //Testa se recebeu um authenticate-back ok.
+                                        if(protoin.ok){
+                                            if(!strcmp(protoin.command, "authenticate-back")){
+                                                if(protoin.status == 200){
+                                                    green printf(" P2P:> ");
+                                                    cyan printf("Autenticacao com ");
+                                                    orange printf("%s", ip_destino);
+                                                    cyan printf(" aceita.\n");
+                                                    //Salva o IP para desconectar ao sair.
+                                                    //insert_ip(CLIENT, ips, ip_destino);
+                                                    ips_list(INSERT, CLIENT, ip_destino, NULL);
+                                                }
+                                                else{
+                                                    green printf(" P2P:> ");
+                                                    red printf("Erro: autenticacao com ");
+                                                    orange printf("%s", ip_destino);
+                                                    red printf(" falhou. Codigo ");
+                                                    orange printf("%d", protoin.status);
+                                                    red printf(".\n");
+                                                }
                                             }
                                             else{
                                                 green printf(" P2P:> ");
-                                                red printf("Erro: autenticacao com ");
+                                                red printf("Erro: ");
                                                 orange printf("%s", ip_destino);
-                                                red printf(" falhou. Codigo ");
+                                                red printf(" retornou %s codigo ", protoin.command);
                                                 orange printf("%d", protoin.status);
                                                 red printf(".\n");
                                             }
@@ -149,28 +159,27 @@ void * cliente(){
                                             green printf(" P2P:> ");
                                             red printf("Erro: ");
                                             orange printf("%s", ip_destino);
-                                            red printf(" retornou %s codigo ", protoin.command);
-                                            orange printf("%d", protoin.status);
-                                            red printf(".\n");
+                                            red printf(" retornou um protocolo incompativel.\n");
                                         }
                                     }
                                     else{
                                         green printf(" P2P:> ");
-                                        red printf("Erro: ");
-                                        orange printf("%s", ip_destino);
-                                        red printf(" retornou um protocolo incompativel.\n");
+                                        red printf("Erro: nao foi possivel receber 'authenticate-back'\n");
                                     }
                                 }
                                 else{
                                     green printf(" P2P:> ");
-                                    red printf("Erro: nao foi possivel receber 'authenticate-back'\n");
+                                    red printf("Erro: nao foi possivel enviar 'authenticate'\n");
                                 }
+                                close(porta_destino);
                             }
-                            else{
-                                green printf(" P2P:> ");
-                                red printf("Erro: nao foi possivel enviar 'authenticate'\n");
-                            }
-                            close(porta_destino);
+                        }
+                        else{
+                            clear_line
+                            green printf(" P2P:> ");
+                            red printf("Erro: arquivo ");
+                            orange printf("%s-certificado.pem", myNick);
+                            red printf(" nao encontrado.\n");
                         }
                     }
                 }

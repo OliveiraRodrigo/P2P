@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
     pthread_t thread_http_server;
     pthread_t thread_cliente;
     
-    printf("\033]0;:: P2P :: %s\007", get_my_ip()); // Altera o titulo do terminal
+    printf("\033]0;:: P2P :: %s\007", get_my_ip("eth0")); // Altera o titulo do terminal
     
     intptr_t porta_servidor = servidor(PORTA_SERVIDOR);
     intptr_t porta_http = servidor(PORTA_HTTP);

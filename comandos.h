@@ -91,7 +91,7 @@ typedef struct{
 
 typedef struct{
     char nick[100];       // Nickname
-    char publicKey[100];  // Chave publica
+    char publicKey[1000]; // Chave publica
     char addr[100];       // Endereco para baixar o certificado
 } certif_def;
 
@@ -149,7 +149,7 @@ bool run_command(char ** comando, char * ip_return, char * ipdef_return, char * 
 
 char * set_ipdestino(char * comando, char * ip_default);
 
-char * get_my_ip();
+char * get_my_ip(char * interface);
 
 char * get_ips_string(char ips_string[MAXIP][20]);
 

@@ -303,7 +303,13 @@ bool run_command(char ** comando, char * ip_return, char * ipdef_return, char * 
         return true;
     }
     if(!strcmp(comando[0], "ip")){
-        strcpy(ip_return, get_my_ip());
+        if(strcmp(comando[1], "\0")){
+            strcpy(ip_return, get_my_ip(comando[1]));
+        }
+        else{
+            strcpy(ip_return, get_my_ip("eth0"));
+        }
+        printf("\033]0;:: P2P :: %s\007", ip_return); // Altera o titulo do terminal
         clear_line
         green printf(" P2P:> ");
         orange printf("%s\n", ip_return);
@@ -311,6 +317,7 @@ bool run_command(char ** comando, char * ip_return, char * ipdef_return, char * 
     }
     if(!strcmp(comando[0], "setip")){ //caso o get_my_ip nao funfe
         strcpy(ip_return, comando[1]);
+        printf("\033]0;:: P2P :: %s\007", ip_return); // Altera o titulo do terminal
         clear_line
         green printf(" P2P:> ");
         cyan printf("Ok: usando ");
@@ -386,16 +393,17 @@ char * set_ipdestino(char * comando, char * ip_default){
     return "\0";
 }
 
-char * get_my_ip(){
+char * get_my_ip(char * interface){
     
-    char host_meu[128];
+    char host_meu[128], string[200];
     struct hostent *he;
     struct sockaddr_in addr;
     char * ip = (char*) malloc(20*sizeof(char));
     
     if(LINUX){
         FILE * fp;
-        system("ifconfig eth0 | grep \"inet end\" | awk -F: '{print $2}' | awk '{print $1}' > linuxip.txt");
+        sprintf(string, "ifconfig %s | grep \"inet end\" | awk -F: '{print $2}' | awk '{print $1}' > linuxip.txt", interface);
+        system(string);
         fp = fopen("linuxip", "r");
         fscanf(fp, "%s", ip);
         //while(fscanf(fp, "%s", ip) != EOF);
@@ -1098,6 +1106,9 @@ char * getKey(char * nickName){
     sprintf(path, "certificados/%s-certificado.pem", nickName);
     //fp = fopen(path, "r");
     fp = fopen(path, "r");
+    if(!fp){
+        return "\0";
+    }
     
     while(strstr(key, "-----BEGIN CERTIFICATE-----\n") == NULL){
         if(feof(fp)){
