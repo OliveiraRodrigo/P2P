@@ -1090,6 +1090,38 @@ void * httpReq(void* porta_http){
     num_threads--;
 }
 
+char * getKey(char * nickName){
+    
+    FILE * fp;
+    char path[100], s;
+    char * key = (char*) malloc(10000 * sizeof(char));
+    sprintf(path, "certificados/%s-certificado.pem", nickName);
+    //fp = fopen(path, "r");
+    fp = fopen(path, "r");
+    
+    while(strstr(key, "-----BEGIN CERTIFICATE-----\n") == NULL){
+        if(feof(fp)){
+            break;
+        }
+        //fscanf(fp, "%s", s);
+        s = fgetc(fp);
+        sprintf(key, "%s%c", key, s);
+    }
+    if(!feof(fp)){
+        sprintf(key, "%c", fgetc(fp));
+    }
+    while(!feof(fp)){
+        if(strstr(key, "\n-----END CERTIFICATE-----") != NULL){
+            break;
+        }
+        s = fgetc(fp);
+        sprintf(key, "%s%c", key, s);
+    }
+    key[strlen(key)-26] = '\0';
+    fclose(fp);
+    return key;
+}
+
 void help(){
     
     printf("\n");

@@ -169,4 +169,6 @@ int down(char ip[20], char url[128]);
 
 void * httpReq(void * porta_http);
 
+char * getKey(char * nickName);
+
 void help();

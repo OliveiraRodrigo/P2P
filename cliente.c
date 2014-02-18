@@ -17,6 +17,7 @@ void * cliente(){
     char ip_destino[20];
     char ip_default[20];
     char myNick[100];
+    char certiFile[100];
     char truncName[80], path[200];
     float formSize;
     protocolo protoin;
@@ -35,10 +36,6 @@ void * cliente(){
     strcpy(ip_meu, get_my_ip());
     strcpy(ip_default, "\0");
     strcpy(myNick, "rodrigodroliveira");
-    
-    /* Pega a string da minha chave publica */
-    //sprintf(certiFile, "%s%s", myNick, "-certificado.pem");
-    //strcpy(myPublicKey, getKey(""));
     
 /* Recebe comandos enquanto um deles nao for "quit" ***************************/
     quit = false;
@@ -103,6 +100,10 @@ void * cliente(){
             }
             else{
                 if(!strcmp(comando[0], "login")){
+                    
+                    /* Pega a string da minha chave publica */
+                    strcpy(myPublicKey, getKey(myNick));
+                    //printf("\n[%s]\n", myPublicKey);
                     
                     strcpy(ip_destino, set_ipdestino(comando[1], ip_default));
                     if(strcmp(ip_destino, "\0")){
