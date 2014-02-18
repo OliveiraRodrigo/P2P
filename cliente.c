@@ -1,16 +1,19 @@
 #include "comandos.h"
 #include "md5.h"
 #include <sys/stat.h>
-#include <time.h>
+//#include <time.h>
 
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
+#define NICK "rodrigodroliveira"
 
 void * cliente(){
     
-    int i, quant, caract, quit, numbytes, code;
+    int i, quant, caract, numbytes, code;
+    bool quit;
     intptr_t porta_destino;
     char buffer[10000];
     char * comando[4];
+    char myPublicKey[1000];
     char ip_meu[20];
     char ip_destino[20];
     char ip_default[20];
@@ -32,8 +35,11 @@ void * cliente(){
     strcpy(ip_meu, get_my_ip());
     strcpy(ip_default, "\0");
     
+    /* Pega a string da minha chave publica */
+    //strcpy(myPublicKey, getKey());
+    
 /* Recebe comandos enquanto um deles nao for "quit" ***************************/
-    quit = 0;
+    quit = false;
     while(!quit){
         
         /*ti = 0;
@@ -105,9 +111,9 @@ void * cliente(){
                             clear_line
                             green printf(" P2P:> ");
                             cyan printf("Enviando authenticate...\n");
-                            //printf("\n P2P:> %s", authenticate(CHAVE, ip_meu, ip_destino));
+                            //printf("\n P2P:> %s", authenticate(NICK, /*myPublicKey*/"x", ip_meu, ip_destino));
                             
-                            if(send(porta_destino, authenticate(CHAVE, ip_meu, ip_destino), 999,0) != -1){
+                            if(send(porta_destino, authenticate(NICK, /*myPublicKey*/"x", ip_meu, ip_destino), 999,0) != -1){
                                 
                                 if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
                                     

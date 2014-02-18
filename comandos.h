@@ -27,6 +27,10 @@ extern "C" {
 #include <arpa/inet.h>
 #include <resolv.h>
 
+#define bool  char
+#define false 0
+#define true  1
+
 /* Fonte */
 #define black   printf("\033[30m");
 #define red     printf("\033[31m");
@@ -60,20 +64,22 @@ extern "C" {
                cyan printf("\n________________________________________________________________________\n");\
                printf("\033[2A\033[7C"); white
 
-#define CLIENT 0
-#define SERVER 1
-#define GET 0
-#define INSERT 1
-#define REMOVE 2
-#define FIND 3
+#define CLIENT  0
+#define SERVER  1
+#define GET     0
+#define INSERT  1
+#define REMOVE  2
+#define FIND    3
 #define GETSIZE 4
 
 #define MAXIP 50 // Quantos IPs na lista
 #define BYTES 1024
 #define CONNMAX 10
 
-#define PORTA_SERVIDOR 9876
-#define PORTA_HTTP 9875
+#define PORTA_SERVIDOR  6789
+#define PORTA_SERVINTER 6789
+#define PORTA_HTTP      5789
+#define IP_SERVINTER    "127.0.0.1"
 
 typedef struct{
     int    id;          // 1, 2, 3...
@@ -83,16 +89,22 @@ typedef struct{
     char md5[50];       // Assinatura do arquivo para validacao
 } archive_def;
 
+typedef struct{
+    char nick[100];       // Nickname
+    char publicKey[100];  // Chave publica
+    char addr[100];       // Endereco para baixar o certificado
+} certif_def;
+
 typedef struct proto{
-    char protocol[5];   // Nome do protocolo
-    char command[30];   // Identificacao do comando
-    int  status;        // Codigo de erro ou validacao
-    char passport[30];  // Chave de autenticacao
-    char back[2000];    // Dado retornado
-    archive_def file;   // Informacoes sobre arquivo
-    char sender[20];    // IP Remetente
-    char recipient[20]; // IP Destinatario
-    int  ok;            // Construcao correta do protocolo
+    char protocol[5];     // Nome do protocolo
+    char command[30];     // Identificacao do comando
+    certif_def certif;    // Informacoes sobre arquivo
+    int  status;          // Codigo de erro ou validacao
+    char back[2000];      // Dado retornado
+    archive_def file;     // Informacoes sobre arquivo
+    char sender[20];      // IP Remetente
+    char recipient[20];   // IP Destinatario
+    int  ok;              // Construcao correta do protocolo
 } protocolo;
 
 typedef char IPs[MAXIP][20];
@@ -107,13 +119,17 @@ char * ping(char * meu_ip, char * seu_ip);
 
 char * pong(char * meu_ip, char * seu_ip);
 
+char * authenticate(char * myNick, char * myPublicKey, char * ip_sender, char * ip_recipient);
+
+char * authenticate_back(int code, char * ip_meu, char * ip_destino);
+
+char * certify(char * nick, char * publicKey, char * ip_sender, char * ip_recipient);
+
+char * certify_back(int code, char * nick, char * certificate, char * ip_sender, char * ip_recipient);
+
 char * agent_list(char * meu_ip, char * seu_ip);
 
 char * agent_list_back(int code, char * ips_string, char * ip_meu, char * ip_destino);
-
-char * authenticate(char * pass, char * ip_meu, char * ip_destino);
-
-char * authenticate_back(int code, char * ip_meu, char * ip_destino);
 
 char * archive_list(char * ip_meu, char * ip_destino);
 
@@ -129,7 +145,7 @@ intptr_t porta(char * ip_destino, intptr_t porta_remota);
 
 void get_command(char * comando[4]);
 
-int run_command(char ** comando, char * ip_return, char * ipdef_return, int * quit);
+bool run_command(char ** comando, char * ip_return, char * ipdef_return, bool * quit);
 
 char * set_ipdestino(char * comando, char * ip_default);
 
@@ -137,11 +153,11 @@ char * get_my_ip();
 
 char * get_ips_string(char ips_string[MAXIP][20]);
 
-//int set_ips_array(char ips_string[MAXIP][20], char * proto_back);
+//bool set_ips_array(char ips_string[MAXIP][20], char * proto_back);
 
 int ips_list(int function, int who, char * target, IPs returnIPs);
 
-int tem_arch(archive_def * archs, int quant_archs, int id);
+bool tem_arch(archive_def * archs, int quant_archs, int id);
 
 int getFileList(char * protoin, archive_def * files);
 

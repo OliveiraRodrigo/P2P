@@ -11,7 +11,7 @@ char * ping(char * ip_sender, char * ip_recipient){
     
     char * saida  = (char*) malloc(200 * sizeof(char));
     
-    sprintf(saida, "{\"protocol\":\"pcmj\","
+    sprintf(saida, "{\"protocol\":\"pcsmj\","
                    "\"command\":\"ping\","
                    "\"sender\":\"%s\","
                    "\"receptor\":\"%s\"}\n", ip_sender, ip_recipient);
@@ -24,7 +24,7 @@ char * pong(char * ip_sender, char * ip_recipient){
     
     char * saida  = (char*) malloc(200 * sizeof(char));
     
-    sprintf(saida, "{\"protocol\":\"pcmj\", "
+    sprintf(saida, "{\"protocol\":\"pcsmj\", "
                    "\"command\":\"pong\", "
                    "\"sender\":\"%s\", "
                    "\"receptor\":\"%s\", "
@@ -33,15 +33,16 @@ char * pong(char * ip_sender, char * ip_recipient){
     return saida;
 }
 
-char * authenticate(char * pass, char * ip_sender, char * ip_recipient){
+char * authenticate(char * myNick, char * myPublicKey, char * ip_sender, char * ip_recipient){
     
-    char * saida  = (char*) malloc(200 * sizeof(char));
+    char * saida  = (char*) malloc(2000 * sizeof(char));
     
-    sprintf(saida, "{\"protocol\":\"pcmj\","
+    sprintf(saida, "{\"protocol\":\"pcsmj\","
                    "\"command\":\"authenticate\","
-                   "\"passport\":\"%s\","
+                   "\"nick_name\":\"%s\","
+                   "\"public_key\":\"%s\","
                    "\"sender\":\"%s\","
-                   "\"receptor\":\"%s\"}\n", pass, ip_sender, ip_recipient);
+                   "\"receptor\":\"%s\"}\n", myNick, myPublicKey, ip_sender, ip_recipient);
     
     //printf("%s", saida);
     return saida;
@@ -51,7 +52,7 @@ char * authenticate_back(int code, char * ip_sender, char * ip_recipient){
     
     char * saida  = (char*) malloc(200 * sizeof(char));
     
-    sprintf(saida, "{\"protocol\":\"pcmj\","
+    sprintf(saida, "{\"protocol\":\"pcsmj\","
                    "\"command\":\"authenticate-back\","
                    "\"status\":\"%d\","
                    "\"sender\":\"%s\","
@@ -61,11 +62,42 @@ char * authenticate_back(int code, char * ip_sender, char * ip_recipient){
     return saida;
 }
 
+char * certify(char * nick, char * publicKey, char * ip_sender, char * ip_recipient){
+    
+    char * saida  = (char*) malloc(2000 * sizeof(char));
+    
+    sprintf(saida, "{\"protocol\":\"pcsmj\","
+                   "\"command\":\"certify\","
+                   "\"nick_name\":\"%s\","
+                   "\"public_key\":\"%s\","
+                   "\"sender\":\"%s\","
+                   "\"receptor\":\"%s\"}\n", nick, publicKey, ip_sender, ip_recipient);
+    
+    //printf("%s", saida);
+    return saida;
+}
+
+char * certify_back(int code, char * nick, char * certificate, char * ip_sender, char * ip_recipient){
+    
+    char * saida  = (char*) malloc(2000 * sizeof(char));
+    
+    sprintf(saida, "{\"protocol\":\"pcsmj\","
+                   "\"command\":\"certify-back\","
+                   "\"status\":\"%d\","
+                   "\"nick_name\":\"%s\","
+                   "\"certify_address\":\"%s\","
+                   "\"sender\":\"%s\","
+                   "\"receptor\":\"%s\"}\n", code, nick, certificate, ip_sender, ip_recipient);
+    
+    //printf("%s", saida);
+    return saida;
+}
+
 char * agent_list(char * ip_sender, char * ip_recipient){
     
     char * saida  = (char*) malloc(200 * sizeof(char));
     
-    sprintf(saida, "{\"protocol\":\"pcmj\","
+    sprintf(saida, "{\"protocol\":\"pcsmj\","
                    "\"command\":\"agent-list\","
                    "\"sender\":\"%s\","
                    "\"receptor\":\"%s\"}\n", ip_sender, ip_recipient);
@@ -77,7 +109,7 @@ char * agent_list_back(int code, char * ips_string, char * ip_sender, char * ip_
     
     char * saida     = (char*) malloc(1000 * sizeof(char));
     
-    sprintf(saida, "{\"protocol\":\"pcmj\","
+    sprintf(saida, "{\"protocol\":\"pcsmj\","
                    "\"command\":\"agent-list-back\","
                    "\"status\":\"%d\","
                    "\"back\":[%s],"
@@ -91,7 +123,7 @@ char * archive_list(char * ip_sender, char * ip_recipient){
     
     char * saida  = (char*) malloc(200 * sizeof(char));
     
-    sprintf(saida, "{\"protocol\":\"pcmj\","
+    sprintf(saida, "{\"protocol\":\"pcsmj\","
                    "\"command\":\"archive-list\","
                    "\"sender\":\"%s\","
                    "\"receptor\":\"%s\"}\n", ip_sender, ip_recipient);
@@ -121,7 +153,7 @@ char * archive_list_back(int code, archive_def * archs, int quant_archs, char * 
         i++;
     }
     
-    sprintf(saida, "{\"protocol\":\"pcmj\","
+    sprintf(saida, "{\"protocol\":\"pcsmj\","
                    "\"command\":\"archive-list-back\","
                    "\"status\":\"%d\","
                    "\"back\":[%s],"
@@ -135,7 +167,7 @@ char * archive_request(char * arch_id, char * ip_sender, char * ip_recipient){
     
     char * saida  = (char*) malloc(200 * sizeof(char));
     
-    sprintf(saida, "{\"protocol\":\"pcmj\","
+    sprintf(saida, "{\"protocol\":\"pcsmj\","
                    "\"command\":\"archive-request\","
                    "\"id\":%s,"
                    "\"sender\":\"%s\","
@@ -148,12 +180,12 @@ char * archive_request_back(int code, archive_def arch, char * ip_sender, char *
     
     char * saida = (char*) malloc(1000  * sizeof(char));
     
-    sprintf(saida, "{\"protocol\":\"pcmj\","
+    sprintf(saida, "{\"protocol\":\"pcsmj\","
                    "\"command\":\"archive-request-back\","
                    "\"status\":\"%d\","
                    "\"id\":%d,"
-                   "\"http_address\":\"%s\","
-                   "\"size\":\"%s\"," //redundante
+                   "\"https_address\":\"%s\","
+                   "\"size\":\"%s\","
                    "\"md5\":\"%s\","
                    "\"sender\":\"%s\","
                    "\"receptor\":\"%s\"}\n",
@@ -166,7 +198,7 @@ char * end_connection(char * ip_sender, char * ip_recipient){
     
     char * saida  = (char*) malloc(200 * sizeof(char));
     
-    sprintf(saida, "{\"protocol\":\"pcmj\","
+    sprintf(saida, "{\"protocol\":\"pcsmj\","
                    "\"command\":\"end-connection\","
                    "\"sender\":\"%s\","
                    "\"receptor\":\"%s\"}\n", ip_sender, ip_recipient);
@@ -261,7 +293,7 @@ void get_command(char * comando[4]){
     }
 }
 
-int run_command(char ** comando, char * ip_return, char * ipdef_return, int * quit_return){
+bool run_command(char ** comando, char * ip_return, char * ipdef_return, bool * quit_return){
     
     if(!strcmp(comando[0], "cls")){
         if(LINUX)
@@ -270,14 +302,14 @@ int run_command(char ** comando, char * ip_return, char * ipdef_return, int * qu
         bg_cyan bold white printf("\n   P2P                                                                  ");
         reset
         defaults printf("\n");
-        return 1;
+        return true;
     }
     if(!strcmp(comando[0], "ip")){
         strcpy(ip_return, get_my_ip());
         clear_line
         green printf(" P2P:> ");
         orange printf("%s\n", ip_return);
-        return 1;
+        return true;
     }
     if(!strcmp(comando[0], "setip")){ //caso o get_my_ip nao funfe
         strcpy(ip_return, comando[1]);
@@ -286,7 +318,7 @@ int run_command(char ** comando, char * ip_return, char * ipdef_return, int * qu
         cyan printf("Ok: usando ");
         orange printf("%s", ip_return);
         cyan printf(" como meu IP.\n");
-        return 1;
+        return true;
     }
     if(!strcmp(comando[0], "def")){
         strcpy(ipdef_return, comando[1]);
@@ -295,7 +327,7 @@ int run_command(char ** comando, char * ip_return, char * ipdef_return, int * qu
         cyan printf("Ok: usando ");
         orange printf("%s", ipdef_return);
         cyan printf(" como IP Padrao.\n");
-        return 1;
+        return true;
     }
     if(!strcmp(comando[0], "help")){
         if(LINUX) system("clear");
@@ -305,25 +337,25 @@ int run_command(char ** comando, char * ip_return, char * ipdef_return, int * qu
         reset
         defaults printf("\n");
         help();
-        return 1;
+        return true;
     }
     if(!strcmp(comando[0], "quit")){
 	defaults        
         clear_screen
         printf("\n\n");
         reset
-        *quit_return = 1;
-        return 1;
+        *quit_return = true;
+        return true;
     }
     if(!strcmp(comando[0], "q")){ //"quit"
         defaults
         clear_screen
         printf("\n\n");
         reset
-        *quit_return = 1;
-        return 1;
+        *quit_return = true;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 char * set_ipdestino(char * comando, char * ip_default){
@@ -358,7 +390,8 @@ char * get_my_ip(){
         FILE * fp;
         system("ifconfig eth0 | grep \"inet end\" | awk -F: '{print $2}' | awk '{print $1}' > linuxip.txt");
         fp = fopen("linuxip", "r");
-        while(fscanf(fp, "%s", ip) != EOF);
+        fscanf(fp, "%s", ip);
+        //while(fscanf(fp, "%s", ip) != EOF);
         fclose(fp);
         //remove("linuxip.txt");
     }
@@ -401,7 +434,7 @@ int ips_list(int function, int who, char * target, IPs returnIPs){
                     strcpy(returnIPs[i], serverIPs[i]);
                 }
             }
-            return 1;
+            return true;
             break;
             
         case INSERT:
@@ -410,31 +443,31 @@ int ips_list(int function, int who, char * target, IPs returnIPs){
                 while(i < clientSize){
                     //procura se ja nao tem
                     if(!strcmp(clientIPs[i], target)){
-                        return -1;
+                        return false; //ja tem
                     }
                     i++;
                 }
                 if(i < MAXIP-1){
                     strcpy(clientIPs[i], target);
                     clientSize++;
-                    return 1;
+                    return true;
                 }
-                return -1;
+                return false; //nao cabe mais nenhum
             }
             else{ //SERVER
                 while(i < serverSize){
                     //procura se ja nao tem
                     if(!strcmp(serverIPs[i], target)){
-                        return -1;
+                        return false; //ja tem
                     }
                     i++;
                 }
                 if(i < MAXIP-1){
                     strcpy(serverIPs[i], target);
                     serverSize++;
-                    return 1;
+                    return true;
                 }
-                return -1;
+                return false; //nao cabe mais nenhum
             }
             break;
         
@@ -447,10 +480,10 @@ int ips_list(int function, int who, char * target, IPs returnIPs){
                             i++;
                         }
                         clientSize--;
-                        return 1;
+                        return true;
                     }
                 }
-                return -1;
+                return false; //ja nao tinha
             }
             else{ //SERVER
                 for(i = 0; i < serverSize; i++){
@@ -460,10 +493,10 @@ int ips_list(int function, int who, char * target, IPs returnIPs){
                             i++;
                         }
                         serverSize--;
-                        return 1;
+                        return true;
                     }
                 }
-                return -1;
+                return false; //ja nao tinha
             }
             break;
         
@@ -471,18 +504,18 @@ int ips_list(int function, int who, char * target, IPs returnIPs){
             if(who == CLIENT){
                 for(i = 0; i < clientSize; i++){
                     if(!strcmp(clientIPs[i], target)){
-                        return 1;
+                        return true;
                     }
                 }
-                return 0;
+                return false;
             }
             else{ //SERVER
                 for(i = 0; i < serverSize; i++){
                     if(!strcmp(serverIPs[i], target)){
-                        return 1;
+                        return true;
                     }
                 }
-                return 0;
+                return false;
             }
             break;
         
@@ -498,7 +531,7 @@ int ips_list(int function, int who, char * target, IPs returnIPs){
     }
 }
 /* Desnecessaria
-int set_ips_array(char ips_array[50][20], char * proto_back){
+bool set_ips_array(char ips_array[50][20], char * proto_back){
     
     int i, j, size;
     char ip[20];
@@ -524,7 +557,7 @@ int set_ips_array(char ips_array[50][20], char * proto_back){
             break;
         }
     }
-    return 0;
+    return true;
 }
 */
 char * get_ips_string(IPs ips_array){
@@ -546,16 +579,16 @@ char * get_ips_string(IPs ips_array){
     return saida;
 }
 
-int tem_arch(archive_def * archs, int quant_archs, int id){
+bool tem_arch(archive_def * archs, int quant_archs, int id){
     
     int i;
     
     for(i = 1; i <= quant_archs; i++){
         if(id == archs[i].id){
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 int getFileList(char *in, archive_def *files){
@@ -620,7 +653,7 @@ int getFileList(char *in, archive_def *files){
             }
         }
     }
-    return f;
+    return f; //quantidade de arquivos
 }
 
 int setFileList(char folder[100], archive_def * files){
@@ -675,10 +708,10 @@ protocolo set_proto(char * entrada){
     
     int i, j;
     protocolo proto;
-    char * field = (char*) malloc(20*sizeof(char));
-    char * data = (char*) malloc(2000*sizeof(char));
-    char * seq = (char*) malloc(20*sizeof(char)); //Pra saber se esta na sequencia correta
-    char * ordem = (char*) malloc(20*sizeof(char)); //Sequencia correta dependendo do comando
+    char * field = (char*) malloc(  20 * sizeof(char));
+    char * data  = (char*) malloc(2000 * sizeof(char));
+    char * seq   = (char*) malloc(  20 * sizeof(char)); //Pra saber se esta na sequencia correta
+    char * ordem = (char*) malloc(  20 * sizeof(char)); //Sequencia correta dependendo do comando
     i = 0;
     if(entrada[i] == '{'){
             i++;
@@ -755,9 +788,9 @@ protocolo set_proto(char * entrada){
                                 strcat(seq, "t");
                             }
                             else{
-                                if(!strcmp(field, "passport")){
-                                    strcpy(proto.passport, data);
-                                    strcat(seq, "k");
+                                if(!strcmp(field, "nick_name")){
+                                    strcpy(proto.certif.nick, data);
+                                    strcat(seq, "n");
                                 }
                                 else{
                                     if(!strcmp(field, "back")){
@@ -765,12 +798,22 @@ protocolo set_proto(char * entrada){
                                         strcat(seq, "b");
                                     }
                                     else{
+                                        if(!strcmp(field, "public_key")){
+                                            strcpy(proto.certif.publicKey, data);
+                                            strcat(seq, "k");
+                                        }
+                                        else{
+                                            if(!strcmp(field, "certify_address")){
+                                                strcpy(proto.certif.addr, data);
+                                                strcat(seq, "y");
+                                            }
+                                            else{
                                         if(!strcmp(field, "id")){
                                             proto.file.id = atoi(data);
                                             strcat(seq, "i");
                                         }
                                         else{
-                                            if(!strcmp(field, "http_address")){
+                                                    if(!strcmp(field, "https_address")){
                                                 strcpy(proto.file.http, data);
                                                 strcat(seq, "h");
                                             }
@@ -810,6 +853,8 @@ protocolo set_proto(char * entrada){
                             }
                         }
                     }
+                        }
+                    }
                     if(entrada[i] == ','){
                         i++;
                     }
@@ -838,13 +883,21 @@ protocolo set_proto(char * entrada){
         }
         else{
             if(!strcmp(proto.command,"authenticate")){
-                strcpy(ordem, "pcksr");
+                strcpy(ordem, "pcnksr");
             }
             else{
                 if(!strcmp(proto.command,"authenticate-back")){
                     strcpy(ordem, "pctsr");
                 }
                 else{
+                    if(!strcmp(proto.command,"certify")){
+                        strcpy(ordem, "pcnksr");
+                    }
+                    else{
+                        if(!strcmp(proto.command,"certify-back")){
+                            strcpy(ordem, "pctnysr");
+                        }
+                        else{
                     if(!strcmp(proto.command,"agent-list")){
                         strcpy(ordem, "pcsr");
                     }
@@ -887,13 +940,15 @@ protocolo set_proto(char * entrada){
             }
         }
     }
+        }
+    }
     if(strcmp(seq, ordem){
         //erro
         //printf(" --6-- ");
         return proto;
     }*/
     
-    proto.ok = 1;
+    proto.ok = true;
     return proto;
 }
 
@@ -962,7 +1017,8 @@ int down(char ip[20], char url[128]){
 
 void * httpReq(void* porta_http){
     
-    int fd, bytes_read, size, repete;
+    int fd, bytes_read, size;
+    bool repete;
     static int num_threads = 0;
     intptr_t porta, porta_cliente;
     char mesg[10000], *reqline[3], data_to_send[BYTES], path[9999];
@@ -972,7 +1028,7 @@ void * httpReq(void* porta_http){
     size = sizeof(struct sockaddr_in);
     porta = (intptr_t) porta_http;
     
-    repete = 1;
+    repete = true;
     while(repete){
         
         porta_cliente = accept(porta, (struct sockaddr*)&endereco_cliente, &size);
@@ -980,7 +1036,7 @@ void * httpReq(void* porta_http){
         /*if(num_threads < MAX_THREADS){
             pthread_create(&new_thread, NULL, httpReq, (void*) porta);
             num_threads++;
-            repete = 0;
+            repete = false;
         }*/ //"Segmentation fault" com muitas conexoes simultaneas.
         
         if(ips_list(FIND, SERVER, inet_ntoa(endereco_cliente.sin_addr), NULL)){
