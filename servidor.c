@@ -4,7 +4,6 @@
 
 #define MAX_THREADS 3 // Quantas conexoes simultaneas
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
-#define NICK "rodrigodroliveira"
 
 intptr_t servidor(intptr_t porta_servidor){
     
@@ -108,16 +107,24 @@ void * start_connection(void* server_port){
             }
             else{
                 if(!strcmp(protoin.command, "authenticate")){
-                    
                     /* Envia um certify pro servidor intermediario
                      * e espera dele um certify-back */
+                    
                     porta_servInter = porta(IP_SERVINTER, PORTA_SERVINTER);
+                    
+                    /* Babaquice ********************************************/
+                    send(porta_servInter, ping(ip_meu, IP_SERVINTER), 999, 0);
+                    recv(porta_servInter, buffer, 999, 0); //pong
+                    close(porta_servInter);
+                    porta_servInter = porta(IP_SERVINTER, PORTA_SERVINTER);
+                    /********************************************************/
+                    
                     if(send(porta_servInter, certify(protoin.certif.nick, protoin.certif.publicKey, ip_meu, IP_SERVINTER), 999, 0) == -1) {
                         perror("\n ::::: Erro: servidor nao conseguiu enviar 'certify'.");
                         clienteAutenticado = false;
                     }
                     else{
-                        if((numbytes = recv(porta_servInter, buffer, 999, 0)) == -1) {
+                        if((numbytes = recv(porta_servInter, buffer, 999, 0)) == -1){//certify-back
                             perror("\n ::::: Erro: Servidor nao conseguiu receber.\n");
                             clienteAutenticado = false;
                         }
@@ -202,12 +209,13 @@ void * start_connection(void* server_port){
             //proto nao ok
             send(nova_porta, authenticate_back(400, ip_meu, ip_cliente), 999, 0);
         }
+        /*if (fork()==0){ // se for o filho
+            close(porta_serv); // o filho nao aceita conexoes a mais
+            //close(nova_porta);
+            //exit(0); // tao logo termine, o filho pode sair
+        }*/
+        close(nova_porta); // essa parte somente o pai executa
+        close(porta_servInter);
     }
-    /*if (fork()==0){ // se for o filho
-        close(porta_serv); // o filho nao aceita conexoes a mais
-        //close(nova_porta);
-        //exit(0); // tao logo termine, o filho pode sair
-    }*/
     num_threads--;
-    close(nova_porta); // essa parte somente o pai executa
 }

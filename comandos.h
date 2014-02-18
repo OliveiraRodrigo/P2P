@@ -145,7 +145,7 @@ intptr_t porta(char * ip_destino, intptr_t porta_remota);
 
 void get_command(char * comando[4]);
 
-bool run_command(char ** comando, char * ip_return, char * ipdef_return, bool * quit);
+bool run_command(char ** comando, char * ip_return, char * ipdef_return, char * myNick, bool * quit);
 
 char * set_ipdestino(char * comando, char * ip_default);
 

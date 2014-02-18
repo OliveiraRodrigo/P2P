@@ -207,45 +207,43 @@ char * end_connection(char * ip_sender, char * ip_recipient){
 }
 
 intptr_t porta(char * ip_destino, intptr_t porta_remota){
-	
+    
     int numbytes, codigo;
     intptr_t porta_destino;
     struct sockaddr_in endereco_destino;
     struct hostent *he;
     long addr_destino, temp_addr;
-	
-                    addr_destino = inet_addr(ip_destino);
-                    
-                    if((he=gethostbyaddr((char *) &addr_destino, sizeof(addr_destino), AF_INET)) == NULL) {
-                        clear_line
-                        green printf("\n P2P:> ");
-                        red printf("Erro: Nao foi possivel localizar ");
-                        orange printf("%s", ip_destino);
-                        red printf(".\n");
-                        return -1;
-                    }
-                    
-                    if((porta_destino = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-                        clear_line
-                        red printf("\n P2P:> Erro: Nao foi possivel criar a porta\n");
-                        return -1;
-                    }
-                    
-                    // prepara estrutura com endereco do servidor
-                    endereco_destino.sin_family = AF_INET; 
-                    endereco_destino.sin_port = htons(porta_remota);
-                    endereco_destino.sin_addr = *((struct in_addr *)he->h_addr);
-                    memset(&(endereco_destino.sin_zero), '\0', 8);
-                    //ip_destino = inet_ntoa(endereco_destino.sin_addr);
-                    
-                    if(connect(porta_destino,
-                      (struct sockaddr *)&endereco_destino,
-                      sizeof(struct sockaddr)) == -1) {
-                        clear_line
-                        red printf("\n P2P:> Erro: conectando no servidor\n");
-                        return -1;
-                    }
-                    return porta_destino;
+    
+    addr_destino = inet_addr(ip_destino);
+    
+    if((he=gethostbyaddr((char *) &addr_destino, sizeof(addr_destino), AF_INET)) == NULL) {
+        clear_line
+        green printf("\n P2P:> ");
+        red printf("Erro: Nao foi possivel localizar ");
+        orange printf("%s", ip_destino);
+        red printf(".\n");
+        return -1;
+    }
+    
+    if((porta_destino = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        clear_line
+        red printf("\n P2P:> Erro: Nao foi possivel criar a porta\n");
+        return -1;
+    }
+    
+    // prepara estrutura com endereco do servidor
+    endereco_destino.sin_family = AF_INET;
+    endereco_destino.sin_port = htons(porta_remota);
+    endereco_destino.sin_addr = *((struct in_addr *)he->h_addr);
+    memset(&(endereco_destino.sin_zero), '\0', 8);
+    //ip_destino = inet_ntoa(endereco_destino.sin_addr);
+    
+    if(connect(porta_destino, (struct sockaddr *)&endereco_destino, sizeof(struct sockaddr)) == -1) {
+        clear_line
+        red printf("\n P2P:> Erro: conectando no servidor\n");
+        return -1;
+    }
+    return porta_destino;
 }
 
 void get_command(char * comando[4]){
@@ -293,7 +291,7 @@ void get_command(char * comando[4]){
     }
 }
 
-bool run_command(char ** comando, char * ip_return, char * ipdef_return, bool * quit_return){
+bool run_command(char ** comando, char * ip_return, char * ipdef_return, char * myNick, bool * quit_return){
     
     if(!strcmp(comando[0], "cls")){
         if(LINUX)
@@ -327,6 +325,15 @@ bool run_command(char ** comando, char * ip_return, char * ipdef_return, bool * 
         cyan printf("Ok: usando ");
         orange printf("%s", ipdef_return);
         cyan printf(" como IP Padrao.\n");
+        return true;
+    }
+    if(!strcmp(comando[0], "nick")){
+        strcpy(myNick, comando[1]);
+        clear_line
+        green printf(" P2P:> ");
+        cyan printf("Ok: seu nickname e' ");
+        orange printf("%s", myNick);
+        cyan printf(".\n");
         return true;
     }
     if(!strcmp(comando[0], "help")){
@@ -1116,4 +1123,3 @@ void help(){
     red printf("\n________________________________________________________________________\n");
     
 }
-

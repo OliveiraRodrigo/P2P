@@ -4,7 +4,6 @@
 //#include <time.h>
 
 #define CHAVE "DiJqWHqKtiDgZySAv7ZX"
-#define NICK "rodrigodroliveira"
 
 void * cliente(){
     
@@ -17,6 +16,7 @@ void * cliente(){
     char ip_meu[20];
     char ip_destino[20];
     char ip_default[20];
+    char myNick[100];
     char truncName[80], path[200];
     float formSize;
     protocolo protoin;
@@ -34,9 +34,11 @@ void * cliente(){
     /* Detecta o IP local e o armazena em 'ip_meu' */
     strcpy(ip_meu, get_my_ip());
     strcpy(ip_default, "\0");
+    strcpy(myNick, "rodrigodroliveira");
     
     /* Pega a string da minha chave publica */
-    //strcpy(myPublicKey, getKey());
+    //sprintf(certiFile, "%s%s", myNick, "-certificado.pem");
+    //strcpy(myPublicKey, getKey(""));
     
 /* Recebe comandos enquanto um deles nao for "quit" ***************************/
     quit = false;
@@ -48,7 +50,7 @@ void * cliente(){
         gettimeofday(&tempo_inicio, NULL);*/
 
         get_command(comando);
-        if(!run_command(comando, ip_meu, ip_default, &quit)){
+        if(!run_command(comando, ip_meu, ip_default, myNick, &quit)){
             
             if(!strcmp(comando[0], "try")){
                 
@@ -111,9 +113,9 @@ void * cliente(){
                             clear_line
                             green printf(" P2P:> ");
                             cyan printf("Enviando authenticate...\n");
-                            //printf("\n P2P:> %s", authenticate(NICK, /*myPublicKey*/"x", ip_meu, ip_destino));
+                            //printf("\n P2P:> %s", authenticate(myNick, /*myPublicKey*/"x", ip_meu, ip_destino));
                             
-                            if(send(porta_destino, authenticate(NICK, /*myPublicKey*/"x", ip_meu, ip_destino), 999,0) != -1){
+                            if(send(porta_destino, authenticate(myNick, /*myPublicKey*/"x", ip_meu, ip_destino), 999,0) != -1){
                                 
                                 if((numbytes = recv(porta_destino, buffer, 999, 0)) != -1) {
                                     
