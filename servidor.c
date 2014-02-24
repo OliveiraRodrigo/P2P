@@ -149,6 +149,7 @@ void * start_connection(void* server_port){
                     else{
                         send(nova_porta, authenticate_back(203, ip_meu, ip_cliente), 999, 0);
                     }
+                close(porta_servInter);
                 }
                 else{
                     /* Faz de conta que sou o servidor intermediario */
@@ -215,7 +216,6 @@ void * start_connection(void* server_port){
             //exit(0); // tao logo termine, o filho pode sair
         }*/
         close(nova_porta); // essa parte somente o pai executa
-        close(porta_servInter);
     }
     num_threads--;
 }
